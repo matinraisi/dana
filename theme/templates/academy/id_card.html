@@ -1,0 +1,184 @@
+{% load static %}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>کارت شناسایی — {{ student.full_name }}</title>
+  <style>
+    @font-face { font-family:"Vazirmatn"; src:url("{% static 'font/fonts/webfonts/Vazirmatn-Regular.woff2' %}")format("woff2"); font-weight:400 }
+    @font-face { font-family:"Vazirmatn"; src:url("{% static 'font/fonts/webfonts/Vazirmatn-Black.woff2' %}")format("woff2"); font-weight:900 }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:"Vazirmatn",sans-serif;background:#e8edf5;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:40px 20px;gap:28px}
+
+    /* ─── Toolbar ─── */
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+    .btn{padding:10px 22px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .15s;font-family:"Vazirmatn",sans-serif}
+    .btn-print{background:#2563eb;color:#fff}.btn-print:hover{background:#1d4ed8}
+    .btn-issue{background:#059669;color:#fff}.btn-issue:hover{background:#047857}
+    .btn-back{background:#fff;color:#475569;border:1px solid #e2e8f0}.btn-back:hover{background:#f8fafc}
+
+    /* ─── Card Shell ─── */
+    .card{width:340px;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.18),0 4px 16px rgba(0,0,0,.08)}
+
+    /* ─── Header ─── */
+    .card-head{background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 50%,#2563eb 100%);padding:20px 22px 56px;position:relative;overflow:hidden}
+    .card-head::before{content:'';position:absolute;top:-30px;left:-30px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.05)}
+    .card-head::after{content:'';position:absolute;bottom:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.04)}
+    .head-top{display:flex;align-items:center;gap:12px;position:relative;z-index:1}
+    .logo-badge{width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.15);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;border:1px solid rgba(255,255,255,.2)}
+    .head-texts .academy{font-size:13px;font-weight:900;color:#fff;line-height:1.2}
+    .head-texts .sub{font-size:10px;color:rgba(255,255,255,.6);margin-top:2px;letter-spacing:.04em}
+    .card-type-badge{position:absolute;left:22px;top:22px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:9px;font-weight:700;padding:4px 10px;border-radius:20px;letter-spacing:.06em;z-index:1}
+
+    /* ─── Avatar Float ─── */
+    .avatar-wrap{position:relative;margin:-40px auto 0;width:84px;height:100px;z-index:2;display:flex;align-items:center;justify-content:center}
+    .avatar{width:84px;height:100px;border-radius:14px;object-fit:cover;border:3px solid #fff;box-shadow:0 4px 16px rgba(0,0,0,.2);background:#e2e8f0}
+    .avatar-placeholder{width:84px;height:100px;border-radius:14px;background:linear-gradient(135deg,#e2e8f0,#f1f5f9);border:3px solid #fff;box-shadow:0 4px 16px rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center;font-size:36px;color:#94a3b8}
+
+    /* ─── Body ─── */
+    .card-body{padding:14px 22px 18px;text-align:center}
+    .student-name{font-size:18px;font-weight:900;color:#0f172a;margin-bottom:4px}
+    .student-field{font-size:11px;color:#64748b;margin-bottom:12px}
+
+    .info-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
+    .info-chip{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:6px 12px;font-size:10px;color:#475569;font-weight:600}
+    .info-chip span{font-weight:900;color:#1e293b;display:block;font-size:11px;margin-bottom:1px}
+
+    .card-number-box{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #bfdbfe;border-radius:10px;padding:8px 16px;margin-bottom:12px;display:inline-block}
+    .card-number-label{font-size:9px;color:#3b82f6;font-weight:700;letter-spacing:.06em}
+    .card-number-value{font-size:14px;font-weight:900;color:#1d4ed8;letter-spacing:.08em;font-family:monospace}
+
+    .status-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:20px;font-size:10px;font-weight:700}
+    .status-paid{background:#dcfce7;color:#15803d}.status-partial{background:#fef9c3;color:#a16207}.status-unpaid{background:#fee2e2;color:#b91c1c}.status-none{background:#f1f5f9;color:#64748b}
+
+    /* ─── QR Section ─── */
+    .qr-section{background:#f8fafc;border-top:1px dashed #e2e8f0;padding:16px 22px;display:flex;align-items:center;gap:16px}
+    .qr-box{width:76px;height:76px;border-radius:12px;background:#fff;border:1px solid #e2e8f0;padding:4px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.06);flex-shrink:0}
+    .qr-box img{width:100%;height:100%;border-radius:8px;display:block}
+    .qr-no{width:68px;height:68px;border:2px dashed #cbd5e1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#94a3b8;text-align:center;line-height:1.4}
+    .qr-meta{flex:1}
+    .qr-meta .title{font-size:11px;font-weight:900;color:#1e293b;margin-bottom:3px}
+    .qr-meta .desc{font-size:9px;color:#94a3b8;line-height:1.5}
+    .verify-url{font-size:8px;color:#3b82f6;margin-top:4px;word-break:break-all}
+
+    /* ─── Footer ─── */
+    .card-foot{background:linear-gradient(135deg,#0f172a,#1e3a8a);padding:10px 22px;display:flex;align-items:center;justify-content:space-between}
+    .foot-text{font-size:8px;color:rgba(255,255,255,.5);letter-spacing:.04em}
+    .foot-valid{font-size:9px;font-weight:700;color:rgba(255,255,255,.8)}
+    .foot-invalid{font-size:9px;font-weight:700;color:#fca5a5}
+
+    @media print{
+      body{background:#fff;padding:0;justify-content:center}
+      .toolbar,.no-print{display:none!important}
+      .card{box-shadow:none;border:1px solid #e2e8f0}
+    }
+  </style>
+</head>
+<body>
+
+<!-- Toolbar -->
+<div class="toolbar no-print">
+  <a href="{% url 'academy:dashboard_home' %}" class="btn btn-back">← بازگشت</a>
+  {% if card %}
+  <button onclick="window.print()" class="btn btn-print">🖨️ چاپ کارت</button>
+  {% endif %}
+</div>
+
+<!-- Card -->
+<div class="card">
+
+  <!-- Header -->
+  <div class="card-head">
+    <div class="card-type-badge">STUDENT ID</div>
+    <div class="head-top">
+      <div class="logo-badge">S</div>
+      <div class="head-texts">
+        <div class="academy">{{ school_title }}</div>
+        <div class="sub">Suntech AI Academy — کارت شناسایی هنرجو</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Avatar -->
+  <div class="avatar-wrap">
+    {% if student.avatar_3x4 %}
+      <img class="avatar" src="{{ student.avatar_3x4.url }}" alt="{{ student.full_name }}">
+    {% else %}
+      <div class="avatar-placeholder">👤</div>
+    {% endif %}
+  </div>
+
+  <!-- Body -->
+  <div class="card-body">
+    <div class="student-name">{{ student.full_name }}</div>
+    {% if student.field_of_study %}
+    <div class="student-field">{{ student.field_of_study }}</div>
+    {% endif %}
+
+    <div class="info-row">
+      <div class="info-chip">
+        <span>{{ student.national_code }}</span>
+        کد ملی
+      </div>
+      {% if student.phone_number %}
+      <div class="info-chip">
+        <span dir="ltr">{{ student.phone_number }}</span>
+        موبایل
+      </div>
+      {% endif %}
+    </div>
+
+    {% if card %}
+    <div class="card-number-box">
+      <div class="card-number-label">CARD NUMBER</div>
+      <div class="card-number-value">{{ card.card_number }}</div>
+    </div>
+    <br>
+    <span class="status-badge status-{{ card.payment_status }}">
+      {% if card.payment_status == 'paid' %}✅{% elif card.payment_status == 'partial' %}⚠️{% else %}❌{% endif %}
+      {{ card.payment_status_display }}
+    </span>
+    {% if not card.is_valid %}
+    <br><br>
+    <span class="status-badge" style="background:#fee2e2;color:#b91c1c">🚫 کارت معلق</span>
+    {% endif %}
+    {% else %}
+    <p style="font-size:11px;color:#94a3b8;margin-top:8px">کارت شناسایی هنوز صادر نشده</p>
+    {% endif %}
+  </div>
+
+  <!-- QR -->
+  <div class="qr-section">
+    <div class="qr-box">
+      {% if card and card.qr_code %}
+        <img src="{{ card.qr_code.url }}" alt="QR Code تأیید هویت">
+      {% else %}
+        <div class="qr-no">QR<br>صادر<br>نشده</div>
+      {% endif %}
+    </div>
+    <div class="qr-meta">
+      <div class="title">تأیید هویت دیجیتال</div>
+      <div class="desc">برای تأیید اعتبار کارت<br>این QR را اسکن کنید</div>
+      {% if card %}
+      <div class="verify-url">verify/{{ card.card_number }}/</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="card-foot">
+    <div class="foot-text">صادرشده توسط {{ school_title }}</div>
+    {% if card %}
+      {% if card.is_valid %}
+      <div class="foot-valid">● معتبر</div>
+      {% else %}
+      <div class="foot-invalid">✕ باطل‌شده</div>
+      {% endif %}
+    {% endif %}
+  </div>
+
+</div>
+
+</body>
+</html>

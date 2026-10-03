@@ -1,0 +1,40 @@
+<?php
+// آپلود به: public_html/dashboard/payment/callback/index.php
+
+$params = $_SERVER['QUERY_STRING'];
+$urlParams = [];
+parse_str($params, $urlParams);
+
+// callback از درگاه (transid + status) → انتقال به پنل
+if (isset($urlParams['transid']) && isset($urlParams['status'])) {
+    $target = "https://panel.aihousesb.ir/dashboard/payment/callback/?" . $params;
+}
+// انتقال به درگاه پرداخت (فقط transid)
+else if (isset($urlParams['transid'])) {
+    $target = "https://panel.aqayepardakht.ir/startpay/" . $urlParams['transid'];
+}
+else {
+    $target = "https://panel.aihousesb.ir/";
+}
+
+// صفحه HTML با redirect سمت کلاینت + Referrer کامل
+header("Content-Type: text/html; charset=utf-8");
+header("Referrer-Policy: unsafe-url");
+?>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>انتقال...</title>
+  <meta name="referrer" content="unsafe-url">
+  <script>
+    window.location.replace("<?php echo $target; ?>");
+  </script>
+  <noscript>
+    <meta http-equiv="refresh" content="0; url=<?php echo $target; ?>">
+  </noscript>
+</head>
+<body>
+  <p>در حال انتقال...</p>
+</body>
+</html>

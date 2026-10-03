@@ -1,0 +1,75 @@
+{% extends 'academy/dashboard/base.html' %}
+{% load humanize %}
+{% block content %}
+<div class="p-6 space-y-8 text-right" dir="rtl">
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 rounded-xl bg-green-600 flex items-center justify-center text-white text-lg">📋</div>
+            <div>
+                <h1 class="text-base font-black text-slate-800">حضور و غیاب</h1>
+                <p class="text-xs text-slate-400 mt-0.5">{{ session.course.title }} — جلسه {{ session.session_number }}: {{ session.title }} — {{ session.date }}</p>
+            </div>
+        </div>
+
+        <form method="POST" class="space-y-4">
+            {% csrf_token %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-right border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100/70 border-b border-slate-200 text-slate-600 text-[11px] font-bold">
+                            <th class="p-4">#</th>
+                            <th class="p-4">نام هنرجو</th>
+                            <th class="p-4">وضعیت</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs">
+                        {% for item in sheet %}
+                        <tr class="hover:bg-slate-50/80 transition">
+                            <td class="p-4 text-slate-400 font-mono">{{ forloop.counter }}</td>
+                            <td class="p-4 font-bold text-slate-800">{{ item.student.first_name }} {{ item.student.last_name }}</td>
+                            <td class="p-4">
+                                <div class="flex gap-3">
+                                    {% for value, label in status_choices %}
+                                    <label class="flex items-center gap-1.5 cursor-pointer">
+                                        <input type="radio" name="status_{{ item.student.id }}" value="{{ value }}"
+                                               {% if item.status == value %}checked{% endif %}
+                                               class="w-3.5 h-3.5 border-slate-300 text-blue-600 focus:ring-blue-500">
+                                        <span class="text-[11px] 
+                                            {% if value == 'present' %}text-green-700
+                                            {% elif value == 'absent' %}text-rose-700
+                                            {% elif value == 'late' %}text-amber-700
+                                            {% elif value == 'excused' %}text-blue-700
+                                            {% endif %}">
+                                            {{ label }}
+                                        </span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="p-8 text-center text-slate-400 font-medium">هنوز هنرجویی در این دوره ثبت‌نام نشده است.</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if sheet %}
+            <div class="flex gap-3 pt-2">
+                <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-lg text-xs font-bold hover:bg-green-700 transition">
+                    ذخیره حضورغیاب
+                </button>
+            </div>
+            {% endif %}
+        </form>
+
+        <div class="mt-4 pt-4 border-t border-slate-100">
+            <a href="{% url 'academy:session_list' session.course.id %}" class="text-xs text-slate-500 hover:text-slate-700 transition">
+                ← بازگشت به جلسات
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

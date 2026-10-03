@@ -1,0 +1,150 @@
+{% extends 'academy/dashboard/base.html' %}
+
+{% block title %}{{ school_title }} | کدهای تخفیف{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-lg font-black text-slate-800">کدهای تخفیف</h1>
+    <p class="text-xs text-slate-400 mt-1">ایجاد و مدیریت کدهای تخفیف ثبت‌نام</p>
+  </div>
+  <a href="{% url 'academy:discount_create' %}"
+     class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 px-4 rounded-lg transition shadow-sm">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+    کد جدید
+  </a>
+</div>
+
+{% if messages %}
+<div class="mb-5 space-y-2">
+  {% for message in messages %}
+    <div class="px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-2
+      {% if message.tags == 'success' %}bg-emerald-50 text-emerald-600 border border-emerald-100
+      {% elif message.tags == 'error' %}bg-red-50 text-red-600 border border-red-100
+      {% else %}bg-indigo-50 text-indigo-600 border border-indigo-100{% endif %}">
+      {{ message }}
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Stats -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <p class="text-[10px] font-bold text-slate-400 mb-1">کل کدها</p>
+    <p class="text-xl font-black text-slate-800">{{ codes|length }}</p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <p class="text-[10px] font-bold text-slate-400 mb-1">فعال</p>
+    <p class="text-xl font-black text-emerald-600">{{ active_count|default:"0" }}</p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <p class="text-[10px] font-bold text-slate-400 mb-1">استفاده شده</p>
+    <p class="text-xl font-black text-blue-600">{{ used_count|default:"0" }}</p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <p class="text-[10px] font-bold text-slate-400 mb-1">منقضی شده</p>
+    <p class="text-xl font-black text-slate-400">{{ expired_count|default:"0" }}</p>
+  </div>
+</div>
+
+<!-- Table -->
+<div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+  <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+    <h3 class="text-sm font-black text-slate-700">لیست کدهای تخفیف</h3>
+    <span class="text-[10px] text-slate-400">{{ codes|length }} کد</span>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-right">
+      <thead>
+        <tr class="bg-slate-50 border-b border-slate-200">
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500">کد</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500">نوع</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500">مقدار</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500">استفاده</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500">دوره</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500">وضعیت</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500">عملیات</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for code in codes %}
+        <tr class="hover:bg-slate-50/50 transition">
+          <td class="px-4 py-3">
+            <span class="text-xs font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">{{ code.code }}</span>
+          </td>
+          <td class="px-4 py-3">
+            {% if code.discount_type == 'percent' %}
+              <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">درصدی</span>
+            {% else %}
+              <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">مبلغ ثابت</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3">
+            <span class="text-xs font-bold text-slate-700">
+              {{ code.discount_value }}{% if code.discount_type == 'percent' %}%{% else %} تومان{% endif %}
+            </span>
+          </td>
+          <td class="px-4 py-3">
+            <span class="text-xs text-slate-600">
+              {{ code.used_count }}{% if code.max_uses > 0 %} / {{ code.max_uses }}{% endif %}
+            </span>
+          </td>
+          <td class="px-4 py-3">
+            {% if code.course %}
+              <span class="text-[10px] text-slate-500">{{ code.course.title }}</span>
+            {% else %}
+              <span class="text-[10px] text-slate-300">همه دوره‌ها</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3">
+            {% if code.is_active %}
+              <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                فعال
+              </span>
+            {% else %}
+              <span class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
+                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                غیرفعال
+              </span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3">
+            <div class="flex items-center gap-1">
+              <form method="post" action="{% url 'academy:discount_toggle' code.id %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="p-1.5 rounded-lg bg-slate-50 text-slate-500 hover:bg-amber-50 hover:text-amber-600 transition" title="تغییر وضعیت">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182"/></svg>
+                </button>
+              </form>
+              <form method="post" action="{% url 'academy:discount_delete' code.id %}" class="inline"
+                    onsubmit="return confirm('آیا از حذف کد «{{ code.code }}» اطمینان دارید؟')">
+                {% csrf_token %}
+                <button type="submit" class="p-1.5 rounded-lg bg-slate-50 text-slate-500 hover:bg-rose-50 hover:text-rose-600 transition" title="حذف">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="px-4 py-12 text-center">
+            <div class="flex flex-col items-center gap-3">
+              <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center">
+                <svg class="w-6 h-6 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+              </div>
+              <p class="text-sm font-bold text-slate-400">هنوز کد تخفیفی ایجاد نشده</p>
+              <a href="{% url 'academy:discount_create' %}" class="text-xs font-bold text-indigo-600 hover:text-indigo-700">+ ایجاد اولین کد</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

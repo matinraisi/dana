@@ -1,0 +1,70 @@
+{% extends "teacher/base.html" %}
+{% block title %}هنرجویان — {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="flex items-center gap-3 mb-5">
+  <a href="{% url 'teacher:course_list' %}" class="text-slate-400 hover:text-slate-700 transition">←</a>
+  <div>
+    <h1 class="text-lg font-black text-slate-800">هنرجویان</h1>
+    <p class="text-xs text-slate-400">{{ course.title }}</p>
+  </div>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+  <div class="overflow-x-auto hidden sm:block">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 border-b border-slate-100">
+        <tr>
+          <th class="px-4 py-3 text-right text-xs font-black text-slate-500">#</th>
+          <th class="px-4 py-3 text-right text-xs font-black text-slate-500">نام هنرجو</th>
+          <th class="px-4 py-3 text-right text-xs font-black text-slate-500">موبایل</th>
+          <th class="px-4 py-3 text-right text-xs font-black text-slate-500">حضور</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-50">
+        {% for student in students %}
+        <tr class="hover:bg-slate-50 transition">
+          <td class="px-4 py-3 text-slate-400 text-xs">{{ forloop.counter }}</td>
+          <td class="px-4 py-3 font-semibold text-slate-800">{{ student.full_name }}</td>
+          <td class="px-4 py-3 text-slate-500 font-mono text-xs">{{ student.phone_number }}</td>
+          <td class="px-4 py-3">
+            {% with atts=student.attendances.all %}
+            {% if atts %}
+              {% with present=atts|length %}
+              <span class="text-xs text-emerald-600 font-bold">{{ present }} جلسه</span>
+              {% endwith %}
+            {% else %}
+              <span class="text-xs text-slate-300">ثبت نشده</span>
+            {% endif %}
+            {% endwith %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="px-4 py-8 text-center text-slate-400 text-sm">هنوز هنرجویی ثبت‌نام نکرده</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="sm:hidden divide-y divide-slate-50">
+    {% for student in students %}
+    <div class="px-4 py-3 flex items-center justify-between">
+      <div class="min-w-0 flex-1">
+        <div class="font-semibold text-slate-800 text-sm truncate">{{ student.full_name }}</div>
+        <div class="text-xs text-slate-400 font-mono mt-0.5">{{ student.phone_number }}</div>
+      </div>
+      <div class="mr-2 shrink-0">
+        {% with atts=student.attendances.all %}
+        {% if atts %}
+          <span class="text-xs text-emerald-600 font-bold">{{ atts|length }} جلسه</span>
+        {% else %}
+          <span class="text-xs text-slate-300">ثبت نشده</span>
+        {% endif %}
+        {% endwith %}
+      </div>
+    </div>
+    {% empty %}
+    <div class="px-4 py-8 text-center text-slate-400 text-sm">هنوز هنرجویی ثبت‌نام نکرده</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,270 @@
+{% load static tailwind_tags %}
+<!doctype html>
+<html lang="fa" dir="rtl" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}{{ school_title }} | اتوماسیون آکادمی{% endblock %}</title>
+  {% tailwind_css %}
+  <style>
+    @font-face { font-family:"Vazirmatn"; src:url("{% static 'font/fonts/webfonts/Vazirmatn-Regular.woff2' %}") format("woff2"); font-weight:400; }
+    @font-face { font-family:"Vazirmatn"; src:url("{% static 'font/fonts/webfonts/Vazirmatn-Black.woff2' %}") format("woff2"); font-weight:900; }
+    body { font-family:"Vazirmatn",sans-serif; }
+    .nav-item { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:10px; font-size:12px; font-weight:600; transition:all .15s; border-right:3px solid transparent; text-decoration:none; color:#475569; }
+    .nav-item:hover { background:#f1f5f9; color:#1e293b; }
+    .nav-item.active { background:#eff6ff; color:#2563eb; border-right-color:#2563eb; }
+    .nav-section { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:#94a3b8; padding:0 12px; margin-bottom:6px; margin-top:4px; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-700 antialiased min-h-screen flex flex-col md:flex-row">
+
+  <!-- ─── Sidebar ─── -->
+  <aside id="sidebar"
+    class="fixed md:sticky top-0 right-0 z-50 w-64 md:w-60 h-screen bg-white border-l border-slate-200 flex-col shrink-0 shadow-sm">
+    <div class="h-14 flex items-center px-5 border-b border-slate-100 gap-3">
+      <button onclick="toggleSidebar()" class="md:hidden ml-3 p-1 rounded-lg hover:bg-slate-100 text-slate-500">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+      {% if school_logo %}
+        <img src="{{ school_logo }}" alt="{{ school_title }}" class="w-8 h-8 rounded-xl object-cover shadow-sm">
+      {% else %}
+        <div class="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black text-sm shadow">{{ school_title|first }}</div>
+      {% endif %}
+      <div>
+        <h1 class="text-xs font-black text-slate-800">{{ school_title }}</h1>
+        <p class="text-[10px] text-slate-400">پنل مدیریت</p>
+      </div>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto p-3 space-y-4">
+      <div>
+        <div class="nav-section">اصلی</div>
+        <a href="{% url 'academy:dashboard_home' %}" class="nav-item {% block nav_home %}{% endblock %}" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          میز کار
+        </a>
+        <a href="{% url 'academy:course_list' %}" class="nav-item {% block nav_courses %}{% endblock %}" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          دوره‌های آموزشی
+        </a>
+        <a href="{% url 'academy:student_create' %}" class="nav-item {% block nav_students %}{% endblock %}" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+          پذیرش هنرجو
+        </a>
+        <a href="{% url 'academy:user_list' %}" class="nav-item {% block nav_users %}{% endblock %}" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          مدیریت کاربران
+        </a>
+        <a href="{% url 'academy:document_verification' %}" class="nav-item {% block nav_docs %}{% endblock %}" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          تأیید مدارک
+        </a>
+        <a href="{% url 'academy:timetable' %}" class="nav-item {% block nav_timetable %}{% endblock %}" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
+          برنامه کلاس‌ها
+        </a>
+        <a href="{% url 'academy:room_timetable' %}" class="nav-item {% block nav_rooms %}{% endblock %}" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+          برنامه فضاها
+        </a>
+      </div>
+
+      <div>
+        <div class="nav-section">CRM و فروش</div>
+        <a href="{% url 'crm:lead_list' %}" class="nav-item {% block nav_crm %}{% endblock %}" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+          سرنخ‌های فروش
+        </a>
+        <a href="{% url 'crm:lead_create' %}" class="nav-item" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          ثبت سرنخ جدید
+        </a>
+        <a href="{% url 'academy:discount_list' %}" class="nav-item {% block nav_discounts %}{% endblock %}" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+          کدهای تخفیف
+        </a>
+      </div>
+
+      <div>
+        <div class="nav-section">مالی و حسابداری</div>
+        <a href="{% url 'academy:accounting_dashboard' %}" class="nav-item {% block nav_accounting %}{% endblock %}" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          داشبورد حسابداری
+        </a>
+        <a href="{% url 'academy:accounting_transactions' %}" class="nav-item" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          دفتر کل تراکنش‌ها
+        </a>
+        <a href="{% url 'academy:accounting_create' %}" class="nav-item" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+          ثبت تراکنش جدید
+        </a>
+        <a href="{% url 'academy:course_profit_report' %}" class="nav-item" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          سودآوری دوره‌ها
+        </a>
+        <a href="{% url 'academy:teacher_payouts' %}" class="nav-item" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4l6-6m0 0l-6-6m6 6H9"/></svg>
+          پرداخت به مدرسین
+        </a>
+        <a href="{% url 'academy:finance_management' %}" class="nav-item" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+          مدیریت اقساط شهریه
+        </a>
+      </div>
+
+      <div>
+        <div class="nav-section">گزارشات</div>
+        <a href="{% url 'academy:reports_dashboard' %}" class="nav-item {% block nav_reports %}{% endblock %}" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          داشبورد گزارشات
+        </a>
+        <a href="{% url 'academy:all_students_report' %}" class="nav-item" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/></svg>
+          لیست هنرجویان
+        </a>
+        <a href="{% url 'academy:course_students_report' %}" class="nav-item" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+          هنرجویان هر دوره
+        </a>
+      </div>
+
+      <div>
+        <div class="nav-section">محتوای آموزشی</div>
+        <a href="{% url 'academy:admin_materials' %}" class="nav-item" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          محتوای دوره‌ها
+        </a>
+      </div>
+
+      <div>
+        <div class="nav-section">آزمون‌ها</div>
+        <a href="{% url 'academy:exam_list' %}" class="nav-item {% block nav_exams %}{% endblock %}" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+          مدیریت آزمون‌ها
+        </a>
+        <a href="{% url 'academy:exam_create' %}" class="nav-item" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+          ایجاد آزمون جدید
+        </a>
+      </div>
+
+      <div>
+        <div class="nav-section">ابزارها</div>
+        <a href="{% url 'academy:meeting_home' %}" class="nav-item" target="_blank" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          کلاس آنلاین
+        </a>
+        <a href="{% url 'academy:idcard_list' %}" class="nav-item {% block nav_idcard %}{% endblock %}" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 012-2h2a2 2 0 012 2v1m-6 4a3 3 0 116 0 3 3 0 01-6 0z"/></svg>
+          کارت‌های شناسایی
+        </a>
+        <a href="{% url 'academy:sms_dashboard' %}" class="nav-item {% block nav_sms %}{% endblock %}" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          مرکز پیامک
+        </a>
+        <a href="{% url 'academy:import_excel' %}" class="nav-item" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          ورود از اکسل
+        </a>
+        <a href="{% url 'forms_builder:form_list' %}" class="nav-item {% block nav_forms %}{% endblock %}" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+          فرم‌ساز
+        </a>
+      </div>
+
+      <div>
+        <div class="nav-section">پنل‌ها</div>
+        <a href="{% url 'teacher:dashboard' %}" class="nav-item" target="_blank" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+          پنل اساتید
+        </a>
+        <a href="{% url 'student:dashboard' %}" class="nav-item" target="_blank" onclick="closeSidebar()">
+          <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          پنل هنرجویان
+        </a>
+      </div>
+    </nav>
+
+    <div class="border-t border-slate-100 p-3">
+      <form action="{% url 'academy:logout' %}" method="POST">
+        {% csrf_token %}
+        <button type="submit" class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold text-rose-600 hover:bg-rose-50 transition">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+          خروج از حساب
+        </button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- ─── Main Content ─── -->
+  <div class="flex-1 flex flex-col min-w-0">
+    <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 shrink-0 sticky top-0 z-10">
+      <div class="flex items-center gap-2">
+        <button onclick="toggleSidebar()" class="md:hidden p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 mr-1">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <span class="text-xs text-slate-400">خوش آمدید،</span>
+        <span class="text-xs font-bold text-slate-700">{{ request.user.get_full_name|default:request.user.username }}</span>
+      </div>
+      <div class="flex items-center gap-2 md:gap-3">
+        {% block header_extra %}{% endblock %}
+        <span class="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 md:px-3 py-1 rounded-full">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="hidden md:inline">کاوه‌نگار متصل</span>
+        </span>
+      </div>
+    </header>
+
+    <main class="flex-1 p-4 md:p-6 overflow-y-auto">
+      {% if messages %}
+        <div class="mb-4 space-y-2">
+          {% for message in messages %}
+            <div class="px-4 py-3 rounded-xl text-sm font-semibold
+              {% if message.tags == 'success' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+              {% elif message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200
+              {% elif message.tags == 'warning' %}bg-amber-50 text-amber-700 border border-amber-200
+              {% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <script>
+    function sidebarShow() { document.getElementById('sidebar').style.display = 'flex'; }
+    function sidebarHide() { document.getElementById('sidebar').style.display = 'none'; }
+
+    function toggleSidebar() {
+      const s = document.getElementById('sidebar');
+      if (window.innerWidth >= 768) return;
+      s.style.display = (s.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    function closeSidebar() {
+      if (window.innerWidth < 768) sidebarHide();
+    }
+
+    function initSidebar() {
+      const s = document.getElementById('sidebar');
+      s.style.display = window.innerWidth >= 768 ? 'flex' : 'none';
+    }
+
+    document.addEventListener('DOMContentLoaded', initSidebar);
+    window.addEventListener('resize', initSidebar);
+
+    document.addEventListener('click', function(e) {
+      if (window.innerWidth >= 768) return;
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar.style.display !== 'flex') return;
+      const btn = document.querySelector('[onclick*="toggleSidebar"]');
+      if (!sidebar.contains(e.target) && !(btn && btn.contains(e.target))) {
+        sidebarHide();
+      }
+    });
+  </script>
+</body>
+</html>

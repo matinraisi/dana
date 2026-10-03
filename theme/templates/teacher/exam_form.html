@@ -1,0 +1,126 @@
+{% extends 'teacher/base.html' %}
+{% load static %}
+{% block nav_exams %}text-indigo-600 bg-indigo-50 font-black{% endblock %}
+{% block content %}
+<div class="max-w-3xl mx-auto text-right" dir="rtl">
+    <div class="bg-white p-4 md:p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-lg">📝</div>
+            <div>
+                <h1 class="text-base font-black text-slate-800">{{ exam|yesno:"ویرایش آزمون,ایجاد آزمون جدید" }}</h1>
+                <p class="text-xs text-slate-400 mt-0.5">{% if exam %}ویرایش اطلاعات آزمون{% else %}ایجاد آزمون جدید برای یکی از دوره‌های شما{% endif %}</p>
+            </div>
+        </div>
+
+        <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% csrf_token %}
+
+            <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-600">عنوان آزمون *</label>
+                <input type="text" name="title" value="{{ exam.title|default:'' }}" required
+                       class="w-full px-3 py-2 text-xs text-slate-800 rounded-lg border border-slate-200 focus:outline-none focus:border-indigo-500 font-medium">
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-600">دوره مرتبط *</label>
+                <select name="course" {% if exam %}disabled{% endif %}
+                        class="w-full px-3 py-2 text-xs text-slate-800 rounded-lg border border-slate-200 focus:outline-none focus:border-indigo-500">
+                    <option value="">انتخاب کنید</option>
+                    {% for c in courses %}
+                    <option value="{{ c.id }}" {% if exam and exam.course_id == c.id %}selected{% endif %}>{{ c.title }}</option>
+                    {% endfor %}
+                </select>
+                {% if exam %}<input type="hidden" name="course" value="{{ exam.course_id }}">{% endif %}
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-600">نوع آزمون</label>
+                <select name="exam_type" class="w-full px-3 py-2 text-xs text-slate-800 rounded-lg border border-slate-200 focus:outline-none focus:border-indigo-500">
+                    <option value="quiz" {% if exam.exam_type == 'quiz' %}selected{% endif %}>آزمک</option>
+                    <option value="midterm" {% if exam.exam_type == 'midterm' %}selected{% endif %}>میان‌ترم</option>
+                    <option value="final" {% if exam.exam_type == 'final' %}selected{% endif %}>پایان‌ترم</option>
+                    <option value="assignment" {% if exam.exam_type == 'assignment' %}selected{% endif %}>تکلیف</option>
+                    <option value="placement" {% if exam.exam_type == 'placement' %}selected{% endif %}>تعیین سطح</option>
+                </select>
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-600">مدت (دقیقه)</label>
+                <input type="number" name="duration_minutes" value="{{ exam.duration_minutes|default:'30' }}"
+                       class="w-full px-3 py-2 text-xs text-slate-800 rounded-lg border border-slate-200 focus:outline-none focus:border-indigo-500 font-medium text-left">
+            </div>
+
+            <div class="md:col-span-2 space-y-1">
+                <label class="text-[11px] font-bold text-slate-600">توضیحات</label>
+                <textarea name="description" rows="2" class="w-full px-3 py-2 text-xs text-slate-800 rounded-lg border border-slate-200 focus:outline-none focus:border-indigo-500 font-medium">{{ exam.description|default:'' }}</textarea>
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-600">درصد قبولی</label>
+                <input type="number" name="pass_score_percent" value="{{ exam.pass_score_percent|default:'50' }}" min="0" max="100"
+                       class="w-full px-3 py-2 text-xs text-slate-800 rounded-lg border border-slate-200 focus:outline-none focus:border-indigo-500 font-medium text-left">
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-600">تعداد دفعات مجاز</label>
+                <input type="number" name="attempts_allowed" value="{{ exam.attempts_allowed|default:'1' }}" min="0"
+                       class="w-full px-3 py-2 text-xs text-slate-800 rounded-lg border border-slate-200 focus:outline-none focus:border-indigo-500 font-medium text-left">
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-600">تعداد سوال تصادفی</label>
+                <input type="number" name="random_question_count" value="{{ exam.random_question_count|default:'' }}"
+                       placeholder="خالی = همه سوالات"
+                       class="w-full px-3 py-2 text-xs text-slate-800 rounded-lg border border-slate-200 focus:outline-none focus:border-indigo-500 font-medium text-left">
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-600">تاریخ شروع</label>
+                <input type="datetime-local" name="start_date" value="{{ exam.start_date|date:'Y-m-d\TH:i'|default:'' }}"
+                       class="w-full px-3 py-2 text-xs text-slate-800 rounded-lg border border-slate-200 focus:outline-none focus:border-indigo-500 font-medium text-left" dir="ltr">
+            </div>
+
+            <div class="space-y-1">
+                <label class="text-[11px] font-bold text-slate-600">تاریخ پایان</label>
+                <input type="datetime-local" name="end_date" value="{{ exam.end_date|date:'Y-m-d\TH:i'|default:'' }}"
+                       class="w-full px-3 py-2 text-xs text-slate-800 rounded-lg border border-slate-200 focus:outline-none focus:border-indigo-500 font-medium text-left" dir="ltr">
+            </div>
+
+            <div class="md:col-span-2 grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-6 py-2">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" name="shuffle_questions" {% if exam.shuffle_questions or not exam %}checked{% endif %}
+                           class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                    <span class="text-xs font-bold text-slate-600">جابجایی تصادفی سوالات</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" name="shuffle_choices" {% if exam.shuffle_choices or not exam %}checked{% endif %}
+                           class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                    <span class="text-xs font-bold text-slate-600">جابجایی تصادفی گزینه‌ها</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" name="show_result_immediately" {% if exam.show_result_immediately %}checked{% endif %}
+                           class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                    <span class="text-xs font-bold text-slate-600">نمایش بلافاصله نتیجه</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" name="show_answers_after" {% if exam.show_answers_after %}checked{% endif %}
+                           class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                    <span class="text-xs font-bold text-slate-600">نمایش پاسخ‌های صحیح پس از آزمون</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" name="is_active" {% if exam.is_active or not exam %}checked{% endif %}
+                           class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                    <span class="text-xs font-bold text-slate-600">فعال</span>
+                </label>
+            </div>
+
+            <div class="md:col-span-2 flex gap-3 pt-2">
+                <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg text-xs font-bold hover:bg-indigo-700 transition">
+                    {% if exam %}ذخیره تغییرات{% else %}ایجاد آزمون{% endif %}
+                </button>
+                <a href="{% url 'teacher:exam_list' %}" class="text-xs text-slate-500 hover:text-slate-700 transition py-2">← انصراف</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

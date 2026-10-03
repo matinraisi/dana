@@ -1,0 +1,91 @@
+{% extends "academy/dashboard/base.html" %}
+{% block title %}مدیریت محتوای آموزشی{% endblock %}
+{% block content %}
+<div class="p-6 pb-16 text-right" dir="rtl">
+  <div class="flex items-center justify-between mb-5 flex-wrap gap-4">
+    <div>
+      <h1 class="text-xl font-black text-slate-800">مدیریت محتوای آموزشی</h1>
+      <p class="text-xs text-slate-500 mt-0.5">تمام محتوای آپلود شده توسط اساتید — نظارت و مدیریت</p>
+    </div>
+  </div>
+
+  <form class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-5">
+    <div class="flex items-center gap-3 flex-wrap">
+      <select name="course" class="px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs">
+        <option value="">همه دوره‌ها</option>
+        {% for c in courses %}
+        <option value="{{ c.id }}" {% if filter_course == c.id|stringformat:'s' %}selected{% endif %}>{{ c.title }}</option>
+        {% endfor %}
+      </select>
+      <select name="type" class="px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs">
+        <option value="">همه نوع‌ها</option>
+        <option value="assignment" {% if filter_type == 'assignment' %}selected{% endif %}>تکلیف</option>
+        <option value="video" {% if filter_type == 'video' %}selected{% endif %}>فیلم</option>
+        <option value="file" {% if filter_type == 'file' %}selected{% endif %}>فایل</option>
+        <option value="link" {% if filter_type == 'link' %}selected{% endif %}>لینک</option>
+        <option value="source_code" {% if filter_type == 'source_code' %}selected{% endif %}>سورس کد</option>
+      </select>
+      <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition">فیلتر</button>
+      <span class="text-xs text-slate-400 mr-auto">{{ materials|length }} محتوا</span>
+    </div>
+  </form>
+
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-right border-collapse">
+        <thead>
+          <tr class="bg-slate-50 border-b border-slate-200 text-slate-700 text-[11px] font-black">
+            <th class="p-3">عنوان</th>
+            <th class="p-3">نوع</th>
+            <th class="p-3">دوره</th>
+            <th class="p-3">جلسه</th>
+            <th class="p-3">استاد</th>
+            <th class="p-3">تاریخ</th>
+            <th class="p-3">فایل/لینک</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-xs">
+          {% for mat in materials %}
+          <tr class="hover:bg-slate-50/80 transition">
+            <td class="p-3">
+              <div class="font-bold text-slate-900">{{ mat.title }}</div>
+              {% if mat.description %}
+              <div class="text-[10px] text-slate-400 mt-0.5 truncate max-w-[200px]">{{ mat.description }}</div>
+              {% endif %}
+            </td>
+            <td class="p-3">
+              <span class="px-2 py-0.5 rounded font-bold text-[10px] 
+                {% if mat.material_type == 'assignment' %}bg-amber-100 text-amber-700
+                {% elif mat.material_type == 'video' %}bg-rose-100 text-rose-700
+                {% elif mat.material_type == 'link' %}bg-blue-100 text-blue-700
+                {% elif mat.material_type == 'source_code' %}bg-emerald-100 text-emerald-700
+                {% else %}bg-slate-100 text-slate-600{% endif %}">
+                {{ mat.get_material_type_display }}
+              </span>
+            </td>
+            <td class="p-3 text-slate-600">{{ mat.course.title|default:'—' }}</td>
+            <td class="p-3 text-slate-600">{{ mat.session.title|default:'عمومی'|truncatechars:30 }}</td>
+            <td class="p-3 text-slate-600">{{ mat.session.course.teacher|default:mat.course.teacher|default:'—' }}</td>
+            <td class="p-3 text-slate-500 text-[10px]">{{ mat.created_at|date:'Y/m/d' }}</td>
+            <td class="p-3">
+              <div class="flex gap-2">
+                {% if mat.file %}
+                <a href="{{ mat.file.url }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-[10px] font-bold">📥</a>
+                {% endif %}
+                {% if mat.link_url %}
+                <a href="{{ mat.link_url }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-[10px] font-bold">🔗</a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="p-10 text-center text-slate-400 font-medium">محتوایی یافت نشد</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

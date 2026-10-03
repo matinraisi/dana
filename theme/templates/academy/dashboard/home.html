@@ -1,0 +1,216 @@
+{% extends 'academy/dashboard/base.html' %}
+{% load custom_filters %}
+
+{% block title %}{{ school_title }} | داشبورد مدیریت{% endblock %}
+
+{% block content %}
+<!-- ─── Header ─── -->
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 md:mb-6">
+  <div>
+    <h2 class="text-base md:text-lg font-black text-slate-800">میز کار</h2>
+    <p class="text-xs text-slate-500 mt-1">خلاصه وضعیت آموزشگاه</p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <a href="{% url 'academy:student_create' %}"
+       class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 px-3.5 rounded-lg transition shadow-sm">
+      <span>➕</span> هنرجوی جدید
+    </a>
+    <a href="{% url 'academy:course_create' %}"
+       class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-3.5 rounded-lg transition shadow-sm">
+      <span>📘</span> دوره جدید
+    </a>
+    <a href="{% url 'academy:import_excel' %}"
+       class="inline-flex items-center gap-1.5 bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold py-2 px-3.5 rounded-lg transition shadow-sm">
+      <span>📥</span> اکسل
+    </a>
+  </div>
+</div>
+
+{% if messages %}
+  <div class="mb-4 md:mb-6 space-y-2">
+    {% for message in messages %}
+      <div class="p-3 border rounded-lg text-xs font-bold {% if message.tags == 'success' %} bg-emerald-100/70 text-emerald-900 border-emerald-300/60 {% else %} bg-rose-100/70 text-rose-900 border-rose-300/60 {% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<!-- ─── Stats Cards ─── -->
+<section class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+  <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-[10px] font-bold text-slate-400 tracking-wide">کل هنرجویان</span>
+      <span class="text-base">🎓</span>
+    </div>
+    <p class="text-xl md:text-2xl font-black text-slate-800">{{ total_students|toman }}</p>
+    <p class="text-[10px] text-slate-400 mt-1">نفر ثبت‌نامی</p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-[10px] font-bold text-slate-400 tracking-wide">دوره‌های فعال</span>
+      <span class="text-base">📚</span>
+    </div>
+    <p class="text-xl md:text-2xl font-black text-slate-800">{{ active_courses }}</p>
+    <p class="text-[10px] text-slate-400 mt-1">دوره از {{ total_courses|toman }} کل</p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-[10px] font-bold text-slate-400 tracking-wide">مدارک در انتظار</span>
+      <span class="text-base">📋</span>
+    </div>
+    <p class="text-xl md:text-2xl font-black {% if pending_docs_count > 0 %}text-amber-600{% else %}text-slate-800{% endif %}">{{ pending_docs_count }}</p>
+    <p class="text-[10px] text-slate-400 mt-1">نیاز به بررسی</p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-[10px] font-bold text-slate-400 tracking-wide">قسط‌های معوق</span>
+      <span class="text-base">⚠️</span>
+    </div>
+    <p class="text-xl md:text-2xl font-black {% if overdue_count > 0 %}text-rose-600{% else %}text-slate-800{% endif %}">{{ overdue_count }}</p>
+    <p class="text-[10px] text-slate-400 mt-1">مورد معوقه</p>
+  </div>
+</section>
+
+<!-- ─── Quick Access ─── -->
+<section class="mb-6">
+  <h3 class="text-xs font-black text-slate-500 mb-3 tracking-wide">دسترسی‌های سریع</h3>
+  <div class="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+    <a href="{% url 'academy:student_list' %}"
+       class="flex flex-col items-center gap-1.5 bg-white border border-slate-200 rounded-xl py-3 px-2 shadow-sm hover:border-blue-300 hover:shadow-md transition">
+      <span class="text-lg">🧑‍🎓</span>
+      <span class="text-[10px] font-bold text-slate-600 text-center leading-tight">مدیریت هنرجویان</span>
+    </a>
+    <a href="{% url 'academy:course_list' %}"
+       class="flex flex-col items-center gap-1.5 bg-white border border-slate-200 rounded-xl py-3 px-2 shadow-sm hover:border-blue-300 hover:shadow-md transition">
+      <span class="text-lg">📚</span>
+      <span class="text-[10px] font-bold text-slate-600 text-center leading-tight">لیست دوره‌ها</span>
+    </a>
+    <a href="{% url 'academy:financial_reports' %}"
+       class="flex flex-col items-center gap-1.5 bg-white border border-slate-200 rounded-xl py-3 px-2 shadow-sm hover:border-blue-300 hover:shadow-md transition">
+      <span class="text-lg">💰</span>
+      <span class="text-[10px] font-bold text-slate-600 text-center leading-tight">گزارش مالی</span>
+    </a>
+    <a href="{% url 'academy:record_payment' %}"
+       class="flex flex-col items-center gap-1.5 bg-white border border-slate-200 rounded-xl py-3 px-2 shadow-sm hover:border-blue-300 hover:shadow-md transition">
+      <span class="text-lg">💳</span>
+      <span class="text-[10px] font-bold text-slate-600 text-center leading-tight">ثبت پرداخت</span>
+    </a>
+    <a href="{% url 'academy:document_verification' %}"
+       class="flex flex-col items-center gap-1.5 bg-white border border-slate-200 rounded-xl py-3 px-2 shadow-sm hover:border-blue-300 hover:shadow-md transition">
+      <span class="text-lg">✅</span>
+      <span class="text-[10px] font-bold text-slate-600 text-center leading-tight">بررسی مدارک</span>
+    </a>
+    <a href="{% url 'academy:sms_dashboard' %}"
+       class="flex flex-col items-center gap-1.5 bg-white border border-slate-200 rounded-xl py-3 px-2 shadow-sm hover:border-blue-300 hover:shadow-md transition">
+      <span class="text-lg">💬</span>
+      <span class="text-[10px] font-bold text-slate-600 text-center leading-tight">پیامک گروهی</span>
+    </a>
+    <a href="{% url 'academy:exam_list' %}"
+       class="flex flex-col items-center gap-1.5 bg-white border border-slate-200 rounded-xl py-3 px-2 shadow-sm hover:border-blue-300 hover:shadow-md transition">
+      <span class="text-lg">📝</span>
+      <span class="text-[10px] font-bold text-slate-600 text-center leading-tight">آزمون‌ها</span>
+    </a>
+    <a href="{% url 'academy:accounting_dashboard' %}"
+       class="flex flex-col items-center gap-1.5 bg-white border border-slate-200 rounded-xl py-3 px-2 shadow-sm hover:border-blue-300 hover:shadow-md transition">
+      <span class="text-lg">📊</span>
+      <span class="text-[10px] font-bold text-slate-600 text-center leading-tight">حسابداری</span>
+    </a>
+  </div>
+</section>
+
+<!-- ─── Financial Snapshot + Recent Activity ─── -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6">
+  <!-- Financial -->
+  <section class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+    <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+      <h3 class="text-xs font-black text-slate-500 tracking-wide">خلاصه مالی</h3>
+      <a href="{% url 'academy:financial_reports' %}" class="text-[10px] font-bold text-blue-600 hover:text-blue-700 transition">مشاهده کامل ←</a>
+    </div>
+    <div class="p-4 space-y-3">
+      <div class="flex items-center justify-between py-2 border-b border-slate-100">
+        <span class="text-xs text-slate-500">مجموع دریافتی</span>
+        <span class="text-sm font-black text-emerald-700">{{ income_total|toman }} <span class="text-[10px] font-normal">تومان</span></span>
+      </div>
+      <div class="flex items-center justify-between py-2 border-b border-slate-100">
+        <span class="text-xs text-slate-500">مجموع هزینه‌ها</span>
+        <span class="text-sm font-black text-rose-600">{{ expense_total|toman }} <span class="text-[10px] font-normal">تومان</span></span>
+      </div>
+      <div class="flex items-center justify-between py-2">
+        <span class="text-xs font-bold text-slate-600">سود خالص</span>
+        <span class="text-sm font-black {% if net_profit >= 0 %}text-emerald-700{% else %}text-rose-600{% endif %}">
+          {{ net_profit|toman }} <span class="text-[10px] font-normal">تومان</span>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent Enrollments -->
+  <section class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+    <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+      <h3 class="text-xs font-black text-slate-500 tracking-wide">آخرین ثبت‌نام‌ها</h3>
+      <a href="{% url 'academy:course_list' %}" class="text-[10px] font-bold text-blue-600 hover:text-blue-700 transition">همه دوره‌ها ←</a>
+    </div>
+    <div class="divide-y divide-slate-100">
+      {% for enrollment in recent_enrollments %}
+        <div class="px-4 py-2.5 flex items-center justify-between hover:bg-slate-50/60 transition">
+          <div class="min-w-0">
+            <p class="text-xs font-bold text-slate-700 truncate">{{ enrollment.student.first_name }} {{ enrollment.student.last_name }}</p>
+            <p class="text-[10px] text-slate-400 truncate">{{ enrollment.course.title }}</p>
+          </div>
+          <div class="text-left shrink-0 mr-2">
+            <span class="text-[10px] font-bold {% if enrollment.is_fully_paid %}text-emerald-600{% else %}text-amber-600{% endif %}">
+              {% if enrollment.is_fully_paid %}تسویه{% else %}{{ enrollment.paid_amount|toman }}/{{ enrollment.total_amount|toman }}{% endif %}
+            </span>
+          </div>
+        </div>
+      {% empty %}
+        <div class="px-4 py-8 text-center text-xs text-slate-400">هنوز ثبت‌نامی انجام نشده</div>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+
+<!-- ─── Upcoming Sessions ─── -->
+{% if upcoming_sessions %}
+<section class="mb-6">
+  <h3 class="text-xs font-black text-slate-500 mb-3 tracking-wide">جلسات پیش‌رو</h3>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+    {% for session in upcoming_sessions %}
+      <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-base">📅</span>
+          <div>
+            <p class="text-xs font-bold text-slate-700 leading-tight">{{ session.title }}</p>
+            <p class="text-[10px] text-slate-400">{{ session.course.title }}</p>
+          </div>
+        </div>
+        <div class="flex items-center justify-between text-[10px] text-slate-500">
+          <span class="font-mono">{{ session.date|jalali }}</span>
+          {% if session.start_time %}
+            <span class="font-mono">{{ session.start_time|time:'H:i' }}</span>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- ─── Student Summary ─── -->
+<section class="bg-white border border-slate-200 rounded-xl shadow-sm p-4 md:p-5">
+  <div class="flex items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-blue-100/60 text-blue-600 rounded-xl flex items-center justify-center text-lg border border-blue-200/40">🎓</div>
+      <div>
+        <h3 class="text-sm font-black text-slate-700">پایگاه داده هنرجویان</h3>
+        <p class="text-xs text-slate-400">{{ total_students|toman }} نفر ثبت‌نام شده</p>
+      </div>
+    </div>
+    <a href="{% url 'academy:student_list' %}"
+       class="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-4 rounded-lg transition shadow-sm">
+      <span>👥</span> مدیریت هنرجویان
+    </a>
+  </div>
+</section>
+{% endblock %}

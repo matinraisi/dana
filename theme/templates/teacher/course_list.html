@@ -1,0 +1,70 @@
+{% extends "teacher/base.html" %}
+{% load custom_filters %}
+{% block title %}دوره‌های من{% endblock %}
+{% block nav_courses %}bg-indigo-50 text-indigo-700{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-5 text-right">
+  <div class="flex items-center justify-between flex-wrap gap-4">
+    <div>
+      <h1 class="text-lg font-black text-slate-800">دوره‌های من</h1>
+      <p class="text-xs text-slate-500 mt-0.5">مدیریت جلسات، محتوا و هنرجویان دوره‌ها</p>
+    </div>
+  </div>
+
+  {% for course in courses %}
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition" id="sessions">
+    <div class="px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-slate-50">
+      <div class="min-w-0 w-full sm:w-auto">
+        <h2 class="font-black text-slate-800 text-base">{{ course.title }}</h2>
+        <p class="text-xs text-slate-400 mt-0.5">
+          {{ course.code }} &nbsp;•&nbsp; {{ course.student_count|toman }} هنرجو &nbsp;•&nbsp; {{ course.total_sessions|toman }} جلسه
+        </p>
+      </div>
+      <span class="text-xs px-3 py-1 rounded-full font-bold shrink-0
+        {% if course.status == 'active' %}bg-emerald-100 text-emerald-700
+        {% elif course.status == 'completed' %}bg-slate-100 text-slate-500
+        {% else %}bg-blue-100 text-blue-700{% endif %}">
+        {{ course.get_status_display }}
+      </span>
+    </div>
+
+    <div class="px-5 py-3">
+      <div class="flex items-center gap-2 mb-3">
+        <a href="{% url 'teacher:session_list' course.id %}"
+           class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-[10px] font-bold hover:bg-indigo-700 transition">
+          📅 مدیریت جلسات
+        </a>
+        <a href="{% url 'teacher:course_materials' course.id %}"
+           class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-[10px] font-bold hover:bg-blue-700 transition">
+          📂 محتوای دوره
+        </a>
+        <a href="{% url 'teacher:student_list' course.id %}"
+           class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-[10px] font-bold hover:bg-slate-200 transition">
+          👥 هنرجویان
+        </a>
+      </div>
+
+      {% if course.sessions.all %}
+      <div class="flex items-center gap-1.5 flex-wrap">
+        {% for session in course.sessions.all %}
+        <a href="{% url 'teacher:attendance' session.id %}"
+           class="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-[10px] font-bold hover:bg-indigo-100 transition">
+          جلسه {{ session.session_number }}
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="text-[10px] text-slate-400">هنوز جلسه‌ای ایجاد نشده. از «مدیریت جلسات» شروع کنید.</p>
+      {% endif %}
+    </div>
+  </div>
+  {% empty %}
+  <div class="bg-white rounded-2xl p-12 text-center border border-slate-100">
+    <div class="text-5xl mb-4">📚</div>
+    <h3 class="font-black text-slate-700">هیچ دوره‌ای به شما اختصاص نیافته</h3>
+    <p class="text-xs text-slate-400 mt-1">با مدیر آکادمی هماهنگ کنید تا در دوره‌ها ثبت‌نام شوید</p>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

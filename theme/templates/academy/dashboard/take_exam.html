@@ -1,0 +1,168 @@
+{% extends 'academy/dashboard/base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% block content %}
+<div class="p-6 text-right" dir="rtl">
+    <div class="max-w-4xl mx-auto space-y-6">
+
+        <!-- هدر آزمون -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-lg font-black text-slate-800">{{ exam.title }}</h1>
+                    <p class="text-xs text-slate-400 mt-0.5">{{ exam.description|default:'' }}</p>
+                </div>
+                <div class="text-left" id="timer">
+                    <span class="text-2xl font-black font-mono text-blue-600" id="timer-display">
+                        {% if attempt.end_time %}
+                        {{ attempt.duration_seconds|default:"00:00" }}
+                        {% endif %}
+                    </span>
+                    <p class="text-[10px] font-bold text-slate-400 mt-0.5">زمان باقیمانده</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4 mt-4 text-xs text-slate-500">
+                <span>تعداد سوالات: {{ exam.questions.count|toman }}</span>
+                <span>نمره کل: {{ exam.total_score|toman }}</span>
+                <span>زمان: {{ exam.duration_minutes }} دقیقه</span>
+            </div>
+        </div>
+
+        <!-- فرم آزمون -->
+        <form method="POST" id="exam-form" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="attempt_id" value="{{ attempt.id }}">
+
+            {% for question in exam.shuffled_questions %}
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 question-card" data-qid="{{ question.id }}">
+                <div class="flex items-start gap-3">
+                    <span class="text-xs font-bold text-slate-400 mt-0.5 shrink-0">#{{ forloop.counter }}</span>
+                    <div class="flex-1 space-y-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-bold text-slate-800">{{ question.title }}</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{{ question.get_question_type_display }}</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{{ question.points }} نمره</span>
+                        </div>
+
+                        {% if question.question_type == 'multiple_choice' %}
+                            {% for choice in question.shuffled_choices %}
+                            <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30 cursor-pointer transition">
+                                <input type="radio" name="q_{{ question.id }}" value="{{ choice.id }}" required
+                                       class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500">
+                                {% if choice.image %}<img src="{{ choice.image.url }}" alt="" class="w-10 h-10 rounded object-cover">{% endif %}
+                                <span class="text-xs font-medium text-slate-700">{{ choice.text }}</span>
+                            </label>
+                            {% endfor %}
+
+                        {% elif question.question_type == 'multiple_answer' %}
+                            {% for choice in question.shuffled_choices %}
+                            <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:border-purple-200 hover:bg-purple-50/30 cursor-pointer transition">
+                                <input type="checkbox" name="q_{{ question.id }}" value="{{ choice.id }}"
+                                       class="w-4 h-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500">
+                                {% if choice.image %}<img src="{{ choice.image.url }}" alt="" class="w-10 h-10 rounded object-cover">{% endif %}
+                                <span class="text-xs font-medium text-slate-700">{{ choice.text }}</span>
+                            </label>
+                            {% endfor %}
+
+                        {% elif question.question_type == 'true_false' %}
+                            {% for choice in question.shuffled_choices %}
+                            <label class="flex items-center gap-3 p-3 rounded-lg border border-slate-100 hover:border-green-200 hover:bg-green-50/30 cursor-pointer transition">
+                                <input type="radio" name="q_{{ question.id }}" value="{{ choice.id }}" required
+                                       class="w-4 h-4 text-green-600 border-slate-300 focus:ring-green-500">
+                                <span class="text-xs font-medium text-slate-700">{{ choice.text }}</span>
+                            </label>
+                            {% endfor %}
+
+                        {% elif question.question_type == 'short_answer' %}
+                            <input type="text" name="q_{{ question.id }}" required
+                                   placeholder="پاسخ خود را وارد کنید..."
+                                   class="w-full px-3 py-2 text-xs text-slate-800 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 font-medium">
+
+                        {% elif question.question_type == 'essay' %}
+                            <textarea name="q_{{ question.id }}" rows="4"
+                                      placeholder="پاسخ تشریحی خود را بنویسید..."
+                                      class="w-full px-3 py-2 text-xs text-slate-800 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 font-medium"></textarea>
+
+                        {% elif question.question_type == 'fill_blank' %}
+                            <input type="text" name="q_{{ question.id }}" required
+                                   placeholder="پاسخ جای خالی..."
+                                   class="w-full px-3 py-2 text-xs text-slate-800 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 font-medium">
+
+                        {% elif question.question_type == 'matching' %}
+                            <div class="space-y-2">
+                            {% for choice in question.shuffled_choices %}
+                                <div class="flex items-center gap-3">
+                                    <span class="text-xs font-bold text-slate-600 min-w-[100px]">{{ choice.text }}</span>
+                                    <input type="text" name="q_{{ question.id }}_{{ choice.id }}" required
+                                           placeholder="متن جفت شده..."
+                                           class="flex-1 px-3 py-2 text-xs text-slate-800 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 font-medium">
+                                </div>
+                            {% endfor %}
+                            </div>
+
+                        {% elif question.question_type == 'ordering' %}
+                            <div class="space-y-2" data-ordering="{{ question.id }}">
+                            {% for choice in question.shuffled_choices %}
+                                <div class="flex items-center gap-3 p-2 rounded-lg border border-slate-100">
+                                    <span class="text-xs font-bold text-slate-400">🔀</span>
+                                    <span class="text-xs font-medium text-slate-700">{{ choice.text }}</span>
+                                    <input type="hidden" name="q_{{ question.id }}" value="{{ choice.id }}" class="order-input">
+                                </div>
+                            {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <span class="text-xs text-slate-500" id="answered-count">۰ پاسخ داده شده</span>
+                <button type="submit" id="submit-btn"
+                        class="bg-emerald-600 text-white px-8 py-3 rounded-lg text-sm font-bold hover:bg-emerald-700 transition"
+                        onclick="return confirm('پاسخ‌ها ثبت شوند؟ پس از ارسال قابل تغییر نیستند.')">
+                    ارسال پاسخ‌ها
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+{% if attempt.end_time %}
+(function() {
+    const endTime = new Date("{{ attempt.end_time|date:'c' }}").getTime();
+    const timer = document.getElementById('timer-display');
+    function update() {
+        const diff = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+        if (diff <= 0) { timer.textContent = '00:00'; document.getElementById('exam-form').submit(); return; }
+        const m = String(Math.floor(diff / 60)).padStart(2, '0');
+        const s = String(diff % 60).padStart(2, '0');
+        timer.textContent = m + ':' + s;
+        if (diff < 300) timer.style.color = '#dc2626';
+        setTimeout(update, 1000);
+    }
+    update();
+})();
+{% endif %}
+
+(function() {
+    const form = document.getElementById('exam-form');
+    const inputs = form.querySelectorAll('input[name^="q_"], textarea[name^="q_"]');
+    const countEl = document.getElementById('answered-count');
+    function updateCount() {
+        let count = 0;
+        inputs.forEach(inp => {
+            if (inp.type === 'radio' || inp.type === 'checkbox') {
+                if (inp.checked) count++;
+            } else {
+                if (inp.value.trim()) count++;
+            }
+        });
+        countEl.textContent = count + ' پاسخ داده شده';
+    }
+    inputs.forEach(inp => inp.addEventListener('change', updateCount));
+    inputs.forEach(inp => inp.addEventListener('input', updateCount));
+})();
+</script>
+{% endblock %}

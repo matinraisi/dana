@@ -1,0 +1,160 @@
+{% extends "admin/base_site.html" %}
+{% load custom_filters %}
+{% block content %}
+<div class="p-4 md:p-8 bg-slate-950 min-h-screen">
+    <!-- هدر داشبورد -->
+    <div class="mb-8 flex justify-between items-end">
+        <div>
+            <h1 class="text-2xl font-bold text-white">پیشخوان مدیریتی {{ school_title }}</h1>
+            <p class="text-slate-400 text-sm">تحلیل هوشمند وضعیت پروژه‌ها و جریان نقدینگی</p>
+        </div>
+        <div class="text-left">
+            <span class="text-slate-500 text-xs block mb-1 font-mono">آخرین به‌روزرسانی:</span>
+            <span class="bg-slate-900 text-purple-400 border border-purple-500/30 px-3 py-1 rounded-lg text-xs">
+                {% now "Y/m/d H:i" %}
+            </span>
+        </div>
+    </div>
+
+    <!-- بخش اول: ویجت‌های عددی اصلی -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        
+        <!-- ویجت سرنخ‌ها -->
+        <div class="relative overflow-hidden bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-2xl group hover:border-purple-500/50 transition-all">
+            <div class="absolute -right-4 -top-4 w-24 h-24 bg-purple-600/10 rounded-full blur-2xl group-hover:bg-purple-600/20 transition-all"></div>
+            <p class="text-slate-400 text-sm font-medium mb-1">سرنخ‌های جدید (Leads)</p>
+            <div class="flex items-baseline gap-2">
+                <span class="text-4xl font-black text-white">{{ new_leads_count|toman }}</span>
+                <span class="text-purple-400 text-xs">مورد جدید</span>
+            </div>
+            <div class="mt-4 w-full bg-slate-800 h-1 rounded-full overflow-hidden">
+                <div class="bg-purple-500 h-full w-2/3"></div>
+            </div>
+        </div>
+
+        <!-- ویجت درآمد کل -->
+        <div class="relative overflow-hidden bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-2xl group hover:border-emerald-500/50 transition-all">
+            <div class="absolute -right-4 -top-4 w-24 h-24 bg-emerald-600/10 rounded-full blur-2xl group-hover:bg-emerald-600/20 transition-all"></div>
+            <p class="text-slate-400 text-sm font-medium mb-1">درآمد تسویه شده</p>
+            <div class="flex items-baseline gap-2">
+                <span class="text-4xl font-black text-white text-emerald-400">
+                        {{ total_revenue|toman }}
+                    </span>
+                    <span class="text-slate-500 text-[10px]">ریال</span>
+            </div>
+            <div class="flex items-baseline gap-2">
+                <span class="text-3xl font-black text-cyan-400">
+                    {{ avg_profit|floatformat:0|toman }}
+                </span>
+                <span class="text-slate-500 text-[10px]">ریال</span>
+            </div>
+
+            <div class="mt-4 flex items-center gap-2 text-[10px] text-emerald-500 font-bold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+                <span>رشد مثبت مالی</span>
+            </div>
+        </div>
+
+        <!-- ویجت سود خالص میانگین -->
+        <div class="relative overflow-hidden bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-2xl group hover:border-cyan-500/50 transition-all">
+            <div class="absolute -right-4 -top-4 w-24 h-24 bg-cyan-600/10 rounded-full blur-2xl group-hover:bg-cyan-600/20 transition-all"></div>
+            <p class="text-slate-400 text-sm font-medium mb-1">میانگین سود خالص هر پروژه</p>
+            <div class="flex items-baseline gap-2">
+                <span class="text-3xl font-black text-cyan-400">{{ avg_profit|toman }}</span>
+                <span class="text-slate-500 text-[10px]">ریال</span>
+            </div>
+            <div class="mt-4 flex items-center gap-2">
+                <div class="flex -space-x-2">
+                    <div class="w-6 h-6 rounded-full bg-purple-500 border-2 border-slate-900 flex items-center justify-center text-[10px] text-white">S</div>
+                    <div class="w-6 h-6 rounded-full bg-blue-500 border-2 border-slate-900 flex items-center justify-center text-[10px] text-white">D</div>
+                    <div class="w-6 h-6 rounded-full bg-pink-500 border-2 border-slate-900 flex items-center justify-center text-[10px] text-white">G</div>
+                </div>
+                <span class="text-[10px] text-slate-500 mr-2">تحلیل عملکرد تیم</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- بخش دوم: پروژه‌ها و وضعیت عملیاتی -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-2xl group hover:border-amber-500/50">
+            <p class="text-slate-400 text-sm font-medium mb-1">پروژه‌های در جریان</p>
+            <div class="flex items-baseline gap-2">
+                <span class="text-4xl font-black text-white text-amber-400">{{ active_projects_count|toman }}</span>
+                <span class="text-slate-500 text-xs">پروژه فعال</span>
+            </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-2xl group hover:border-indigo-500/50">
+            <p class="text-slate-400 text-sm font-medium mb-1">کل رکورد پروژه‌ها</p>
+            <div class="flex items-baseline gap-2">
+                <span class="text-4xl font-black text-white text-indigo-400">{{ total_projects |toman }}</span>
+            </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-2xl group hover:border-blue-500/50">
+            <p class="text-slate-400 text-sm font-medium mb-1">واحد تجاری</p>
+            <div class="flex items-baseline gap-2">
+                <span class="text-4xl font-black text-white italic">Suntech</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- بخش سوم: نمودار و تسک‌ها -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl">
+            <h3 class="text-lg font-bold text-white border-r-4 border-purple-500 pr-3 mb-8">تحلیل جریان نقدینگی</h3>
+            <div class="w-full h-80">
+                {% if sample_chart %}
+                    <canvas id="adminChart" width="400" height="200" class="w-full h-full"></canvas>
+                    <script>
+                    var ctx = document.getElementById('adminChart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: [{% for l in sample_chart.labels %}'{{ l }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+                            datasets: [{
+                                label: '{{ sample_chart.dataset_label }}',
+                                data: [{% for d in sample_chart.data %}{{ d }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                                borderColor: '#a855f7',
+                                backgroundColor: 'rgba(168,85,247,0.1)',
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        }
+                    });
+                    </script>
+                {% else %}
+                    <div class="h-full flex items-center justify-center">
+                        <p class="text-slate-500 italic text-sm font-mono">No financial data available.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-2xl">
+            <h3 class="text-white font-bold mb-6 flex items-center gap-2">
+                <span class="w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
+                وظایف فوری
+            </h3>
+            <div class="space-y-4">
+                {% for task in urgent_tasks %}
+                <div class="bg-slate-800/40 p-4 rounded-2xl border border-slate-700">
+                    <div class="flex justify-between items-start mb-2">
+                        <p class="text-white font-medium text-sm leading-relaxed">{{ task.title }}</p>
+                        <span class="bg-red-500/10 text-red-400 text-[10px] px-2 py-0.5 rounded-full border border-red-500/20">فوری</span>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px]">
+                        <span class="text-slate-300">مسئول: {{ task.assigned_to.username }}</span>
+                        <span class="text-slate-400 font-mono">{{ task.due_date|date:"Y/m/d" }}</span>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-slate-500 text-center text-xs italic py-10">تسک فوری یافت نشد.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

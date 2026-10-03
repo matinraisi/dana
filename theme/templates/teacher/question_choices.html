@@ -1,0 +1,128 @@
+{% extends 'teacher/base.html' %}
+{% load static %}
+{% block nav_exams %}text-indigo-600 bg-indigo-50 font-black{% endblock %}
+{% block content %}
+<div class="space-y-6 text-right" dir="rtl">
+    <div class="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-6">
+            <div class="min-w-0">
+                <h1 class="text-base font-black text-slate-800">گزینه‌های سوال</h1>
+                <p class="text-xs text-slate-400 mt-0.5 truncate max-w-full">{{ question.title }} | {{ question.get_question_type_display }} | {{ question.points }} نمره</p>
+            </div>
+            <a href="{% url 'teacher:exam_questions' question.exam_id %}" class="text-xs text-slate-500 hover:text-slate-700 transition shrink-0">← بازگشت</a>
+        </div>
+
+        {% if question.question_type == 'short_answer' or question.question_type == 'fill_blank' %}
+        {# ---- FillBlankAnswer management for short_answer / fill_blank ---- #}
+        <div class="bg-slate-50 p-3 md:p-4 rounded-xl border border-slate-200 mb-6">
+            <h2 class="text-xs font-bold text-slate-700 mb-3">➕ پاسخ صحیح جدید</h2>
+            <form method="POST" class="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_fillblank_answer">
+                <div class="flex-1 space-y-1">
+                    <label class="text-[11px] font-bold text-slate-600">پاسخ صحیح *</label>
+                    <input type="text" name="answer_text" required class="w-full px-3 py-2 text-xs text-slate-800 rounded-lg border border-slate-200 focus:outline-none focus:border-indigo-500 font-medium">
+                </div>
+                <div class="flex-1 space-y-1">
+                    <label class="text-[11px] font-bold text-slate-600">سایر پاسخ‌های قابل قبول (هر خط یک پاسخ)</label>
+                    <textarea name="acceptable_alternatives" rows="1" class="w-full px-3 py-2 text-xs text-slate-800 rounded-lg border border-slate-200 focus:outline-none focus:border-indigo-500 font-medium"></textarea>
+                </div>
+                <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-indigo-700 transition w-full sm:w-auto">افزودن</button>
+            </form>
+        </div>
+
+        <div class="space-y-2">
+            {% for fa in fillblank_answers %}
+            <div class="border border-slate-200 rounded-xl p-3 md:p-4 hover:border-slate-300 transition">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+                    <div class="flex-1 min-w-0 w-full sm:w-auto">
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <span class="text-xs font-bold text-slate-800 truncate max-w-full">{{ fa.answer_text }}</span>
+                            {% if fa.acceptable_alternatives %}
+                            <span class="text-[10px] text-slate-400">| سایر: {{ fa.acceptable_alternatives|linebreaksbr }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <form method="POST" onsubmit="return confirm('حذف پاسخ؟')" class="inline w-full sm:w-auto">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete_fillblank_answer">
+                        <input type="hidden" name="fillblank_id" value="{{ fa.id }}">
+                        <button type="submit" class="text-xs px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 font-bold transition w-full sm:w-auto">حذف</button>
+                    </form>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-8 text-slate-400">
+                <p class="text-sm font-bold">پاسخی تعریف نشده</p>
+                <p class="text-xs mt-1">پاسخ صحیح را برای تصحیح خودکار تعریف کنید</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% else %}
+        {# ---- Choice management for multiple_choice, true_false, matching, ordering ---- #}
+        <div class="bg-slate-50 p-3 md:p-4 rounded-xl border border-slate-200 mb-6">
+            <h2 class="text-xs font-bold text-slate-700 mb-3">➕ گزینه جدید</h2>
+            <form method="POST" enctype="multipart/form-data" class="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_choice">
+                <div class="flex-1 space-y-1">
+                    <label class="text-[11px] font-bold text-slate-600">متن گزینه *</label>
+                    <input type="text" name="text" required class="w-full px-3 py-2 text-xs text-slate-800 rounded-lg border border-slate-200 focus:outline-none focus:border-indigo-500 font-medium">
+                </div>
+                <div class="space-y-1 w-full sm:w-auto">
+                    <label class="text-[11px] font-bold text-slate-600">تصویر</label>
+                    <input type="file" name="image" accept="image/*" class="w-full sm:w-auto text-xs text-slate-500 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300">
+                </div>
+                <div class="flex items-center pb-1">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" name="is_correct" class="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                        <span class="text-xs font-bold text-slate-600">گزینه صحیح</span>
+                    </label>
+                </div>
+                <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-indigo-700 transition w-full sm:w-auto">افزودن</button>
+            </form>
+        </div>
+
+        <div class="space-y-2">
+            {% for c in choices %}
+            <div class="border border-slate-200 rounded-xl p-3 md:p-4 hover:border-slate-300 transition">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                    {% if c.image %}
+                    <img src="{{ c.image.url }}" alt="" class="w-10 h-10 md:w-12 md:h-12 rounded-lg object-cover border border-slate-100 shrink-0">
+                    {% endif %}
+                    <div class="flex-1 min-w-0 w-full sm:w-auto">
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <span class="text-xs font-bold text-slate-800 truncate max-w-full">{{ c.text }}</span>
+                            {% if c.is_correct %}
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold shrink-0">✓ صحیح</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <form method="POST" class="inline flex-1 sm:flex-none">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="set_correct">
+                            <input type="hidden" name="choice_id" value="{{ c.id }}">
+                            <button type="submit" class="text-xs px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold transition w-full sm:w-auto">تنظیم صحیح</button>
+                        </form>
+                        <form method="POST" class="inline flex-1 sm:flex-none" onsubmit="return confirm('حذف گزینه؟')">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete_choice">
+                            <input type="hidden" name="choice_id" value="{{ c.id }}">
+                            <button type="submit" class="text-xs px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 font-bold transition w-full sm:w-auto">حذف</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-12 text-slate-400">
+                <p class="text-sm font-bold">هیچ گزینه‌ای تعریف نشده</p>
+                <p class="text-xs mt-1">برای سوالات چند گزینه‌ای، جورکردنی و ترتیب‌دار باید گزینه تعریف کنید</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

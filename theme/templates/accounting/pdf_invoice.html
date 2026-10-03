@@ -1,0 +1,55 @@
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page { size: A4; margin: 1cm; }
+        body { font-family: "DejaVu Sans", sans-serif; direction: rtl; text-align: right; }
+        .header { border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 20px; }
+        .invoice-box { max-width: 800px; margin: auto; }
+        table { width: 100%; line-height: inherit; text-align: right; border-collapse: collapse; }
+        table td { padding: 5px; vertical-align: top; border: 1px solid #eee; }
+        .heading { background: #f8f9fa; font-weight: bold; }
+        .total { font-weight: bold; background: #eee; }
+        
+        /* فراخوانی فونت آنلاین بدون نیاز به ذخیره فایل در پروژه */
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap');
+        
+        /* بقیه استایل‌ها */
+
+    </style>
+</head>
+<body>
+    <div class="invoice-box">
+        <div class="header">
+            <table>
+                <tr>
+                    <td><h2>{{ title }}</h2></td>
+                    <td>واحد تجاری: {{ unit_name }}<br>تاریخ: {{ invoice.created_at|date:"Y/m/d" }}</td>
+                </tr>
+            </table>
+        </div>
+        <table>
+            <tr class="heading">
+                <td>شرح خدمات</td>
+                <td>تعداد</td>
+                <td>قیمت واحد</td>
+                <td>جمع کل</td>
+            </tr>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.desc }}</td>
+                <td>{{ item.qty }}</td>
+                <td>{{ item.price|toman }}</td>
+                <td>{{ item.total|toman }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="total">
+                <td colspan="3">مبلغ قابل پرداخت:</td>
+                <td>{{ invoice.total_amount|toman }} ریال</td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

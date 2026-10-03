@@ -1,0 +1,135 @@
+{% extends "academy/dashboard/base.html" %}
+{% load custom_filters %}
+
+{% block title %}{{ school_title }} | پرداخت به مدرسین{% endblock %}
+{% block nav_accounting %}active{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-lg font-black text-slate-800">پرداخت به مدرسین</h1>
+    <p class="text-xs text-slate-400 mt-1">تاریخچه و مدیریت پرداخت‌ها به اساتید</p>
+  </div>
+  <a href="{% url 'academy:accounting_create' %}"
+     class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 px-4 rounded-lg transition shadow-sm">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+    ثبت پرداخت جدید
+  </a>
+</div>
+
+<!-- ═══ خلاصه آماری ═══ -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+  <div class="bg-amber-50 border border-amber-100 rounded-xl p-5">
+    <div class="flex items-center justify-between mb-2">
+      <p class="text-[10px] font-bold text-amber-600">مجموع کل پرداخت‌ها</p>
+      <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4l6-6m0 0l-6-6m6 6H9"/></svg>
+      </div>
+    </div>
+    <p class="text-xl font-black text-amber-700">{{ total|toman }}</p>
+    <p class="text-[10px] text-amber-500 mt-1">تومان</p>
+  </div>
+
+  <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-5">
+    <div class="flex items-center justify-between mb-2">
+      <p class="text-[10px] font-bold text-indigo-600">پرداخت ماه جاری</p>
+      <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
+      </div>
+    </div>
+    <p class="text-xl font-black text-indigo-700">{{ month_total|toman }}</p>
+    <p class="text-[10px] text-indigo-500 mt-1">تومان</p>
+  </div>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-xl p-5">
+    <div class="flex items-center justify-between mb-2">
+      <p class="text-[10px] font-bold text-slate-500">تعداد تراکنش‌ها</p>
+      <div class="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      </div>
+    </div>
+    <p class="text-xl font-black text-slate-700">{{ payout_count }}</p>
+    <p class="text-[10px] text-slate-400 mt-1">مورد</p>
+  </div>
+</div>
+
+<!-- ═══ خلاصه به تفکیک مدرس ═══ -->
+{% if by_teacher %}
+<div class="bg-white border border-slate-200 rounded-xl p-5 mb-6">
+  <h3 class="text-sm font-black text-slate-700 mb-4">خلاصه پرداخت به تفکیک مدرس</h3>
+  <div class="space-y-3">
+    {% for item in by_teacher %}
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+          <svg class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+        </div>
+        <div>
+          <p class="text-xs font-bold text-slate-700">{{ item.teacher__first_name }} {{ item.teacher__last_name|default:item.teacher__username }}</p>
+          <p class="text-[10px] text-slate-400">{{ item.tx_count }} تراکنش</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
+          <div class="h-full bg-amber-400 rounded-full" style="width: {% widthratio item.total_paid total 100 %}%"></div>
+        </div>
+        <span class="text-xs font-bold font-mono text-amber-600 min-w-[90px] text-left">{{ item.total_paid|toman }}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- ═══ لیست تراکنش‌ها ═══ -->
+<div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+  <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+    <h3 class="text-sm font-black text-slate-700">لیست پرداخت‌ها</h3>
+    <span class="text-[10px] text-slate-400">{{ payout_count }} تراکنش</span>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead>
+        <tr class="bg-slate-50 border-b border-slate-200">
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">تاریخ</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">مدرس</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">دوره</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">مبلغ</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">روش</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">توضیح</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for p in payouts %}
+        <tr class="hover:bg-slate-50/50 transition">
+          <td class="px-4 py-3 text-[11px] font-mono text-slate-500">{{ p.transaction_date|jalali }}</td>
+          <td class="px-4 py-3">
+            <p class="text-xs font-bold text-slate-700">{{ p.teacher.get_full_name|default:p.teacher.username|default:"—" }}</p>
+          </td>
+          <td class="px-4 py-3 text-xs text-slate-500">{{ p.course.title|default:"—" }}</td>
+          <td class="px-4 py-3">
+            <span class="text-xs font-bold font-mono text-amber-600">{{ p.amount|toman }}</span>
+            <span class="text-[9px] text-slate-400 mr-0.5">تومان</span>
+          </td>
+          <td class="px-4 py-3 text-[11px] text-slate-500">{{ p.get_payment_method_display|default:"—" }}</td>
+          <td class="px-4 py-3 text-[11px] text-slate-400 max-w-[200px] truncate">{{ p.description|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="px-4 py-12 text-center">
+            <div class="flex flex-col items-center gap-3">
+              <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center">
+                <svg class="w-6 h-6 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4l6-6m0 0l-6-6m6 6H9"/></svg>
+              </div>
+              <p class="text-sm font-bold text-slate-400">هنوز پرداختی ثبت نشده</p>
+              <a href="{% url 'academy:accounting_create' %}" class="text-xs font-bold text-indigo-600 hover:text-indigo-700">+ ثبت اولین پرداخت</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

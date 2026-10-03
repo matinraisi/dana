@@ -1,0 +1,93 @@
+{% extends 'teacher/base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% block nav_exams %}text-indigo-600 bg-indigo-50 font-black{% endblock %}
+{% block content %}
+<div class="space-y-6 text-right" dir="rtl">
+    <div class="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-6">
+            <div class="min-w-0">
+                <h1 class="text-base font-black text-slate-800">جزئیات تلاش</h1>
+                <p class="text-xs text-slate-400 mt-0.5 truncate max-w-full">{{ attempt.exam.title }} — {{ attempt.student.full_name }}</p>
+            </div>
+            <a href="{% url 'teacher:exam_results' attempt.exam_id %}" class="text-xs text-slate-500 hover:text-slate-700 transition shrink-0">← بازگشت</a>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-200">
+                <span class="text-lg font-black text-slate-700">{{ attempt.start_time|jalali }}</span>
+                <p class="text-[10px] font-bold text-slate-500 mt-1">شروع</p>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-200">
+                <span class="text-lg font-black text-slate-700">{{ attempt.end_time|jalali|default:'—' }}</span>
+                <p class="text-[10px] font-bold text-slate-500 mt-1">پایان</p>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-200">
+                <span class="text-lg font-black {% if attempt.status == 'graded' %}{% if attempt.is_passed %}text-emerald-600{% else %}text-red-600{% endif %}{% else %}text-slate-700{% endif %}">
+                    {{ attempt.score|default:'—' }}/{{ attempt.exam.total_score|toman }}
+                </span>
+                <p class="text-[10px] font-bold text-slate-500 mt-1">نمره</p>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-200">
+                <span class="text-lg font-black text-slate-700">{{ attempt.duration_seconds|default:'—' }}</span>
+                <p class="text-[10px] font-bold text-slate-500 mt-1">مدت (ثانیه)</p>
+            </div>
+        </div>
+
+        <form method="POST" id="grade-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="grade_essay">
+            <input type="hidden" name="attempt_id" value="{{ attempt.id }}">
+
+            <div class="space-y-4">
+                {% for answer in answers %}
+                <div class="border border-slate-200 rounded-xl p-4 hover:border-slate-300 transition">
+                    <div class="flex items-start gap-3">
+                        <span class="text-xs font-bold text-slate-400 mt-0.5 shrink-0">#{{ answer.question.order }}</span>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-sm font-bold text-slate-800">{{ answer.question.title }}</span>
+                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{{ answer.question.get_question_type_display }}</span>
+                                {% if answer.question.question_type == 'essay' and answer.score == None %}
+                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-red-50 text-red-700 font-bold">نیاز به تصحیح</span>
+                                {% else %}
+                                <span class="text-[10px] px-2 py-0.5 rounded-full
+                                    {% if answer.score != None %}bg-emerald-50 text-emerald-700{% else %}bg-amber-50 text-amber-700{% endif %}">
+                                    {% if answer.score != None %}{{ answer.score|toman }}/{{ answer.question.points }}{% else %}تصحیح نشده{% endif %}
+                                </span>
+                                {% endif %}
+                            </div>
+                            <p class="text-xs text-slate-600">پاسخ: <span class="font-bold">{{ answer.text_answer|default:'پاسخی ثبت نشده' }}</span></p>
+
+                            {% if answer.question.question_type == 'essay' %}
+                            <div class="mt-3 flex items-center gap-3">
+                                <label class="text-[11px] font-bold text-slate-600">نمره:</label>
+                                <input type="number" name="score_{{ answer.id }}" value="{{ answer.score|default:'' }}"
+                                       min="0" max="{{ answer.question.points }}" step="0.5"
+                                       class="w-24 px-3 py-1.5 text-xs text-slate-800 rounded-lg border border-slate-200 focus:outline-none focus:border-indigo-500 font-medium text-left"
+                                       {% if answer.score != None %}readonly{% endif %}>
+                                <span class="text-[11px] text-slate-400">از {{ answer.question.points }}</span>
+                                {% if answer.score == None %}
+                                <button type="submit" class="text-xs px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold transition">ثبت نمره</button>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+
+                            {% if answer.graded_by %}
+                            <p class="text-[10px] text-slate-400 mt-1">تصحیح شده توسط: {{ answer.graded_by.get_full_name|default:answer.graded_by.username }} در {{ answer.graded_at|jalali }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-8 text-slate-400"><p class="text-sm font-bold">هیچ پاسخی ثبت نشده</p></div>
+                {% endfor %}
+            </div>
+
+            <div class="mt-6 flex gap-3">
+                <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg text-xs font-bold hover:bg-indigo-700 transition">ذخیره همه نمرات</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

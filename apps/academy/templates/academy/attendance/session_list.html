@@ -1,0 +1,90 @@
+{% extends 'academy/dashboard/base.html' %}
+{% block title %}جلسات دوره {{ course.title }}{% endblock %}
+{% block content %}
+<div class="p-6" dir="rtl">
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-800">جلسات دوره</h1>
+      <p class="text-gray-500 mt-1">{{ course.title }} — {{ course.code }}</p>
+    </div>
+    <a href="{% url 'academy:course_list' %}" class="text-sm text-gray-500 hover:text-gray-700">← بازگشت به دوره‌ها</a>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="mb-4 p-3 rounded-lg text-sm {% if message.tags == 'success' %}bg-green-50 text-green-700{% elif message.tags == 'error' %}bg-red-50 text-red-700{% else %}bg-blue-50 text-blue-700{% endif %}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- فرم افزودن جلسه -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+      <h2 class="text-base font-semibold text-gray-800 mb-4">افزودن جلسه جدید</h2>
+      <form method="post" action="{% url 'academy:session_create' course.id %}">
+        {% csrf_token %}
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">عنوان جلسه</label>
+            <input type="text" name="title" placeholder="جلسه {{ course.total_sessions|add:1 }}"
+                   class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">تاریخ برگزاری <span class="text-red-500">*</span></label>
+            <input type="date" name="date" required
+                   class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">ساعت شروع</label>
+              <input type="time" name="start_time"
+                     class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">ساعت پایان</label>
+              <input type="time" name="end_time"
+                     class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300">
+            </div>
+          </div>
+          <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2.5 rounded-xl transition">
+            ثبت جلسه
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- لیست جلسات -->
+    <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h2 class="text-base font-semibold text-gray-800">لیست جلسات ({{ sessions.count }} جلسه)</h2>
+        <a href="{% url 'academy:course_attendance_summary' course.id %}"
+           class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg transition">
+          گزارش کلی حضور
+        </a>
+      </div>
+      {% if sessions %}
+        <div class="divide-y divide-gray-50">
+          {% for session in sessions %}
+          <div class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 font-bold text-sm">
+                {{ session.session_number }}
+              </div>
+              <div>
+                <p class="text-sm font-medium text-gray-800">{{ session.title }}</p>
+                <p class="text-xs text-gray-400 mt-0.5">{{ session.date }} {% if session.start_time %}— {{ session.start_time }}{% endif %}</p>
+              </div>
+            </div>
+            <a href="{% url 'academy:attendance_sheet' session.id %}"
+               class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg transition">
+              ثبت حضور
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="px-6 py-16 text-center text-gray-400 text-sm">هنوز جلسه‌ای ثبت نشده است.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

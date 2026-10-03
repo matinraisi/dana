@@ -1,0 +1,361 @@
+{% extends "academy/dashboard/base.html" %}
+
+{% block title %}{{ school_title }} | ثبت تراکنش{% endblock %}
+{% block nav_accounting %}active{% endblock %}
+
+{% block content %}
+<style>
+  .input-wrap{position:relative}
+  .input-wrap .ico{
+    position:absolute;right:12px;top:50%;transform:translateY(-50%);
+    color:#cbd5e1;pointer-events:none;transition:color .2s;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .input-wrap input:focus ~ .ico{color:#818cf8}
+  .input-wrap input{padding-right:40px}
+</style>
+<!-- Header -->
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-lg font-black text-slate-800">ثبت تراکنش جدید</h1>
+    <p class="text-xs text-slate-400 mt-1">اطلاعات تراکنش مالی را وارد کنید</p>
+  </div>
+  <a href="{% url 'academy:accounting_transactions' %}"
+     class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 transition">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+    بازگشت به لیست
+  </a>
+</div>
+
+{% if messages %}
+<div class="mb-5 space-y-2">
+  {% for message in messages %}
+    <div class="px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-2
+      {% if message.tags == 'success' %}bg-emerald-50 text-emerald-600 border border-emerald-100
+      {% elif message.tags == 'error' %}bg-red-50 text-red-600 border border-red-100
+      {% else %}bg-indigo-50 text-indigo-600 border border-indigo-100{% endif %}">
+      {% if message.tags == 'error' %}
+      <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+      {% endif %}
+      {{ message }}
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<form method="post" id="txForm">
+  {% csrf_token %}
+
+  <!-- ═══ بخش ۱: اطلاعات اصلی ═══ -->
+  <div class="bg-white border border-slate-200 rounded-xl p-6 mb-5">
+    <h3 class="text-sm font-black text-slate-700 mb-5 flex items-center gap-2">
+      <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      اطلاعات اصلی
+    </h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+
+      <!-- نوع تراکنش -->
+      <div class="sm:col-span-3">
+        <label class="block text-xs font-bold text-slate-600 mb-2">نوع تراکنش <span class="text-red-400">*</span></label>
+        <div class="flex gap-3 flex-wrap">
+          <label class="flex items-center gap-2 px-4 py-3 rounded-xl border-2 border-slate-200 cursor-pointer hover:border-indigo-300 transition-all duration-200 has-[:checked]:bg-indigo-50 has-[:checked]:border-indigo-400 has-[:checked]:shadow-sm">
+            <input type="radio" name="transaction_type" value="income" required
+                   class="text-indigo-600 focus:ring-indigo-500" onchange="toggleFields()">
+            <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span class="text-xs font-bold text-slate-700">درآمد</span>
+          </label>
+          <label class="flex items-center gap-2 px-4 py-3 rounded-xl border-2 border-slate-200 cursor-pointer hover:border-rose-300 transition-all duration-200 has-[:checked]:bg-rose-50 has-[:checked]:border-rose-400 has-[:checked]:shadow-sm">
+            <input type="radio" name="transaction_type" value="expense" required
+                   class="text-rose-600 focus:ring-rose-500" onchange="toggleFields()">
+            <svg class="w-4 h-4 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>
+            <span class="text-xs font-bold text-slate-700">هزینه</span>
+          </label>
+          <label class="flex items-center gap-2 px-4 py-3 rounded-xl border-2 border-slate-200 cursor-pointer hover:border-amber-300 transition-all duration-200 has-[:checked]:bg-amber-50 has-[:checked]:border-amber-400 has-[:checked]:shadow-sm">
+            <input type="radio" name="transaction_type" value="teacher_payout" required
+                   class="text-amber-600 focus:ring-amber-500" onchange="toggleFields()">
+            <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.268-6.657c.672.105 1.34.166 2.011.166a48.554 48.554 0 018.178 0c.672 0 1.34-.061 2.011-.166a50.57 50.57 0 00-2.268 6.657m-15.482 0A50.672 50.672 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5"/></svg>
+            <span class="text-xs font-bold text-slate-700">پرداخت به مدرس</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- مبلغ -->
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-2">مبلغ (تومان) <span class="text-red-400">*</span></label>
+        <div class="input-wrap">
+          <input type="text" name="amount" id="amount-input" inputmode="numeric" required
+                 class="currency-input w-full border-2 border-slate-200 rounded-xl px-4 py-3.5 pr-10 text-sm font-mono text-slate-800 placeholder-slate-300 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition bg-white text-left"
+                 dir="ltr" placeholder="مبلغ را وارد کنید">
+          <div class="ico">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- تاریخ -->
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-2">تاریخ تراکنش (شمسی) <span class="text-red-400">*</span></label>
+        <input type="text" name="transaction_date" required
+               value="{{ today_jalali }}"
+               placeholder="۱۴۰۵/۰۴/۰۱" pattern="\d{4}/\d{1,2}/\d{1,2}"
+               class="w-full border-2 border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition bg-white font-mono"
+               dir="ltr">
+      </div>
+
+      <!-- روش پرداخت -->
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-2">روش پرداخت</label>
+        <select name="payment_method"
+                class="w-full border-2 border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-800 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition bg-white">
+          <option value="cash">نقدی</option>
+          <option value="pos">کارت‌خوان</option>
+          <option value="gateway">درگاه آنلاین</option>
+          <option value="bank">حواله / پایا</option>
+          <option value="check">چک</option>
+          <option value="installment">قسط</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ بخش ۲: اطلاعات مرتبط ═══ -->
+  <div class="bg-white border border-slate-200 rounded-xl p-6 mb-5">
+    <h3 class="text-sm font-black text-slate-700 mb-5 flex items-center gap-2">
+      <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+      اطلاعات مرتبط
+    </h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+
+      <!-- درگاه / حساب -->
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-2">درگاه / حساب مالی</label>
+        <select name="payment_gateway"
+                class="w-full border-2 border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-800 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition bg-white">
+          <option value="">انتخاب کنید</option>
+          {% for g in gateways %}
+          <option value="{{ g.id }}">{{ g.name }}{% if g.card_number %} — {{ g.card_number }}{% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- ۴ رقم آخر کارت -->
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-2">۴ رقم آخر کارت</label>
+        <input type="text" name="card_number" maxlength="4" dir="ltr"
+               class="w-full border-2 border-slate-200 rounded-xl px-4 py-3.5 text-sm font-mono text-slate-800 placeholder-slate-300 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition bg-white text-center tracking-widest"
+               placeholder="۱۲۳۴">
+      </div>
+
+      <!-- دوره -->
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-2">دوره مرتبط</label>
+        <div class="relative">
+          <input type="text" id="course-search" placeholder="جستجوی دوره..."
+                 class="w-full border-2 border-slate-200 rounded-xl px-4 py-3.5 pr-10 text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition bg-white"
+                 autocomplete="off">
+          <div class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </div>
+          <input type="hidden" name="course" id="course-id">
+          <div id="course-dropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50">
+            {% for c in courses %}
+            <div class="course-option px-4 py-2.5 text-sm text-slate-700 hover:bg-indigo-50 cursor-pointer transition"
+                 data-id="{{ c.id }}" data-title="{{ c.title }} ({{ c.code }})">
+              <span class="font-bold">{{ c.title }}</span>
+              <span class="text-[10px] text-slate-400 mr-1">({{ c.code }})</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- هنرجو -->
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-2">هنرجو</label>
+        <div class="relative">
+          <input type="text" id="student-search" placeholder="جستجوی نام یا شماره..."
+                 class="w-full border-2 border-slate-200 rounded-xl px-4 py-3.5 pr-10 text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition bg-white"
+                 autocomplete="off">
+          <div class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </div>
+          <input type="hidden" name="student" id="student-id">
+          <div id="student-dropdown" class="hidden absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-48 overflow-y-auto z-50">
+            {% for s in students %}
+            <div class="student-option px-4 py-2.5 text-sm text-slate-700 hover:bg-indigo-50 cursor-pointer transition"
+                 data-id="{{ s.id }}" data-title="{{ s.full_name }} — {{ s.phone_number }}">
+              <span class="font-bold">{{ s.full_name }}</span>
+              <span class="text-[10px] text-slate-400 mr-1">({{ s.phone_number }})</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- دسته هزینه (فقط برای هزینه) -->
+      <div id="expense-category-field" class="hidden">
+        <label class="block text-xs font-bold text-slate-600 mb-2">دسته هزینه</label>
+        <select name="expense_category"
+                class="w-full border-2 border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-800 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition bg-white">
+          <option value="">بدون دسته</option>
+          {% for cat in categories %}
+          <option value="{{ cat.id }}">{{ cat.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- مدرس (فقط برای پرداخت به مدرس) -->
+      <div id="teacher-field" class="hidden">
+        <label class="block text-xs font-bold text-slate-600 mb-2">مدرس</label>
+        <select name="teacher"
+                class="w-full border-2 border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-800 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition bg-white">
+          <option value="">انتخاب مدرس</option>
+          {% for t in teachers %}
+          <option value="{{ t.id }}">{{ t.get_full_name|default:t.username }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- شماره رسید -->
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-2">شماره رسید / فیش</label>
+        <input type="text" name="receipt_number"
+               class="w-full border-2 border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition bg-white"
+               placeholder="اختیاری">
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ بخش ۳: توضیحات ═══ -->
+  <div class="bg-white border border-slate-200 rounded-xl p-6 mb-5">
+    <h3 class="text-sm font-black text-slate-700 mb-5 flex items-center gap-2">
+      <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+      توضیحات
+    </h3>
+    <textarea name="description" rows="3"
+              class="w-full border-2 border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition bg-white resize-none"
+              placeholder="توضیحات تکمیلی تراکنش..."></textarea>
+  </div>
+
+  <!-- ═══ دکمه‌ها ═══ -->
+  <div class="flex items-center gap-3">
+    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl text-sm font-bold transition shadow-sm">
+      ثبت تراکنش
+    </button>
+    <a href="{% url 'academy:accounting_transactions' %}" class="text-sm text-slate-500 hover:text-slate-700 transition py-3">
+      انصراف
+    </a>
+  </div>
+</form>
+
+<script>
+// ─── جداکننده هزارگان ───
+function formatNumber(num) {
+    if (!num || num === '0') return '';
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+function parseNumber(str) {
+    return str.replace(/,/g, '');
+}
+
+// ─── نمایش/مخفی کردن فیلدها بر اساس نوع ───
+function toggleFields() {
+    var val = document.querySelector('input[name="transaction_type"]:checked');
+    var catField = document.getElementById('expense-category-field');
+    var teacherField = document.getElementById('teacher-field');
+    if (val) {
+        catField.classList.toggle('hidden', val.value !== 'expense');
+        teacherField.classList.toggle('hidden', val.value !== 'teacher_payout');
+    }
+}
+
+// ─── جستجوی دوره ───
+var courseSearch = document.getElementById('course-search');
+var courseDropdown = document.getElementById('course-dropdown');
+var courseIdInput = document.getElementById('course-id');
+var courseOptions = courseDropdown.querySelectorAll('.course-option');
+
+courseSearch.addEventListener('input', function() {
+    var query = this.value.toLowerCase();
+    courseIdInput.value = '';
+    courseOptions.forEach(function(opt) {
+        var title = opt.dataset.title.toLowerCase();
+        opt.style.display = title.includes(query) ? 'block' : 'none';
+    });
+    courseDropdown.classList.remove('hidden');
+    if (query.length === 0) {
+        courseIdInput.value = '';
+    }
+});
+
+courseSearch.addEventListener('focus', function() {
+    courseDropdown.classList.remove('hidden');
+});
+
+courseOptions.forEach(function(opt) {
+    opt.addEventListener('click', function() {
+        courseSearch.value = this.dataset.title;
+        courseIdInput.value = this.dataset.id;
+        courseDropdown.classList.add('hidden');
+    });
+});
+
+// ─── جستجوی هنرجو ───
+var studentSearch = document.getElementById('student-search');
+var studentDropdown = document.getElementById('student-dropdown');
+var studentIdInput = document.getElementById('student-id');
+var studentOptions = studentDropdown.querySelectorAll('.student-option');
+
+studentSearch.addEventListener('input', function() {
+    var query = this.value.toLowerCase();
+    studentIdInput.value = '';
+    studentOptions.forEach(function(opt) {
+        var title = opt.dataset.title.toLowerCase();
+        opt.style.display = title.includes(query) ? 'block' : 'none';
+    });
+    studentDropdown.classList.remove('hidden');
+    if (query.length === 0) {
+        studentIdInput.value = '';
+    }
+});
+
+studentSearch.addEventListener('focus', function() {
+    studentDropdown.classList.remove('hidden');
+});
+
+studentOptions.forEach(function(opt) {
+    opt.addEventListener('click', function() {
+        studentSearch.value = this.dataset.title;
+        studentIdInput.value = this.dataset.id;
+        studentDropdown.classList.add('hidden');
+    });
+});
+
+// ─── بستن dropdown با کلیک بیرون ───
+document.addEventListener('click', function(e) {
+    if (!courseSearch.contains(e.target) && !courseDropdown.contains(e.target)) {
+        courseDropdown.classList.add('hidden');
+    }
+    if (!studentSearch.contains(e.target) && !studentDropdown.contains(e.target)) {
+        studentDropdown.classList.add('hidden');
+    }
+});
+
+// ─── فرمت عددی + پاکسازی قبل از ارسال ───
+document.addEventListener('DOMContentLoaded', function() {
+    var amountInput = document.getElementById('amount-input');
+    amountInput.addEventListener('input', function() {
+        var raw = parseNumber(this.value);
+        if (/^\d*$/.test(raw)) {
+            this.value = formatNumber(raw);
+        }
+    });
+
+    document.getElementById('txForm').addEventListener('submit', function() {
+        amountInput.value = parseNumber(amountInput.value);
+    });
+
+    toggleFields();
+});
+</script>
+{% endblock %}

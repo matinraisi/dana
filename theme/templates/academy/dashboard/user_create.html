@@ -1,0 +1,164 @@
+{% extends "academy/dashboard/base.html" %}
+{% block title %}کاربر جدید{% endblock %}
+
+{% block content %}
+<div class="flex items-center gap-3 mb-5">
+  <a href="{% url 'academy:user_list' %}" class="text-slate-400 hover:text-slate-700 transition">←</a>
+  <h1 class="text-lg font-black text-slate-800">ساخت کاربر جدید</h1>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 max-w-2xl">
+  <form method="post" id="user-form">
+    {% csrf_token %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-1">نقش کاربری *</label>
+        <select name="role" id="role-select" onchange="toggleRoleFields()"
+                class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-indigo-400 transition bg-white text-slate-800">
+          {% for val, label in role_choices %}
+          <option value="{{ val }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-1">شماره موبایل *</label>
+        <input type="tel" name="phone_number" required maxlength="11"
+               class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-mono focus:outline-none focus:border-indigo-400 transition bg-white text-slate-800"
+               placeholder="09xxxxxxxxx" dir="ltr">
+        <p class="text-xs text-slate-400 mt-1">این شماره برای ورود OTP استفاده می‌شود</p>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-1">نام</label>
+        <input type="text" name="first_name"
+               class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-indigo-400 transition bg-white text-slate-800"
+               placeholder="نام">
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-1">نام خانوادگی</label>
+        <input type="text" name="last_name"
+               class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-indigo-400 transition bg-white text-slate-800"
+               placeholder="نام خانوادگی">
+      </div>
+
+      <div class="sm:col-span-2">
+        <label class="block text-xs font-bold text-slate-600 mb-1">نام کاربری</label>
+        <input type="text" name="username"
+               class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-mono focus:outline-none focus:border-indigo-400 transition bg-white text-slate-800"
+               placeholder="خالی بگذارید تا خودکار ساخته شود" dir="ltr">
+      </div>
+
+      <!-- فیلدهای مخصوص استاد -->
+      <div id="teacher-fields" class="sm:col-span-2 hidden">
+        <div class="border border-indigo-100 rounded-xl p-4 bg-indigo-50 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="sm:col-span-2">
+            <p class="text-xs font-black text-indigo-700 mb-3">⚡ اطلاعات استاد</p>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">تخصص</label>
+            <input type="text" name="specialization"
+                   class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-indigo-400 transition bg-white text-slate-800"
+                   placeholder="مثلاً: هوش مصنوعی، پایتون">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">دستمزد هر جلسه (تومان)</label>
+            <input type="text" name="salary_per_session" inputmode="numeric" id="salary_per_session"
+                   class="currency-input w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-indigo-400 transition bg-white text-slate-800 font-mono text-left"
+                   placeholder="مثلاً: 1,500,000" dir="ltr" oninput="calcSalary()">
+            <p class="text-[10px] text-slate-400 mt-1">هر جلسه ۱.۵ ساعت — <span id="hourly_rate" class="font-bold text-indigo-600">-</span> تومان/ساعت</p>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">شماره کارت بانکی</label>
+            <input type="text" name="card_number" maxlength="16" dir="ltr"
+                   class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-mono focus:outline-none focus:border-indigo-400 transition bg-white text-slate-800"
+                   placeholder="xxxx-xxxx-xxxx-xxxx">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">شماره شبا</label>
+            <input type="text" name="shaba_number" maxlength="24" dir="ltr"
+                   class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-mono focus:outline-none focus:border-indigo-400 transition bg-white text-slate-800"
+                   placeholder="IRxxxxxxxxxxxxxxxxxxxxxxxx">
+          </div>
+        </div>
+      </div>
+
+      <!-- فیلدهای مخصوص هنرجو -->
+      <div id="student-fields" class="sm:col-span-2 hidden">
+        <div class="border border-emerald-100 rounded-xl p-4 bg-emerald-50">
+          <p class="text-xs font-black text-emerald-700 mb-3">🎓 اتصال به پرونده هنرجو</p>
+          <label class="block text-xs font-bold text-slate-600 mb-1">هنرجوی مرتبط (اختیاری)</label>
+          <select name="enrollment_id"
+                  class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-400 transition bg-white text-slate-800">
+            <option value="">— بدون اتصال به پرونده —</option>
+            {% for s in students_without_account %}
+            <option value="{{ s.id }}">{{ s.full_name }} — {{ s.phone_number }}</option>
+            {% endfor %}
+          </select>
+          <p class="text-xs text-emerald-600 mt-1">فقط هنرجویانی که هنوز حساب کاربری ندارند نشان داده می‌شوند</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="flex gap-3 mt-6">
+      <button type="submit"
+              class="px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition">
+        ✅ ساخت کاربر
+      </button>
+      <a href="{% url 'academy:user_list' %}"
+         class="px-6 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200 transition">
+        انصراف
+      </a>
+    </div>
+  </form>
+</div>
+
+<script>
+// جداکننده هزارگان
+function formatNumber(num) {
+    if (!num || num === '0') return '';
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function parseNumber(str) {
+    return str.replace(/,/g, '');
+}
+
+function toggleRoleFields() {
+  const role = document.getElementById('role-select').value;
+  document.getElementById('teacher-fields').classList.toggle('hidden', role !== 'TEACHER');
+  document.getElementById('student-fields').classList.toggle('hidden', role !== 'STUDENT');
+}
+
+function calcSalary() {
+  const raw = parseNumber(document.getElementById('salary_per_session').value);
+  const val = parseInt(raw) || 0;
+  const hourly = Math.round(val / 1.5);
+  document.getElementById('hourly_rate').textContent = hourly ? formatNumber(hourly) : '-';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.currency-input').forEach(function(input) {
+        input.addEventListener('input', function() {
+            var raw = parseNumber(this.value);
+            if (/^\d*$/.test(raw)) {
+                this.value = formatNumber(raw);
+            }
+        });
+    });
+
+    document.querySelectorAll('form').forEach(function(form) {
+        form.addEventListener('submit', function() {
+            form.querySelectorAll('.currency-input').forEach(function(input) {
+                input.value = parseNumber(input.value);
+            });
+        });
+    });
+});
+
+toggleRoleFields();
+</script>
+{% endblock %}

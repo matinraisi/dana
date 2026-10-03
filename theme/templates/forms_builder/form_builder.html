@@ -1,0 +1,102 @@
+{% extends "academy/dashboard/base.html" %}
+{% block title %}فرم‌ساز — {{ form_obj.title }}{% endblock %}
+
+{% block content %}
+<div class="flex items-center gap-3 mb-5">
+  <a href="{% url 'forms_builder:form_list' %}" class="text-slate-400 hover:text-slate-700 transition">←</a>
+  <div class="flex-1">
+    <h1 class="text-lg font-black text-slate-800">{{ form_obj.title }}</h1>
+    <p class="text-xs text-slate-400">شناسه: /forms/f/{{ form_obj.slug }}/</p>
+  </div>
+  <div class="flex gap-2">
+    <a href="{% url 'forms_builder:form_public' form_obj.slug %}" target="_blank"
+       class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-200 transition">
+      👁 پیش‌نمایش
+    </a>
+    <a href="{% url 'forms_builder:form_responses' form_obj.pk %}"
+       class="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold hover:bg-emerald-100 transition">
+      📊 پاسخ‌ها ({{ form_obj.response_count }})
+    </a>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+  <!-- فیلدهای موجود -->
+  <div class="lg:col-span-2 space-y-3">
+    <h2 class="text-sm font-black text-slate-700">فیلدهای فرم</h2>
+    {% for field in form_obj.fields.all %}
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 flex items-center gap-3">
+      <div class="w-8 h-8 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-black text-xs shrink-0">
+        {{ forloop.counter }}
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="font-semibold text-slate-800 text-sm">{{ field.label }}</div>
+        <div class="flex items-center gap-2 mt-0.5">
+          <span class="text-xs text-slate-400">{{ field.get_field_type_display }}</span>
+          {% if field.is_required %}<span class="text-xs text-red-500">اجباری</span>{% endif %}
+        </div>
+      </div>
+      <form method="post" onsubmit="return confirm('این فیلد حذف شود؟')">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="delete_field">
+        <input type="hidden" name="field_id" value="{{ field.pk }}">
+        <button type="submit" class="text-slate-300 hover:text-red-500 transition text-sm px-2">✕</button>
+      </form>
+    </div>
+    {% empty %}
+    <div class="bg-slate-50 rounded-2xl p-8 text-center border-2 border-dashed border-slate-200">
+      <p class="text-slate-400 text-sm">هنوز فیلدی اضافه نشده</p>
+      <p class="text-xs text-slate-300 mt-1">از پنل سمت راست فیلد اضافه کنید</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- اضافه کردن فیلد -->
+  <div>
+    <h2 class="text-sm font-black text-slate-700 mb-3">افزودن فیلد</h2>
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_field">
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">نوع فیلد</label>
+            <select name="field_type"
+                    class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-indigo-400 transition">
+              {% for val, label in field_types %}
+              <option value="{{ val }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">برچسب *</label>
+            <input type="text" name="label" required
+                   class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-indigo-400 transition"
+                   placeholder="متن سوال یا برچسب">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">متن راهنما</label>
+            <input type="text" name="placeholder"
+                   class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-indigo-400 transition"
+                   placeholder="placeholder...">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">گزینه‌ها (هر خط یک گزینه)</label>
+            <textarea name="options" rows="3"
+                      class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-indigo-400 transition resize-none"
+                      placeholder="گزینه ۱&#10;گزینه ۲&#10;گزینه ۳"></textarea>
+          </div>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" name="is_required" class="rounded">
+            <span class="text-sm text-slate-700">اجباری</span>
+          </label>
+          <button type="submit"
+                  class="w-full py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition">
+            + افزودن فیلد
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

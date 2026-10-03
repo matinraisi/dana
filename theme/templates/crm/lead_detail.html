@@ -1,0 +1,138 @@
+{% extends "academy/dashboard/base.html" %}
+{% block title %}{{ lead.full_name }}{% endblock %}
+
+{% block content %}
+<div class="flex items-center gap-3 mb-5">
+  <a href="{% url 'crm:lead_list' %}" class="text-slate-400 hover:text-slate-700 transition">←</a>
+  <div class="flex-1">
+    <h1 class="text-lg font-black text-slate-800">{{ lead.full_name }}</h1>
+    <p class="text-xs text-slate-400">ثبت شده: {{ lead.created_at|date:"Y/m/d" }}</p>
+  </div>
+  <a href="{% url 'crm:lead_update' lead.id %}"
+     class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-200 transition">
+    ویرایش
+  </a>
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+  <!-- اطلاعات اصلی -->
+  <div class="sm:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+    <h2 class="text-sm font-black text-slate-700 mb-4">اطلاعات تماس</h2>
+    <dl class="grid grid-cols-2 gap-3 text-sm">
+      <div>
+        <dt class="text-xs text-slate-400 mb-0.5">موبایل</dt>
+        <dd class="font-mono font-semibold text-slate-800">{{ lead.phone_number }}</dd>
+      </div>
+      {% if lead.email %}
+      <div>
+        <dt class="text-xs text-slate-400 mb-0.5">ایمیل</dt>
+        <dd class="font-semibold text-slate-800 text-xs">{{ lead.email }}</dd>
+      </div>
+      {% endif %}
+      <div>
+        <dt class="text-xs text-slate-400 mb-0.5">منبع آشنایی</dt>
+        <dd class="font-semibold text-slate-800">{{ lead.get_source_display }}</dd>
+      </div>
+      <div>
+        <dt class="text-xs text-slate-400 mb-0.5">دوره مورد علاقه</dt>
+        <dd class="font-semibold text-slate-800">{{ lead.interested_course.title|default:"—" }}</dd>
+      </div>
+      {% if lead.note %}
+      <div class="col-span-2">
+        <dt class="text-xs text-slate-400 mb-0.5">یادداشت</dt>
+        <dd class="text-slate-700 text-xs leading-relaxed">{{ lead.note }}</dd>
+      </div>
+      {% endif %}
+    </dl>
+  </div>
+
+  <!-- وضعیت و تغییر -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+    <h2 class="text-sm font-black text-slate-700 mb-4">وضعیت پایپ‌لاین</h2>
+    <div class="space-y-2">
+      {% for val, label in lead.STATUS_CHOICES %}
+      <form method="post" action="{% url 'crm:lead_update_status' lead.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="status" value="{{ val }}">
+        <button type="submit"
+                class="w-full text-right px-3 py-2 rounded-xl text-xs font-bold transition
+                       {% if lead.status == val %}
+                         {% if val == 'new' %}bg-blue-100 text-blue-700
+                         {% elif val == 'contacted' %}bg-amber-100 text-amber-700
+                         {% elif val == 'registered' %}bg-indigo-100 text-indigo-700
+                         {% elif val == 'enrolled' %}bg-emerald-100 text-emerald-700
+                         {% else %}bg-red-100 text-red-600{% endif %}
+                       {% else %}bg-slate-50 text-slate-500 hover:bg-slate-100{% endif %}">
+          {% if lead.status == val %}✓ {% endif %}{{ label }}
+        </button>
+      </form>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- تبدیل به هنرجو -->
+{% if lead.status != 'enrolled' %}
+<div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-5">
+  <h2 class="text-sm font-black text-slate-700 mb-4">تبدیل به هنرجو</h2>
+  <p class="text-xs text-slate-400 mb-4">با کلیک روی دکمه زیر، این سرنخ به هنرجو تبدیل می‌شود و می‌توانید او را در یک دوره ثبت‌نام کنید.</p>
+  <a href="{% url 'crm:lead_convert' lead.id %}"
+     class="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition text-xs shadow-sm">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+    تبدیل به هنرجو
+  </a>
+</div>
+{% else %}
+<div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 mb-5 flex items-center gap-3">
+  <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+  <div>
+    <span class="text-xs font-bold text-emerald-700">این سرنخ تبدیل به هنرجو شده است.</span>
+    {% if lead.converted_student %}
+    <a href="{% url 'academy:student_edit' lead.converted_student.short_slug %}" class="text-xs text-emerald-600 hover:text-emerald-800 font-bold mr-2">
+      مشاهده هنرجو
+    </a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+<!-- فعالیت‌ها -->
+<div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+  <h2 class="text-sm font-black text-slate-700 mb-4">تاریخچه فعالیت</h2>
+
+  <!-- فرم افزودن یادداشت -->
+  <form method="post" action="{% url 'crm:lead_add_activity' lead.id %}" class="mb-5">
+    {% csrf_token %}
+    <div class="flex gap-2">
+      <input type="text" name="note" placeholder="یادداشت جدید..."
+             class="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-indigo-400 transition">
+      <button type="submit"
+              class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition">
+        ثبت
+      </button>
+    </div>
+  </form>
+
+  <div class="space-y-3">
+    {% for activity in activities %}
+    <div class="flex gap-3 items-start">
+      <div class="w-2 h-2 rounded-full bg-indigo-400 mt-2 shrink-0"></div>
+      <div class="flex-1">
+        <div class="flex items-center gap-2">
+          <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-semibold">
+            {{ activity.get_activity_type_display }}
+          </span>
+        </div>
+        <p class="text-sm text-slate-700 mt-1">{{ activity.description }}</p>
+        <p class="text-xs text-slate-400 mt-0.5">
+          {{ activity.created_at|date:"Y/m/d H:i" }}
+          {% if activity.created_by %} — {{ activity.created_by.get_full_name|default:activity.created_by.username }}{% endif %}
+        </p>
+      </div>
+    </div>
+    {% empty %}
+    <p class="text-sm text-slate-400 text-center py-4">هیچ فعالیتی ثبت نشده</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

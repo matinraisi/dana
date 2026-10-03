@@ -1,0 +1,146 @@
+{% extends "teacher/base.html" %}
+{% block title %}پروفایل من{% endblock %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6 text-right">
+
+  <div class="flex items-center gap-3">
+    <a href="{% url 'teacher:dashboard' %}" class="text-slate-400 hover:text-slate-700 transition">←</a>
+    <h1 class="text-lg font-black text-slate-800">پروفایل من</h1>
+  </div>
+
+  <!-- Profile Header -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+    <div class="flex items-center gap-4 mb-6">
+      <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black text-white"
+           style="background:linear-gradient(135deg,#4f46e5,#7c3aed)">
+        {{ teacher.full_name|first }}
+      </div>
+      <div>
+        <h2 class="text-xl font-black text-slate-800">{{ teacher.full_name }}</h2>
+        <p class="text-xs text-slate-400 mt-1">{{ user.username }} — استاد</p>
+        {% if teacher.specialization %}
+        <span class="inline-block mt-1 px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[10px] font-bold">{{ teacher.specialization }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+      <div class="bg-slate-50 rounded-xl p-3">
+        <div class="text-lg font-black text-slate-800">{{ total_sessions }}</div>
+        <div class="text-[10px] text-slate-400">جلسه تدریس</div>
+      </div>
+      <div class="bg-slate-50 rounded-xl p-3">
+        <div class="text-lg font-black text-slate-800">{{ courses.count }}</div>
+        <div class="text-[10px] text-slate-400">دوره</div>
+      </div>
+      <div class="bg-slate-50 rounded-xl p-3">
+        <div class="text-lg font-black text-slate-800">{{ total_enrolled }}</div>
+        <div class="text-[10px] text-slate-400">هنرجو</div>
+      </div>
+      <div class="bg-amber-50 rounded-xl p-3">
+        <div class="text-lg font-black text-amber-600">{{ teacher.total_salary_due|toman }}</div>
+        <div class="text-[10px] text-amber-500">تومان حق‌الزحمه</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact Info -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+    <h3 class="text-sm font-black text-slate-800 mb-4 flex items-center gap-2">
+      <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>
+      اطلاعات تماس
+    </h3>
+    <div class="space-y-3">
+      <div class="flex items-center justify-between py-2 border-b border-slate-100">
+        <span class="text-xs text-slate-400">شماره موبایل</span>
+        <span class="text-xs font-bold text-slate-800 font-mono" dir="ltr">{{ teacher.phone_number|default:user.phone_number|default:"-" }}</span>
+      </div>
+      <div class="flex items-center justify-between py-2 border-b border-slate-100">
+        <span class="text-xs text-slate-400">کد ملی</span>
+        <span class="text-xs font-bold text-slate-800 font-mono" dir="ltr">{{ teacher.national_code|default:"-" }}</span>
+      </div>
+      <div class="flex items-center justify-between py-2 border-b border-slate-100">
+        <span class="text-xs text-slate-400">تاریخ شروع همکاری</span>
+        <span class="text-xs font-bold text-slate-800">{{ teacher.hire_date|jalali|default:"-" }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bank Info -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+    <h3 class="text-sm font-black text-slate-800 mb-4 flex items-center gap-2">
+      <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z"/></svg>
+      اطلاعات بانکی
+    </h3>
+    <div class="space-y-3">
+      <div class="flex items-center justify-between py-2 border-b border-slate-100">
+        <span class="text-xs text-slate-400">شماره کارت بانکی</span>
+        {% if teacher.card_number %}
+        <span class="text-xs font-bold text-slate-800 font-mono" dir="ltr">{{ teacher.card_number }}</span>
+        {% else %}
+        <span class="text-xs text-slate-300">ثبت نشده</span>
+        {% endif %}
+      </div>
+      <div class="flex items-center justify-between py-2">
+        <span class="text-xs text-slate-400">شماره شبا</span>
+        {% if teacher.shaba_number %}
+        <span class="text-xs font-bold text-slate-800 font-mono" dir="ltr">{{ teacher.shaba_number }}</span>
+        {% else %}
+        <span class="text-xs text-slate-300">ثبت نشده</span>
+        {% endif %}
+      </div>
+    </div>
+    <p class="text-[10px] text-slate-400 mt-3">برای ویرایش اطلاعات بانکی با مدیریت تماس بگیرید.</p>
+  </div>
+
+  <!-- Salary Info -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+    <h3 class="text-sm font-black text-slate-800 mb-4 flex items-center gap-2">
+      <svg class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      جزییات دستمزد
+    </h3>
+    <div class="grid grid-cols-3 gap-4 text-center">
+      <div class="bg-amber-50 rounded-xl p-3">
+        <div class="text-lg font-black text-amber-700">{{ teacher.salary_per_session|toman }}</div>
+        <div class="text-[10px] text-amber-600">تومان / جلسه</div>
+      </div>
+      <div class="bg-amber-50 rounded-xl p-3">
+        <div class="text-lg font-black text-amber-700">{{ teacher.hourly_rate|toman }}</div>
+        <div class="text-[10px] text-amber-600">تومان / ساعت</div>
+      </div>
+      <div class="bg-amber-50 rounded-xl p-3">
+        <div class="text-lg font-black text-amber-700">۱.۵</div>
+        <div class="text-[10px] text-amber-600">ساعت / جلسه</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- My Courses -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+    <h3 class="text-sm font-black text-slate-800 mb-4 flex items-center gap-2">
+      <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      دوره‌های من
+    </h3>
+    <div class="space-y-2">
+      {% for course in courses %}
+      <a href="{% url 'teacher:session_list' course.id %}" class="flex items-center justify-between p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition">
+        <div>
+          <div class="text-xs font-bold text-slate-800">{{ course.title }}</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">{{ course.student_count }} هنرجو · {{ course.total_sessions }} جلسه</div>
+        </div>
+        <span class="text-[10px] px-2 py-0.5 rounded font-bold
+          {% if course.status == 'active' %}bg-emerald-50 text-emerald-600
+          {% elif course.status == 'completed' %}bg-slate-100 text-slate-500
+          {% else %}bg-blue-50 text-blue-600{% endif %}">
+          {{ course.get_status_display }}
+        </span>
+      </a>
+      {% empty %}
+      <p class="text-xs text-slate-400 text-center py-4">دوره‌ای ثبت نشده</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

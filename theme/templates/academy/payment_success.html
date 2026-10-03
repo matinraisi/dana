@@ -1,0 +1,97 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if pending %}در حال بررسی پرداخت{% elif error %}پرداخت ناموفق{% else %}پرداخت موفق{% endif %} | دانا</title>
+    <link rel="stylesheet" href="{% static 'css/dist/styles.css' %}">
+    <style>
+        @font-face{font-family:"Vazirmatn";src:url("{% static 'font/fonts/webfonts/Vazirmatn-Regular.woff2' %}")format("woff2");font-weight:400}
+        @font-face{font-family:"Vazirmatn";src:url("{% static 'font/fonts/webfonts/Vazirmatn-Black.woff2' %}")format("woff2");font-weight:900}
+        body{font-family:"Vazirmatn",sans-serif}
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-lg max-w-md w-full p-8 text-center">
+        {% if pending %}
+        <!-- در حال بررسی: درگاه هنوز نتیجهٔ بانک را تأیید نکرده -->
+        <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-10 h-10 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+        </div>
+        <h1 class="text-xl font-black text-slate-800 mb-2">پرداخت در حال بررسی است</h1>
+        <p class="text-sm text-slate-500 mb-6">{{ error }}</p>
+        {% elif error %}
+        <!-- ناموفق: پیش‌تر همین صفحه برای خطاها هم «موفق» نشان می‌داد -->
+        <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-10 h-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </div>
+        <h1 class="text-xl font-black text-slate-800 mb-2">پرداخت انجام نشد</h1>
+        <p class="text-sm text-slate-500 mb-6">{{ error }}</p>
+        {% if course_title %}
+        <p class="text-xs text-slate-400 mb-6">دوره: {{ course_title }}{% if amount %} — {{ amount|floatformat:0 }} تومان{% endif %}. اگر مبلغی از حساب شما کم شده، طی ۷۲ ساعت برمی‌گردد.</p>
+        {% endif %}
+        {% else %}
+        <!-- آیکون موفقیت -->
+        <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-10 h-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+        </div>
+
+        <h1 class="text-xl font-black text-slate-800 mb-2">پرداخت با موفقیت انجام شد</h1>
+        <p class="text-sm text-slate-500 mb-6">شهریه دوره شما با موفقیت پرداخت شد</p>
+
+        {% if amount %}
+        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs text-emerald-600">مبلغ پرداختی:</span>
+                <span class="text-sm font-black text-emerald-700">{{ amount|floatformat:0 }} تومان</span>
+            </div>
+            {% if course_title %}
+            <div class="flex items-center justify-between">
+                <span class="text-xs text-emerald-600">دوره:</span>
+                <span class="text-sm font-bold text-emerald-700">{{ course_title }}</span>
+            </div>
+            {% endif %}
+            {% if tracking_number %}
+            <div class="flex items-center justify-between mt-2 pt-2 border-t border-emerald-200">
+                <span class="text-xs text-emerald-600">شماره تراکنش:</span>
+                <span class="text-xs font-mono text-emerald-700" dir="ltr">{{ tracking_number }}</span>
+            </div>
+            {% endif %}
+            {% if bank %}
+            <div class="flex items-center justify-between mt-2">
+                <span class="text-xs text-emerald-600">بانک:</span>
+                <span class="text-sm font-bold text-emerald-700">{{ bank }}</span>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-6">
+            <p class="text-xs text-indigo-600 leading-relaxed">
+                اطلاعات ورود شما به پنل هنرجو از طریق پیامک ارسال شد.
+            </p>
+        </div>
+        {% endif %}
+
+        <div class="space-y-3">
+            <a href="https://panel.aihousesb.ir/my/" 
+               class="block w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-indigo-700 transition text-center">
+                ورود به پنل هنرجو
+            </a>
+            <a href="https://panel.aihousesb.ir/" 
+               class="block w-full bg-slate-100 text-slate-600 py-3 rounded-xl font-bold text-sm hover:bg-slate-200 transition text-center">
+                بازگشت به صفحه اصلی
+            </a>
+        </div>
+
+        <p class="text-[10px] text-slate-400 mt-6">دانا — پلتفرم هوشمند آموزشگاه</p>
+    </div>
+</body>
+</html>

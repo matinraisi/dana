@@ -1,0 +1,130 @@
+{% extends 'academy/dashboard/base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% block nav_exams %}active{% endblock %}
+{% block content %}
+<div class="p-6 space-y-6 text-right" dir="rtl">
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-base font-black text-slate-800">نتایج آزمون</h1>
+                <p class="text-xs text-slate-400 mt-0.5">{{ exam.title }} — {{ exam.get_exam_type_display }}</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="{% url 'academy:exam_list' %}" class="text-xs text-slate-500 hover:text-slate-700 transition">← بازگشت</a>
+            </div>
+        </div>
+
+        {% if stats.total > 0 %}
+        <div class="grid grid-cols-4 gap-4 mb-6">
+            <div class="bg-blue-50 rounded-xl p-4 text-center border border-blue-100">
+                <span class="text-2xl font-black text-blue-700">{{ stats.total }}</span>
+                <p class="text-[10px] font-bold text-blue-500 mt-1">کل تلاش‌ها</p>
+            </div>
+            <div class="bg-emerald-50 rounded-xl p-4 text-center border border-emerald-100">
+                <span class="text-2xl font-black text-emerald-700">{{ stats.passed }}</span>
+                <p class="text-[10px] font-bold text-emerald-500 mt-1">قبول شده</p>
+            </div>
+            <div class="bg-red-50 rounded-xl p-4 text-center border border-red-100">
+                <span class="text-2xl font-black text-red-700">{{ stats.failed }}</span>
+                <p class="text-[10px] font-bold text-red-500 mt-1">رد شده</p>
+            </div>
+            <div class="bg-amber-50 rounded-xl p-4 text-center border border-amber-100">
+                <span class="text-2xl font-black text-amber-700">{{ stats.pass_rate }}%</span>
+                <p class="text-[10px] font-bold text-amber-500 mt-1">درصد قبولی</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-4 gap-4 mb-6">
+            <div class="bg-slate-50 rounded-xl p-3 text-center border border-slate-200">
+                <span class="text-lg font-black text-slate-700">{{ stats.avg_score }}</span>
+                <p class="text-[10px] font-bold text-slate-500 mt-0.5">میانگین نمره</p>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-3 text-center border border-slate-200">
+                <span class="text-lg font-black text-slate-700">{{ stats.max_score }}</span>
+                <p class="text-[10px] font-bold text-slate-500 mt-0.5">بیشترین نمره</p>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-3 text-center border border-slate-200">
+                <span class="text-lg font-black text-slate-700">{{ stats.min_score }}</span>
+                <p class="text-[10px] font-bold text-slate-500 mt-0.5">کمترین نمره</p>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-3 text-center border border-slate-200">
+                <span class="text-lg font-black text-slate-700">{{ stats.total_score }}</span>
+                <p class="text-[10px] font-bold text-slate-500 mt-0.5">نمره کل</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- انتشار نتایج -->
+        <form method="POST" class="mb-6">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="release_results">
+            <button type="submit" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-emerald-700 transition"
+                    onclick="return confirm('نتایج برای همه هنرجویان قابل مشاهده می‌شود. ادامه؟')">
+                انتشار نتایج برای هنرجویان
+            </button>
+        </form>
+
+        <!-- لیست تلاش‌ها -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-right border-collapse">
+                <thead>
+                    <tr class="bg-slate-100/70 border-b border-slate-200 text-slate-600 text-[11px] font-bold">
+                        <th class="p-4">هنرجو</th>
+                        <th class="p-4">تاریخ</th>
+                        <th class="p-4">وضعیت</th>
+                        <th class="p-4">نمره</th>
+                        <th class="p-4">نتیجه</th>
+                        <th class="p-4 text-left">عملیات</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs">
+                    {% for a in attempts %}
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="p-4 font-bold text-slate-800">{{ a.student.full_name }}</td>
+                        <td class="p-4 text-slate-500 font-mono">{{ a.start_time|jalali }}</td>
+                        <td class="p-4">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold
+                                {% if a.status == 'in_progress' %}bg-amber-50 text-amber-700
+                                {% elif a.status == 'submitted' %}bg-blue-50 text-blue-700
+                                {% elif a.status == 'graded' %}bg-emerald-50 text-emerald-700
+                                {% else %}bg-slate-100 text-slate-500{% endif %}">
+                                {{ a.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="p-4 font-bold {% if a.status == 'graded' %}{% if a.is_passed %}text-emerald-600{% else %}text-red-600{% endif %}{% else %}text-slate-400{% endif %}">
+                            {{ a.score|default:'—' }}
+                            {% if a.score != None %}/ {{ a.exam.total_score }}{% endif %}
+                        </td>
+                        <td class="p-4">
+                            {% if a.is_passed %}
+                            <span class="text-emerald-600 font-bold">قبول</span>
+                            {% elif a.status == 'graded' %}
+                            <span class="text-red-600 font-bold">رد</span>
+                            {% else %}
+                            <span class="text-slate-300">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-4 text-left flex gap-1 justify-end">
+                            <a href="{% url 'academy:attempt_detail' a.id %}"
+                               class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition">جزئیات</a>
+                            <form method="POST" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="grade_essay">
+                                <input type="hidden" name="attempt_id" value="{{ a.id }}">
+                                <button type="submit"
+                                        class="text-xs px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold transition">تصحیح</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="p-8 text-center text-slate-400 font-medium">هنوز هیچ تلاشی برای این آزمون ثبت نشده است.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

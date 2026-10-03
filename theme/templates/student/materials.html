@@ -1,0 +1,102 @@
+{% extends "student/base.html" %}
+{% block title %}محتوای آموزشی{% endblock %}
+{% block nav_mat %}active{% endblock %}
+{% block nav_mat_m %}active{% endblock %}
+{% block content %}
+<div class="bg-gradient-to-br from-indigo-500 via-blue-600 to-sky-500 rounded-3xl p-6 md:p-8 text-white mb-6 shadow-xl relative overflow-hidden">
+  <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNMjAgMjBhMjAgMjAgMCAwIDEgMjAgMjAgMjAgMjAgMCAwIDAgMjAgMjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA0KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')] opacity-50"></div>
+  <div class="relative z-10 flex items-center justify-between flex-wrap gap-4">
+    <div>
+      <h1 class="text-xl md:text-2xl font-black drop-shadow-sm">📂 محتوای آموزشی</h1>
+      <p class="text-blue-100/90 text-sm mt-1">فایل‌ها، تمرین‌ها و منابع درس‌های شما</p>
+    </div>
+    <form class="flex gap-2">
+      <select name="course" onchange="this.form.submit()"
+              class="px-3 py-2 rounded-xl border border-white/20 bg-white/15 backdrop-blur-md text-white text-xs font-bold focus:outline-none focus:ring-2 focus:ring-white/30 [&>option]:text-slate-800">
+        <option value="" class="text-slate-800">همه دوره‌ها</option>
+        {% for enroll in courses %}
+        <option value="{{ enroll.course.id }}" class="text-slate-800" {% if request.GET.course == enroll.course.id|stringformat:'s' %}selected{% endif %}>
+          {{ enroll.course.title }}
+        </option>
+        {% endfor %}
+      </select>
+    </form>
+  </div>
+</div>
+
+{% if materials %}
+<div class="space-y-3">
+  {% regroup materials by course as course_materials %}
+  {% for group in course_materials %}
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+    <div class="px-5 py-3.5 bg-gradient-to-l from-indigo-50 to-blue-50 border-b border-slate-100">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-black text-slate-800">{{ group.grouper.title }}</h3>
+        <span class="text-[10px] font-bold text-slate-400">{{ group.list|length }} مورد</span>
+      </div>
+    </div>
+    <div class="divide-y divide-slate-50">
+      {% for mat in group.list %}
+      <div class="px-5 py-3.5 flex items-center justify-between hover:bg-slate-50/60 transition">
+        <div class="flex items-center gap-3 min-w-0 flex-1">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center text-base shrink-0 shadow-sm
+            {% if mat.material_type == 'assignment' %}bg-amber-50 ring-1 ring-amber-200
+            {% elif mat.material_type == 'video' %}bg-rose-50 ring-1 ring-rose-200
+            {% elif mat.material_type == 'link' %}bg-blue-50 ring-1 ring-blue-200
+            {% elif mat.material_type == 'source_code' %}bg-emerald-50 ring-1 ring-emerald-200
+            {% else %}bg-slate-50 ring-1 ring-slate-200{% endif %}">
+            {% if mat.material_type == 'assignment' %}📝
+            {% elif mat.material_type == 'video' %}🎬
+            {% elif mat.material_type == 'link' %}🔗
+            {% elif mat.material_type == 'source_code' %}💻
+            {% elif mat.material_type == 'file' %}📎
+            {% else %}📄{% endif %}
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="text-xs font-bold text-slate-800 truncate">{{ mat.title }}</div>
+            <div class="flex items-center gap-2 mt-0.5 flex-wrap">
+              <span class="text-[9px] px-1.5 py-0.5 rounded font-bold
+                {% if mat.material_type == 'assignment' %}bg-amber-100 text-amber-700
+                {% elif mat.material_type == 'video' %}bg-rose-100 text-rose-700
+                {% elif mat.material_type == 'link' %}bg-blue-100 text-blue-700
+                {% elif mat.material_type == 'source_code' %}bg-emerald-100 text-emerald-700
+                {% else %}bg-slate-100 text-slate-600{% endif %}">
+                {{ mat.get_material_type_display }}
+              </span>
+              {% if mat.session %}
+              <span class="text-[9px] text-slate-400">جلسه {{ mat.session.session_number }}</span>
+              {% endif %}
+              {% if mat.description %}
+              <span class="text-[9px] text-slate-400 truncate max-w-[160px]">{{ mat.description }}</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0 mr-3">
+          {% if mat.file %}
+          <a href="{{ mat.file.url }}" target="_blank"
+             class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-[10px] font-bold hover:bg-indigo-700 transition shadow-sm whitespace-nowrap">
+            📥 دانلود
+          </a>
+          {% endif %}
+          {% if mat.link_url %}
+          <a href="{{ mat.link_url }}" target="_blank"
+             class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-[10px] font-bold hover:bg-blue-700 transition shadow-sm whitespace-nowrap">
+            🔗 باز کردن
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 text-center">
+  <div class="text-5xl mb-4">📂</div>
+  <p class="text-slate-500 font-medium">هنوز محتوایی برای دوره‌های شما بارگذاری نشده</p>
+  <p class="text-xs text-slate-400 mt-1">به زودی استاد دوره محتواهای آموزشی را بارگذاری خواهد کرد</p>
+</div>
+{% endif %}
+{% endblock %}

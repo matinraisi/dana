@@ -1,0 +1,98 @@
+{% extends 'academy/dashboard/base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% block nav_exams %}active{% endblock %}
+{% block content %}
+<div class="p-6 space-y-6 text-right" dir="rtl">
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-base font-black text-slate-800">جزئیات تلاش آزمون</h1>
+                <p class="text-xs text-slate-400 mt-0.5">
+                    {{ attempt.exam.title }} — {{ attempt.student.full_name }}
+                </p>
+            </div>
+            <a href="{% url 'academy:exam_results' attempt.exam_id %}"
+               class="text-xs text-slate-500 hover:text-slate-700 transition">← بازگشت</a>
+        </div>
+
+        <div class="grid grid-cols-4 gap-4 mb-6">
+            <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-200">
+                <span class="text-lg font-black text-slate-700">{{ attempt.start_time|jalali }}</span>
+                <p class="text-[10px] font-bold text-slate-500 mt-1">زمان شروع</p>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-200">
+                <span class="text-lg font-black text-slate-700">{{ attempt.end_time|jalali|default:'—' }}</span>
+                <p class="text-[10px] font-bold text-slate-500 mt-1">زمان پایان</p>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-200">
+                <span class="text-lg font-black
+                    {% if attempt.status == 'graded' %}{% if attempt.is_passed %}text-emerald-600{% else %}text-red-600{% endif %}{% else %}text-slate-700{% endif %}">
+                    {{ attempt.score|default:'—' }}/{{ attempt.exam.total_score|toman }}
+                </span>
+                <p class="text-[10px] font-bold text-slate-500 mt-1">نمره</p>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-200">
+                <span class="text-lg font-black text-slate-700">{{ attempt.duration_display|default:'—' }}</span>
+                <p class="text-[10px] font-bold text-slate-500 mt-1">مدت زمان</p>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            {% for answer in answers %}
+            <div class="border border-slate-200 rounded-xl p-4 hover:border-slate-300 transition">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-xs font-bold text-slate-500">#{{ answer.question.order }}</span>
+                            <span class="text-sm font-bold text-slate-800">{{ answer.question.title }}</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{{ answer.question.get_question_type_display }}</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full
+                                {% if answer.score != None %}bg-emerald-50 text-emerald-700{% else %}bg-amber-50 text-amber-700{% endif %}">
+                                {% if answer.score != None %}{{ answer.score|toman }}/{{ answer.question.points }}{% else %}تصحیح نشده{% endif %}
+                            </span>
+                        </div>
+
+                        {% if answer.question.question_type == 'multiple_choice' or answer.question.question_type == 'true_false' %}
+                        <p class="text-xs text-slate-600">پاسخ:
+                          {% for choice in answer.selected_choices.all %}
+                            <span class="font-bold">{{ choice.text }}</span>{% if not forloop.last %}، {% endif %}
+                          {% empty %}
+                            <span class="text-slate-400">پاسخی ثبت نشده</span>
+                          {% endfor %}
+                        </p>
+                        {% elif answer.question.question_type == 'multiple_answer' %}
+                        <p class="text-xs text-slate-600">پاسخ‌ها:
+                          {% for choice in answer.selected_choices.all %}
+                            <span class="font-bold">{{ choice.text }}</span>{% if not forloop.last %}، {% endif %}
+                          {% empty %}
+                            <span class="text-slate-400">پاسخی ثبت نشده</span>
+                          {% endfor %}
+                        </p>
+                        {% elif answer.question.question_type == 'short_answer' %}
+                        <p class="text-xs text-slate-600">پاسخ: <span class="font-bold">{{ answer.text_answer|default:'پاسخی ثبت نشده' }}</span></p>
+                        {% elif answer.question.question_type == 'essay' %}
+                        <p class="text-xs text-slate-600">پاسخ: {{ answer.text_answer|default:'پاسخی ثبت نشده'|linebreaks }}</p>
+                        {% elif answer.question.question_type == 'fill_blank' %}
+                        <p class="text-xs text-slate-600">پاسخ: <span class="font-bold">{{ answer.text_answer|default:'پاسخی ثبت نشده' }}</span></p>
+                        {% elif answer.question.question_type == 'matching' %}
+                        <p class="text-xs text-slate-600">پاسخ‌های جورکردنی ثبت شده</p>
+                        {% elif answer.question.question_type == 'ordering' %}
+                        <p class="text-xs text-slate-600">ترتیب ثبت شده</p>
+                        {% endif %}
+
+                        {% if answer.graded_by %}
+                        <p class="text-[10px] text-slate-400 mt-1">تصحیح شده توسط: {{ answer.graded_by.get_full_name|default:answer.graded_by.username }} در {{ answer.graded_at|jalali }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-8 text-slate-400">
+                <p class="text-sm font-bold">هیچ پاسخی ثبت نشده است</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

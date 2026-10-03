@@ -1,0 +1,102 @@
+{% extends 'academy/dashboard/base.html' %}
+
+{% block title %}{{ school_title }} | ورود دسته‌جمعی هنرجویان{% endblock %}
+
+{% block content %}
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 border-b border-slate-300/60 pb-4 text-right" dir="rtl">
+    <div>
+        <h2 class="text-lg font-black text-slate-800">ورود دسته‌جمعی از فایل اکسل (Import)</h2>
+        <p class="text-xs text-slate-500 mt-1">بارگذاری فایل مشخصات دانشجویان جدید و همگام‌سازی خودکار با پایگاه داده</p>
+    </div>
+    <div>
+        <a href="{% url 'academy:dashboard_home' %}" class="inline-flex items-center bg-white border border-slate-300 hover:border-slate-400 hover:bg-slate-50 text-slate-700 font-bold py-2 px-4 rounded-lg transition text-xs">
+            بازگشت به میز کار اصلی ←
+        </a>
+    </div>
+</div>
+
+{% if messages %}
+    <div class="mb-6 space-y-2 text-right" dir="rtl">
+        {% for message in messages %}
+            <div class="p-3 border rounded-lg text-xs font-bold {% if message.tags == 'success' %} bg-emerald-100/70 text-emerald-900 border-emerald-300/60 {% else %} bg-rose-100/70 text-rose-900 border-rose-300/60 {% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start text-right" dir="rtl">
+    
+    <div class="bg-[#fafafa] border border-slate-300/50 rounded-xl p-5 shadow-sm space-y-4">
+        <h3 class="text-xs font-black text-slate-800 border-b border-slate-200 pb-2">راهنمای آماده‌سازی فایل اکسل</h3>
+        
+        <p class="text-[11px] text-slate-500 leading-relaxed">
+            ترتیب ستون‌های فایل اکسل باید دقیقاً به این صورت تنظیم شود:
+        </p>
+        
+        <ol class="text-[10px] text-slate-600 space-y-1 list-decimal list-inside font-medium bg-white p-3 rounded-lg border border-slate-100">
+            <li>نام</li>
+            <li>نام خانوادگی</li>
+            <li>کد ملی <span class="text-rose-600">*</span></li>
+            <li>شماره موبایل <span class="text-rose-600">*</span></li>
+            <li>کد اختصاصی دوره <span class="text-rose-600">*</span></li>
+            <li>مبلغ کل شهریه</li>
+            <li>کل پرداختی نقدی</li>
+            <li class="text-blue-600 font-bold">رشته تحصیلی</li>
+            <li class="text-blue-600 font-bold">مقطع تحصیلی</li>
+            <li class="text-blue-600 font-bold">تلفن اضطراری</li>
+            <li class="text-blue-600 font-bold">تاریخ تولد (YYYY-MM-DD)</li>
+            <li class="text-blue-600 font-bold">آدرس محل سکونت</li>
+        </ol>
+
+        <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-[10px] text-amber-800 leading-normal">
+            <strong>راهنمای ستون مقطع تحصیلی:</strong><br>
+            برای مقدار مقطع تحصیلی از کلمات کلیدی انگلیسی روبه‌رو استفاده کنید: 
+            <code class="font-mono bg-amber-100 px-1 rounded">diploma</code> (دیپلم)، 
+            <code class="font-mono bg-amber-100 px-1 rounded">bachelor</code> (کارشناسی)، 
+            <code class="font-mono bg-amber-100 px-1 rounded">master</code> (ارشد).
+        </div>
+
+        <a href="{% url 'academy:download_sample_excel' %}" class="w-full inline-flex items-center justify-center gap-2 bg-white border border-slate-300 hover:border-slate-400 hover:bg-slate-50 text-slate-700 font-bold py-2.5 px-4 rounded-lg transition text-xs shadow-sm">
+            📎 دانلود فایل اکسل نمونه جدید
+        </a>
+    </div>
+
+    <div class="lg:col-span-2 bg-[#fafafa] border border-slate-300/60 rounded-xl shadow-sm overflow-hidden">
+        <div class="p-4 border-b border-slate-200/80 bg-[#f8fafc]">
+            <h3 class="text-xs font-black text-slate-600 tracking-wide">بارگذاری مستندات اکسل</h3>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="p-6 space-y-6">
+            {% csrf_token %}
+            
+            <div class="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 hover:border-blue-400 bg-white rounded-xl p-8 text-center transition cursor-pointer relative group">
+                <input type="file" name="excel_file" id="excel_file" accept=".xlsx, .xls" required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                
+                <div class="w-12 h-12 bg-slate-100 group-hover:bg-blue-50 text-slate-400 group-hover:text-blue-600 rounded-full flex items-center justify-center text-xl mb-3 transition shadow-inner">
+                    📁
+                </div>
+                
+                <p class="text-xs font-bold text-slate-700 mb-1" id="file_name_display">Fایل اکسل خود را به این‌جا بکشید یا کلیک کنید</p>
+                <p class="text-[10px] text-slate-400">فرمت‌های مجاز: Excel (.xlsx)</p>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 border-t border-slate-200 pt-4">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-5 rounded-lg transition shadow-md shadow-blue-600/10">
+                    🚀 شروع فرآیند پردازش و ایمپورت
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<script>
+    document.getElementById('excel_file').addEventListener('change', function(e) {
+        const fileName = e.target.files[0] ? e.target.files[0].name : "فایل اکسل خود را به این‌جا بکشید یا کلیک کنید";
+        const display = document.getElementById('file_name_display');
+        display.textContent = fileName;
+        display.classList.add('text-blue-600');
+    });
+</script>
+{% endblock %}

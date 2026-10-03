@@ -1,0 +1,163 @@
+{% extends "teacher/base.html" %}
+{% load custom_filters %}
+{% block title %}حضور و غیاب — جلسه {{ session.session_number }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-5 text-right">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between flex-wrap gap-4">
+    <div class="flex items-center gap-3">
+      <a href="{% url 'teacher:session_list' session.course.id %}" class="text-slate-400 hover:text-slate-700 transition">←</a>
+      <div>
+        <h1 class="text-lg font-black text-slate-800">حضور و غیاب</h1>
+        <p class="text-xs text-slate-400">جلسه {{ session.session_number }} — {{ session.course.title }} — {{ session.date|jalali }}</p>
+      </div>
+    </div>
+    <a href="{% url 'teacher:material_list' session.id %}"
+       class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-[10px] font-bold hover:bg-blue-700 transition">
+      محتوای جلسه
+    </a>
+  </div>
+
+  {% if sheet %}
+
+  <!-- Stats -->
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+      <div class="p-3 bg-slate-50 rounded-xl">
+        <div class="text-lg font-black text-slate-800 tabular-nums">{{ sheet|length }}</div>
+        <div class="text-[10px] text-slate-400">کل هنرجویان</div>
+      </div>
+      <div class="p-3 bg-emerald-50 rounded-xl">
+        <div class="text-lg font-black text-emerald-600 tabular-nums" id="presentCount">0</div>
+        <div class="text-[10px] text-emerald-500">حاضر</div>
+      </div>
+      <div class="p-3 bg-amber-50 rounded-xl">
+        <div class="text-lg font-black text-amber-600 tabular-nums" id="lateCount">0</div>
+        <div class="text-[10px] text-amber-500">تأخیر</div>
+      </div>
+      <div class="p-3 bg-rose-50 rounded-xl">
+        <div class="text-lg font-black text-rose-600 tabular-nums" id="absentCount">0</div>
+        <div class="text-[10px] text-rose-500">غایب</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="flex flex-wrap gap-4 text-[10px] text-slate-500 px-1">
+    <span class="flex items-center gap-1.5">
+      <span class="w-5 h-5 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-[10px]">✓</span>
+      حاضر
+    </span>
+    <span class="flex items-center gap-1.5">
+      <span class="w-5 h-5 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600 font-bold text-[10px]">~</span>
+      تأخیر
+    </span>
+    <span class="flex items-center gap-1.5">
+      <span class="w-5 h-5 rounded-lg bg-rose-100 flex items-center justify-center text-rose-600 font-bold text-[10px]">✗</span>
+      غایب
+    </span>
+    <span class="flex items-center gap-1.5">
+      <span class="w-5 h-5 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-[10px]">📋</span>
+      غیبت موجه
+    </span>
+  </div>
+
+  <!-- Attendance Form -->
+  <form method="post">
+    {% csrf_token %}
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-right border-collapse">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 text-[11px] font-black">
+              <th class="p-3 w-12">ردیف</th>
+              <th class="p-3 text-right">نام هنرجو</th>
+              <th class="p-3 text-center w-16">حاضر ✓</th>
+              <th class="p-3 text-center w-16">تأخیر ~</th>
+              <th class="p-3 text-center w-16">غایب ✗</th>
+              <th class="p-3 text-center w-16">موجه 📋</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 text-xs">
+            {% for row in sheet %}
+            <tr class="hover:bg-slate-50/80 transition">
+              <td class="p-3 text-slate-400 font-mono">{{ forloop.counter }}</td>
+              <td class="p-3 font-bold text-slate-800">{{ row.student.full_name }}</td>
+              {% for status_val, status_label in status_choices %}
+              <td class="p-3 text-center">
+                <label class="cursor-pointer block">
+                  <input type="radio" name="attendance_{{ row.student.id }}" value="{{ status_val }}"
+                         {% if row.status == status_val %}checked{% endif %}
+                         class="sr-only peer" onchange="updateStats()">
+                  <div class="w-9 h-9 mx-auto rounded-xl border-2 border-slate-200 flex items-center justify-center text-sm font-bold
+                              peer-checked:{% if status_val == 'present' %}border-emerald-400 bg-emerald-50 text-emerald-600 shadow-sm
+                                           {% elif status_val == 'absent' %}border-rose-400 bg-rose-50 text-rose-600 shadow-sm
+                                           {% elif status_val == 'excused' %}border-blue-400 bg-blue-50 text-blue-600 shadow-sm
+                                           {% else %}border-amber-400 bg-amber-50 text-amber-600 shadow-sm{% endif %}
+                              {% if row.status == status_val %}ring-2 ring-offset-1
+                                           {% if status_val == 'present' %}ring-emerald-200
+                                           {% elif status_val == 'absent' %}ring-rose-200
+                                           {% elif status_val == 'excused' %}ring-blue-200
+                                           {% else %}ring-amber-200{% endif %}
+                              {% endif %}
+                              hover:border-slate-300 transition">
+                    {% if status_val == 'present' %}✓
+                    {% elif status_val == 'absent' %}✗
+                    {% elif status_val == 'excused' %}📋
+                    {% else %}~{% endif %}
+                  </div>
+                </label>
+              </td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="flex gap-3 mt-4">
+      <button type="submit" class="flex-1 bg-indigo-600 text-white py-3 rounded-2xl font-black text-sm hover:bg-indigo-700 transition shadow-sm flex items-center justify-center gap-2">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        ذخیره حضور و غیاب
+      </button>
+      <button type="button" onclick="setAllPresent()"
+              class="px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl text-xs font-bold hover:bg-slate-200 transition">
+        همه حاضر
+      </button>
+    </div>
+  </form>
+
+  {% else %}
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 text-center">
+    <div class="w-16 h-16 mx-auto rounded-2xl bg-slate-100 flex items-center justify-center text-3xl mb-3">👥</div>
+    <p class="text-slate-500 font-medium">هنوز هنرجویی ثبت‌نام نکرده</p>
+    <p class="text-xs text-slate-400 mt-1">بعد از ثبت‌نام هنرجویان، حضورغیاب فعال می‌شود</p>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+function updateStats() {
+  const total = document.querySelectorAll('input[type=radio]').length / 4;
+  let present = 0, late = 0, absent = 0;
+  document.querySelectorAll('input[type=radio]:checked').forEach(r => {
+    if (r.value === 'present') present++;
+    else if (r.value === 'late') late++;
+    else if (r.value === 'absent') absent++;
+  });
+  document.getElementById('presentCount').textContent = present;
+  document.getElementById('lateCount').textContent = late;
+  document.getElementById('absentCount').textContent = absent;
+}
+function setAllPresent() {
+  document.querySelectorAll('input[type=radio]').forEach(r => {
+    r.checked = r.value === 'present';
+  });
+  updateStats();
+}
+document.addEventListener('DOMContentLoaded', updateStats);
+</script>
+{% endblock %}

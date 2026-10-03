@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>پاسخ ثبت شد</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/dist/styles.css' %}">
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center px-4">
+  <div class="max-w-sm w-full bg-white rounded-2xl shadow-sm border border-slate-100 p-8 text-center">
+    <div class="text-5xl mb-4">✅</div>
+    <h1 class="text-lg font-black text-slate-800 mb-2">پاسخ ثبت شد!</h1>
+    <p class="text-sm text-slate-500 leading-relaxed">{{ form_obj.submit_message }}</p>
+  </div>
+</body>
+</html>

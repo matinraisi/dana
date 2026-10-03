@@ -1,0 +1,29 @@
+name: panel-aihousesb
+
+services:
+  web:
+    image: panel-aihousesb:latest
+    build:
+      context: .
+    env_file:
+      - /srv/panel-aihousesb/.env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings
+      DATABASE_URL: "sqlite:////data/db.sqlite3"
+      STATIC_ROOT: /app/staticfiles
+      MEDIA_ROOT: /app/media
+    volumes:
+      - panel_data:/data
+      - /srv/panel-aihousesb/media:/app/media
+    ports:
+      - "127.0.0.1:3011:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-H", "Host: panel.aihousesb.ir", "http://127.0.0.1:8000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  panel_data:

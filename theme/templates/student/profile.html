@@ -1,0 +1,92 @@
+{% extends "student/base.html" %}
+{% block title %}پروفایل{% endblock %}
+{% block nav_prof %}active{% endblock %}
+{% block nav_prof_m %}active{% endblock %}
+
+{% block content %}
+<div class="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-3xl p-6 md:p-8 text-white mb-6 shadow-lg relative overflow-hidden">
+  <div class="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4"></div>
+  <div class="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-1/3 -translate-x-1/4"></div>
+  <div class="relative z-10 flex items-center gap-4">
+    {% if student.avatar_3x4 %}
+      <img src="{{ student.avatar_3x4.url }}" class="w-16 h-16 md:w-20 md:h-20 rounded-2xl object-cover border-2 border-white/30 shadow-md">
+    {% else %}
+      <div class="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white/20 flex items-center justify-center text-3xl shadow-inner backdrop-blur-sm">👤</div>
+    {% endif %}
+    <div>
+      <h1 class="text-xl md:text-2xl font-black">پروفایل من</h1>
+      <p class="text-blue-100 text-sm mt-0.5">{{ student.full_name }}</p>
+    </div>
+  </div>
+</div>
+
+<div class="grid md:grid-cols-2 gap-5">
+  <!-- Info -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+    <h2 class="font-black text-slate-800 text-sm mb-4 flex items-center gap-2">
+      <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+      اطلاعات شخصی
+    </h2>
+    <div class="space-y-0.5 text-sm">
+      <div class="flex justify-between py-3 border-b border-slate-50"><span class="text-slate-400">نام کامل</span><span class="font-semibold text-slate-700">{{ student.full_name }}</span></div>
+      <div class="flex justify-between py-3 border-b border-slate-50"><span class="text-slate-400">کد ملی</span><span class="font-semibold text-slate-700">{{ student.national_code }}</span></div>
+      <div class="flex justify-between py-3 border-b border-slate-50"><span class="text-slate-400">موبایل</span><span class="font-semibold text-slate-700 ltr text-right">{{ student.phone_number }}</span></div>
+      <div class="flex justify-between py-3 border-b border-slate-50"><span class="text-slate-400">مقطع تحصیلی</span><span class="font-semibold text-slate-700">{{ student.get_education_level_display|default:"—" }}</span></div>
+      <div class="flex justify-between py-3 border-b border-slate-50"><span class="text-slate-400">رشته</span><span class="font-semibold text-slate-700">{{ student.field_of_study|default:"—" }}</span></div>
+      {% for label, value in info_rows %}
+        <div class="flex justify-between py-3 border-b border-slate-50 last:border-0">
+          <span class="text-slate-400">{{ label }}</span>
+          <span class="font-semibold text-slate-700">{{ value|default:"—" }}</span>
+        </div>
+      {% endfor %}
+      <div class="flex justify-between py-3">
+        <span class="text-slate-400">وضعیت مدارک</span>
+        <span class="px-2.5 py-1 rounded-full text-xs font-bold
+          {% if student.document_status == 'verified' %}bg-emerald-100 text-emerald-700
+          {% elif student.document_status == 'rejected' %}bg-red-100 text-red-700
+          {% else %}bg-amber-100 text-amber-700{% endif %}">
+          {{ student.get_document_status_display }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload docs -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+    <h2 class="font-black text-slate-800 text-sm mb-4 flex items-center gap-2">
+      <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+      بارگذاری مدارک
+    </h2>
+    <form method="post" enctype="multipart/form-data" class="space-y-4">
+      {% csrf_token %}
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-2">عکس ۳×۴</label>
+        {% if student.avatar_3x4 %}
+          <img src="{{ student.avatar_3x4.url }}" class="w-20 h-24 rounded-xl object-cover border border-slate-200 mb-2 shadow-sm">
+        {% endif %}
+        <input type="file" name="avatar_3x4" accept="image/*"
+          class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100">
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-2">تصویر کارت ملی</label>
+        {% if student.national_card_img %}
+          <img src="{{ student.national_card_img.url }}" class="h-16 rounded-xl object-cover border border-slate-200 mb-2 shadow-sm">
+        {% endif %}
+        <input type="file" name="national_card_img" accept="image/*"
+          class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100">
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-2">تصویر شناسنامه</label>
+        {% if student.identity_img %}
+          <img src="{{ student.identity_img.url }}" class="h-16 rounded-xl object-cover border border-slate-200 mb-2 shadow-sm">
+        {% endif %}
+        <input type="file" name="identity_img" accept="image/*"
+          class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100">
+      </div>
+      <button type="submit" class="w-full bg-blue-600 text-white py-2.5 rounded-xl font-bold text-sm hover:bg-blue-700 transition shadow-sm">
+        ذخیره مدارک
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

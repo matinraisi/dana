@@ -1,0 +1,26 @@
+{% load static tailwind_tags %}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>خطای سرور</title>
+  {% tailwind_css %}
+  <style>
+    @font-face{font-family:"Vazirmatn";src:url("{% static 'font/fonts/webfonts/Vazirmatn-Regular.woff2' %}")format("woff2");font-weight:400}
+    @font-face{font-family:"Vazirmatn";src:url("{% static 'font/fonts/webfonts/Vazirmatn-Black.woff2' %}")format("woff2");font-weight:900}
+    body{font-family:"Vazirmatn",sans-serif}
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+  <div class="text-center space-y-4 max-w-md">
+    <div class="text-7xl font-black text-slate-200">۵۰۰</div>
+    <h1 class="text-xl font-black text-slate-800">خطای داخلی سرور</h1>
+    <p class="text-sm text-slate-400">مشکلی پیش آمده است. لطفاً بعداً دوباره تلاش کنید.</p>
+    <div class="flex gap-3 justify-center pt-4">
+      <a href="/" class="px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition">بازگشت به خانه</a>
+      <button onclick="location.reload()" class="px-6 py-2.5 bg-slate-200 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-300 transition">تلاش مجدد</button>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,104 @@
+{% extends "student/base.html" %}
+{% load custom_filters %}
+{% block title %}وضعیت پرداخت{% endblock %}
+{% block nav_pay %}active{% endblock %}
+{% block nav_pay_m %}active{% endblock %}
+
+{% block content %}
+<div class="bg-gradient-to-br from-indigo-500 via-blue-600 to-sky-500 rounded-3xl p-6 md:p-8 text-white mb-6 shadow-xl relative overflow-hidden">
+  <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNMjAgMjBhMjAgMjAgMCAwIDEgMjAgMjAgMjAgMjAgMCAwIDAgMjAgMjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA0KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')] opacity-50"></div>
+  <div class="relative z-10">
+    <h1 class="text-xl md:text-2xl font-black drop-shadow-sm">💳 وضعیت شهریه و اقساط</h1>
+    <p class="text-blue-100/90 text-sm mt-1">جزئیات مالی تمام دوره‌ها</p>
+  </div>
+</div>
+
+{% if course_enrollments %}
+  {% for e in course_enrollments %}
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 mb-5 overflow-hidden hover:shadow-md transition-shadow">
+    <div class="px-5 py-4 border-b border-slate-50 flex flex-wrap justify-between items-center gap-2">
+      <h2 class="font-black text-slate-800">{{ e.course.title }}</h2>
+      <div class="flex items-center gap-2">
+      <span class="text-xs px-3 py-1 rounded-full font-bold
+        {% if e.is_fully_paid %}bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200{% elif e.remaining_amount %}bg-amber-50 text-amber-700 ring-1 ring-amber-200{% else %}bg-red-50 text-red-700 ring-1 ring-red-200{% endif %}">
+        {% if e.is_fully_paid %}✅ تسویه کامل{% else %}{{ e.remaining_amount|toman }} تومان مانده{% endif %}
+      </span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-px bg-slate-100 mx-5 my-4 rounded-xl overflow-hidden">
+      <div class="bg-white p-4 text-center">
+        <div class="text-lg font-black text-slate-700">{{ e.total_amount|toman }}</div>
+        <div class="text-xs text-slate-400 mt-0.5">کل شهریه</div>
+      </div>
+      <div class="bg-white p-4 text-center">
+        <div class="text-lg font-black text-emerald-600">{{ e.paid_amount|toman }}</div>
+        <div class="text-xs text-slate-400 mt-0.5">پرداخت‌شده</div>
+      </div>
+      <div class="bg-white p-4 text-center">
+        <div class="text-lg font-black {% if e.remaining_amount %}text-red-500{% else %}text-emerald-500{% endif %}">{{ e.remaining_amount|toman }}</div>
+        <div class="text-xs text-slate-400 mt-0.5">باقی‌مانده</div>
+      </div>
+    </div>
+
+    {% if e.installments.exists %}
+    <div class="px-5 pb-5">
+      <h3 class="text-xs font-black text-slate-500 mb-3">📆 اقساط</h3>
+      <div class="space-y-2">
+        {% for inst in e.installments.all %}
+        <div class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 hover:bg-slate-100/50 transition-colors">
+          <div>
+            <div class="text-sm font-bold text-slate-700">{{ inst.amount|toman }} تومان</div>
+            <div class="text-xs text-slate-400 mt-0.5">سررسید: {{ inst.due_date|jalali }}</div>
+          </div>
+          <div class="flex items-center gap-2">
+            {% if inst.status == 'paid' %}
+              <span class="text-xs text-emerald-500 font-bold">✅ پرداخت شده</span>
+            {% elif inst.status == 'overdue' %}
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">سررسید گذشته</span>
+              <form method="POST" action="{% url 'student:payment_initiate' %}">
+                {% csrf_token %}
+                <input type="hidden" name="enrollment_id" value="{{ e.id }}">
+                <input type="hidden" name="amount" value="{{ inst.amount }}">
+                <button type="submit" class="text-xs px-3 py-1.5 bg-rose-600 text-white rounded-full font-bold hover:bg-rose-700 transition">
+                  پرداخت قسط
+                </button>
+              </form>
+            {% else %}
+              <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700">در انتظار</span>
+              <form method="POST" action="{% url 'student:payment_initiate' %}">
+                {% csrf_token %}
+                <input type="hidden" name="enrollment_id" value="{{ e.id }}">
+                <input type="hidden" name="amount" value="{{ inst.amount }}">
+                <button type="submit" class="text-xs px-3 py-1.5 bg-indigo-600 text-white rounded-full font-bold hover:bg-indigo-700 transition">
+                  پرداخت قسط
+                </button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% elif e.remaining_amount > 0 %}
+    <div class="px-5 pb-5">
+      <form method="POST" action="{% url 'student:payment_initiate' %}">
+        {% csrf_token %}
+        <input type="hidden" name="enrollment_id" value="{{ e.id }}">
+        <input type="hidden" name="amount" value="{{ e.remaining_amount }}">
+        <button type="submit" class="w-full text-sm px-4 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition">
+          پرداخت آنلاین — {{ e.remaining_amount|toman }} تومان
+        </button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+{% else %}
+  <div class="bg-white rounded-2xl p-12 text-center border border-slate-100 shadow-sm">
+    <div class="text-5xl mb-4">💳</div>
+    <h3 class="font-black text-slate-700">هیچ اطلاعات مالی‌ای وجود ندارد</h3>
+    <p class="text-sm text-slate-400 mt-2">با ثبت‌نام در دوره‌ها، اطلاعات مالی نمایش داده میشه</p>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends 'academy/dashboard/base.html' %}
+{% load custom_filters %}
+{% block nav_exams %}active{% endblock %}
+{% block content %}
+<div class="p-6 space-y-6 text-right" dir="rtl">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-base font-black text-slate-800">مدیریت آزمون‌ها</h1>
+            <p class="text-xs text-slate-400 mt-0.5">لیست تمام آزمون‌های تعریف شده</p>
+        </div>
+        <a href="{% url 'academy:exam_create' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-700 transition">+ آزمون جدید</a>
+    </div>
+
+    {% if courses %}
+    <form method="GET" class="flex gap-3 items-end">
+        <div class="space-y-1">
+            <label class="text-[11px] font-bold text-slate-600">فیلتر بر اساس دوره</label>
+            <select name="course" onchange="this.form.submit()" class="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-800">
+                <option value="">همه دوره‌ها</option>
+                {% for c in courses %}
+                <option value="{{ c.id }}" {% if selected_course_id == c.id %}selected{% endif %}>{{ c.title }} ({{ c.code }})</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+    {% endif %}
+
+    <div class="grid grid-cols-1 gap-3">
+        {% for exam in exams %}
+        <div class="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-sm transition">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-sm font-bold text-slate-800">{{ exam.title }}</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full
+                            {% if exam.status == 'active' %}bg-emerald-50 text-emerald-700
+                            {% elif exam.status == 'upcoming' %}bg-amber-50 text-amber-700
+                            {% elif exam.status == 'closed' %}bg-red-50 text-red-700
+                            {% else %}bg-slate-100 text-slate-500{% endif %}">
+                            {{ exam.status_display }}
+                        </span>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">{{ exam.get_exam_type_display }}</span>
+                    </div>
+                    <div class="text-xs text-slate-500 space-x-3 space-x-reverse">
+                        <span>دوره: {{ exam.course.title }}</span>
+                        <span>سوالات: {{ exam.total_questions }}</span>
+                        <span>نمره کل: {{ exam.total_score }}</span>
+                        <span>مدت: {{ exam.duration_minutes }} دقیقه</span>
+                        <span>تلاش مجاز: {{ exam.attempts_allowed }}</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 mr-4">
+                    <a href="{% url 'academy:exam_questions' exam.id %}" class="text-xs px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition">سوالات</a>
+                    <a href="{% url 'academy:exam_results' exam.id %}" class="text-xs px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition">نتایج</a>
+                    <a href="{% url 'academy:exam_edit' exam.id %}" class="text-xs px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold transition">ویرایش</a>
+                    <form method="POST" action="{% url 'academy:exam_delete' exam.id %}" onsubmit="return confirm('آیا از حذف این آزمون اطمینان دارید؟')" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="text-xs px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 font-bold transition">حذف</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-12 text-slate-400">
+            <p class="text-sm font-bold">هیچ آزمونی یافت نشد</p>
+            <p class="text-xs mt-1">اولین آزمون را ایجاد کنید</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

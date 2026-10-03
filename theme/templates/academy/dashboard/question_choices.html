@@ -1,0 +1,87 @@
+{% extends 'academy/dashboard/base.html' %}
+{% load static %}
+{% block nav_exams %}active{% endblock %}
+{% block content %}
+<div class="p-6 space-y-6 text-right" dir="rtl">
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-base font-black text-slate-800">مدیریت گزینه‌های سوال</h1>
+                <p class="text-xs text-slate-400 mt-0.5">{{ question.title }} | {{ question.get_question_type_display }} | {{ question.points }} نمره</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <a href="{% url 'academy:exam_questions' question.exam_id %}"
+                   class="text-xs px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition">← بازگشت</a>
+            </div>
+        </div>
+
+        <!-- افزودن گزینه -->
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6">
+            <h2 class="text-xs font-bold text-slate-700 mb-3">➕ افزودن گزینه جدید</h2>
+            <form method="POST" enctype="multipart/form-data" class="flex flex-wrap items-end gap-3">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_choice">
+                <div class="flex-1 min-w-[200px] space-y-1">
+                    <label class="text-[11px] font-bold text-slate-600">متن گزینه *</label>
+                    <input type="text" name="text" required
+                           class="w-full px-3 py-2 text-xs text-slate-800 rounded-lg border border-slate-200 focus:outline-none focus:border-blue-500 font-medium">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[11px] font-bold text-slate-600">تصویر (اختیاری)</label>
+                    <input type="file" name="image" accept="image/*"
+                           class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300">
+                </div>
+                <div class="flex items-center gap-2 pb-1">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" name="is_correct"
+                               class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                        <span class="text-xs font-bold text-slate-600">گزینه صحیح</span>
+                    </label>
+                </div>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-700 transition">افزودن</button>
+            </form>
+        </div>
+
+        <!-- لیست گزینه‌ها -->
+        <div class="space-y-2">
+            {% for c in choices %}
+            <div class="border border-slate-200 rounded-xl p-4 hover:border-slate-300 transition">
+                <div class="flex items-center gap-4">
+                    {% if c.image %}
+                    <img src="{{ c.image.url }}" alt="" class="w-12 h-12 rounded-lg object-cover border border-slate-100">
+                    {% endif %}
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-slate-800">{{ c.text }}</span>
+                            {% if c.is_correct %}
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold">✓ صحیح</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <form method="POST" class="inline" style="display:inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="set_correct">
+                            <input type="hidden" name="choice_id" value="{{ c.id }}">
+                            <button type="submit" class="text-xs px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold transition">تنظیم صحیح</button>
+                        </form>
+                        <form method="POST" class="inline" style="display:inline"
+                              onsubmit="return confirm('حذف گزینه؟')">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete_choice">
+                            <input type="hidden" name="choice_id" value="{{ c.id }}">
+                            <button type="submit" class="text-xs px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 font-bold transition">حذف</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-12 text-slate-400">
+                <p class="text-sm font-bold">هیچ گزینه‌ای تعریف نشده</p>
+                <p class="text-xs mt-1">برای سوالات چند گزینه‌ای، جورکردنی و ترتیب‌دار باید گزینه تعریف کنید</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

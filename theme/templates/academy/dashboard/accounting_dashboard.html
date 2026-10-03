@@ -1,0 +1,364 @@
+{% extends "academy/dashboard/base.html" %}
+{% load custom_filters %}
+
+{% block title %}{{ school_title }} | داشبورد حسابداری{% endblock %}
+{% block nav_accounting %}active{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-lg font-black text-slate-800">داشبورد حسابداری</h1>
+    <p class="text-xs text-slate-400 mt-1">خلاصه وضعیت مالی {{ school_title }}</p>
+  </div>
+  <a href="{% url 'academy:accounting_create' %}"
+     class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 px-4 rounded-lg transition shadow-sm">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+    ثبت تراکنش
+  </a>
+</div>
+
+<!-- ═══ KPI Cards ═══ -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+  <!-- درآمد -->
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-[10px] font-bold text-slate-400">درآمد واقعی</span>
+      <div class="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+    </div>
+    <p class="text-xl font-black text-emerald-600">{{ total_revenue|toman }}</p>
+    <p class="text-[10px] text-slate-400 mt-1">تومان — پرداخت هنرجویان</p>
+    <div class="mt-2 pt-2 border-t border-slate-100">
+      <p class="text-[9px] text-slate-400">شهریه کل: {{ enrollment_revenue|toman }} تومان</p>
+    </div>
+  </div>
+
+  <!-- هزینه -->
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-[10px] font-bold text-slate-400">کل هزینه‌ها</span>
+      <div class="w-8 h-8 bg-rose-50 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>
+      </div>
+    </div>
+    <p class="text-xl font-black text-rose-600">{{ total_expenses|toman }}</p>
+    <p class="text-[10px] text-slate-400 mt-1">تومان — هزینه + مدرسین</p>
+    <div class="mt-2 pt-2 border-t border-slate-100">
+      <p class="text-[9px] text-slate-400">نرخ هزینه: {% if total_revenue > 0 %}{% widthratio total_expenses total_revenue 100 %}{% else %}۰{% endif %}%</p>
+    </div>
+  </div>
+
+  <!-- سود -->
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-[10px] font-bold text-slate-400">سود خالص</span>
+      <div class="w-8 h-8 {% if net_profit >= 0 %}bg-blue-50{% else %}bg-rose-50{% endif %} rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 {% if net_profit >= 0 %}text-blue-500{% else %}text-rose-500{% endif %}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/></svg>
+      </div>
+    </div>
+    <p class="text-xl font-black {% if net_profit >= 0 %}text-blue-600{% else %}text-rose-600{% endif %}">{{ net_profit|toman }}</p>
+    <p class="text-[10px] text-slate-400 mt-1">تومان — درآمد - هزینه</p>
+    <div class="mt-2 pt-2 border-t border-slate-100">
+      <p class="text-[9px] text-slate-400">حاشیه سود: {% if total_revenue > 0 %}{% widthratio net_profit total_revenue 100 %}{% else %}۰{% endif %}%</p>
+    </div>
+  </div>
+
+  <!-- بدهی -->
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-[10px] font-bold text-slate-400">بدهی باقی‌مانده</span>
+      <div class="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+      </div>
+    </div>
+    <p class="text-xl font-black text-amber-600">{{ total_debt|toman }}</p>
+    <p class="text-[10px] text-slate-400 mt-1">تومان — شهریه نپرداخته</p>
+    <div class="mt-2 pt-2 border-t border-slate-100">
+      <p class="text-[9px] text-slate-400">نرخ وصول: {% if enrollment_revenue > 0 %}{% widthratio total_revenue enrollment_revenue 100 %}{% else %}۰{% endif %}%</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ نمودار ماهانه ═══ -->
+<div class="bg-white border border-slate-200 rounded-xl p-5 mb-6">
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <h3 class="text-sm font-black text-slate-700">درآمد و هزینه — ۶ ماه اخیر</h3>
+      <p class="text-[10px] text-slate-400 mt-0.5">مقایسه ماهانه (سبز: درآمد، قرمز: هزینه)</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="flex items-center gap-1 text-[10px] text-slate-500"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> درآمد</span>
+      <span class="flex items-center gap-1 text-[10px] text-slate-500"><span class="w-2 h-2 rounded-full bg-rose-500"></span> هزینه</span>
+    </div>
+  </div>
+  <div class="relative" style="height: 260px;">
+    <canvas id="monthlyChart"></canvas>
+  </div>
+</div>
+
+<!-- ═══ نمودار هفتگی ═══ -->
+<div class="bg-white border border-slate-200 rounded-xl p-5 mb-6">
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <h3 class="text-sm font-black text-slate-700">درآمد و هزینه — ۴ هفته اخیر</h3>
+      <p class="text-[10px] text-slate-400 mt-0.5">روند هفتگی (خط: درآمد، ناحیه: هزینه)</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="flex items-center gap-1 text-[10px] text-slate-500"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> درآمد</span>
+      <span class="flex items-center gap-1 text-[10px] text-slate-500"><span class="w-2 h-2 rounded-full bg-rose-500"></span> هزینه</span>
+    </div>
+  </div>
+  <div class="relative" style="height: 260px;">
+    <canvas id="weeklyChart"></canvas>
+  </div>
+</div>
+
+<!-- ═══ درآمد و هزینه به تفکیک ═══ -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
+  <!-- درآمد به تفکیک دوره -->
+  <div class="bg-white border border-slate-200 rounded-xl p-5">
+    <h3 class="text-sm font-black text-slate-700 mb-1">درآمد به تفکیک دوره</h3>
+    <p class="text-[10px] text-slate-400 mb-4">مبلغ پرداختی هنرجویان هر دوره</p>
+    <div class="space-y-3">
+      {% for item in revenue_by_course %}
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-slate-600 truncate max-w-[55%]">{{ item.course__title|default:"بدون دوره" }}</span>
+        <div class="flex items-center gap-2 flex-1 mx-3">
+          <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div class="h-full bg-emerald-400 rounded-full" style="width: {% widthratio item.total total_revenue 100 %}%"></div>
+          </div>
+        </div>
+        <span class="text-xs font-bold text-emerald-600 font-mono min-w-[90px] text-left">{{ item.total|toman }}</span>
+      </div>
+      {% empty %}
+      <div class="text-center py-8">
+        <div class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+          <svg class="w-5 h-5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <p class="text-xs text-slate-400">هنوز درآمدی ثبت نشده</p>
+        <p class="text-[10px] text-slate-300 mt-1">تراکنش درآمد ثبت کنید تا اینجا نمایش داده شود</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- هزینه به تفکیک دسته -->
+  <div class="bg-white border border-slate-200 rounded-xl p-5">
+    <h3 class="text-sm font-black text-slate-700 mb-1">هزینه به تفکیک دسته</h3>
+    <p class="text-[10px] text-slate-400 mb-4">هزینه‌ها بر اساس دسته‌بندی ثبت شده</p>
+    <div class="space-y-3">
+      {% for item in expense_by_category %}
+      <div class="flex items-center justify-between">
+        <span class="text-xs text-slate-600 truncate max-w-[55%]">{{ item.expense_category__name|default:"بدون دسته" }}</span>
+        <div class="flex items-center gap-2 flex-1 mx-3">
+          <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+            <div class="h-full bg-rose-400 rounded-full" style="width: {% widthratio item.total total_expenses 100 %}%"></div>
+          </div>
+        </div>
+        <span class="text-xs font-bold text-rose-600 font-mono min-w-[90px] text-left">{{ item.total|toman }}</span>
+      </div>
+      {% empty %}
+      <div class="text-center py-8">
+        <div class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+          <svg class="w-5 h-5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>
+        </div>
+        <p class="text-xs text-slate-400">هنوز هزینه‌ای ثبت نشده</p>
+        <p class="text-[10px] text-slate-300 mt-1">تراکنش هزینه با دسته‌بندی ثبت کنید</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- ═══ آخرین تراکنش‌ها ═══ -->
+<div class="bg-white border border-slate-200 rounded-xl overflow-hidden mb-6">
+  <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+    <h3 class="text-sm font-black text-slate-700">آخرین تراکنش‌ها</h3>
+    <a href="{% url 'academy:accounting_transactions' %}" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 transition">مشاهده همه ←</a>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead>
+        <tr class="bg-slate-50 border-b border-slate-200">
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">تاریخ</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">نوع</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">مبلغ</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">دوره</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">توضیح</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">روش</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for tx in recent_transactions %}
+        <tr class="hover:bg-slate-50/50 transition">
+          <td class="px-4 py-3 text-[11px] font-mono text-slate-500">{{ tx.transaction_date|jalali }}</td>
+          <td class="px-4 py-3">
+            {% if tx.transaction_type == 'income' %}
+              <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">درآمد</span>
+            {% elif tx.transaction_type == 'expense' %}
+              <span class="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">هزینه</span>
+            {% elif tx.transaction_type == 'teacher_payout' %}
+              <span class="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">مدرس</span>
+            {% else %}
+              <span class="text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">{{ tx.get_transaction_type_display }}</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-xs font-bold font-mono {% if tx.transaction_type == 'income' %}text-emerald-600{% else %}text-rose-600{% endif %}">
+            {{ tx.amount|toman }}
+          </td>
+          <td class="px-4 py-3 text-[11px] text-slate-500">{{ tx.course.title|default:"—" }}</td>
+          <td class="px-4 py-3 text-[11px] text-slate-500 max-w-[180px] truncate">{{ tx.description|default:"—" }}</td>
+          <td class="px-4 py-3 text-[11px] text-slate-500">{{ tx.get_payment_method_display|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="px-4 py-10 text-center">
+            <div class="flex flex-col items-center gap-2">
+              <div class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center">
+                <svg class="w-5 h-5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+              </div>
+              <p class="text-xs text-slate-400">هیچ تراکنشی ثبت نشده</p>
+              <a href="{% url 'academy:accounting_create' %}" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-700">+ ثبت اولین تراکنش</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ Chart.js ═══ -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+var monthlyLabels = [{% for d in monthly_data %}'{{ d.label }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+var monthlyIncome = [{% for d in monthly_data %}{{ d.income }}{% if not forloop.last %},{% endif %}{% endfor %}];
+var monthlyExpense = [{% for d in monthly_data %}{{ d.expense }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+var weeklyLabels = [{% for d in weekly_data %}'{{ d.label }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+var weeklyIncome = [{% for d in weekly_data %}{{ d.income }}{% if not forloop.last %},{% endif %}{% endfor %}];
+var weeklyExpense = [{% for d in weekly_data %}{{ d.expense }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+// نمودار ماهانه — نمودار میله‌ای
+new Chart(document.getElementById('monthlyChart'), {
+  type: 'bar',
+  data: {
+    labels: monthlyLabels,
+    datasets: [
+      {
+        label: 'درآمد',
+        data: monthlyIncome,
+        backgroundColor: 'rgba(16, 185, 129, 0.85)',
+        borderColor: 'rgb(16, 185, 129)',
+        borderWidth: 0,
+        borderRadius: 8,
+        borderSkipped: false,
+      },
+      {
+        label: 'هزینه',
+        data: monthlyExpense,
+        backgroundColor: 'rgba(239, 68, 68, 0.85)',
+        borderColor: 'rgb(239, 68, 68)',
+        borderWidth: 0,
+        borderRadius: 8,
+        borderSkipped: false,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { intersect: false, mode: 'index' },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: 'rgba(15,23,42,0.9)',
+        titleFont: { size: 12, family: 'Vazirmatn' },
+        bodyFont: { size: 11, family: 'Vazirmatn' },
+        padding: 12,
+        cornerRadius: 8,
+        callbacks: {
+          label: function(ctx) {
+            return ctx.dataset.label + ': ' + ctx.raw.toLocaleString('fa-IR') + ' تومان';
+          }
+        }
+      }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 11, family: 'Vazirmatn' } } },
+      y: {
+        beginAtZero: true,
+        grid: { color: 'rgba(0,0,0,0.04)' },
+        ticks: { font: { size: 10 }, callback: function(val) { return val >= 1000000 ? (val/1000000).toFixed(0) + 'M' : val >= 1000 ? (val/1000).toFixed(0) + 'K' : val; } }
+      }
+    }
+  }
+});
+
+// نمودار هفتگی — نمودار خطی
+new Chart(document.getElementById('weeklyChart'), {
+  type: 'line',
+  data: {
+    labels: weeklyLabels,
+    datasets: [
+      {
+        label: 'درآمد',
+        data: weeklyIncome,
+        borderColor: 'rgb(16, 185, 129)',
+        backgroundColor: 'rgba(16, 185, 129, 0.08)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: 'rgb(16, 185, 129)',
+        pointBorderWidth: 2,
+        borderWidth: 2.5,
+      },
+      {
+        label: 'هزینه',
+        data: weeklyExpense,
+        borderColor: 'rgb(239, 68, 68)',
+        backgroundColor: 'rgba(239, 68, 68, 0.08)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: 'rgb(239, 68, 68)',
+        pointBorderWidth: 2,
+        borderWidth: 2.5,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { intersect: false, mode: 'index' },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: 'rgba(15,23,42,0.9)',
+        titleFont: { size: 12, family: 'Vazirmatn' },
+        bodyFont: { size: 11, family: 'Vazirmatn' },
+        padding: 12,
+        cornerRadius: 8,
+        callbacks: {
+          label: function(ctx) {
+            return ctx.dataset.label + ': ' + ctx.raw.toLocaleString('fa-IR') + ' تومان';
+          }
+        }
+      }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 11, family: 'Vazirmatn' } } },
+      y: {
+        beginAtZero: true,
+        grid: { color: 'rgba(0,0,0,0.04)' },
+        ticks: { font: { size: 10 }, callback: function(val) { return val >= 1000000 ? (val/1000000).toFixed(0) + 'M' : val >= 1000 ? (val/1000).toFixed(0) + 'K' : val; } }
+      }
+    }
+  }
+});
+</script>
+{% endblock %}

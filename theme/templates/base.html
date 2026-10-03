@@ -1,0 +1,28 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ school_title }} | کارخانه نرم‌افزار هوشمند{% endblock %}</title>
+    
+    {% tailwind_css %}
+    
+    <style>
+        @font-face {
+            font-family: 'Vazirmatn';
+            src: url("{% static 'fonts/Vazirmatn-Regular.woff2' %}") format('woff2');
+            font-weight: 400;
+        }
+        @font-face {
+            font-family: 'Vazirmatn';
+            src: url("{% static 'fonts/Vazirmatn-Black.woff2' %}") format('woff2');
+            font-weight: 900;
+        }
+        body { font-family: 'Vazirmatn', sans-serif; }
+    </style>
+</head>
+<body class="bg-[#020617] text-slate-200 antialiased">
+    {% block content %}{% endblock %}
+</body>
+</html>

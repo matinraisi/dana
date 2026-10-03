@@ -1,0 +1,180 @@
+{% extends "teacher/base.html" %}
+{% load custom_filters %}
+{% block title %}جلسات {{ course.title }}{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-5 text-right">
+
+  <div class="flex items-center justify-between flex-wrap gap-4">
+    <div>
+      <h1 class="text-lg font-black text-slate-800">{{ course.title }}</h1>
+      <p class="text-xs text-slate-500 mt-0.5">مدیریت جلسات و منابع آموزشی</p>
+    </div>
+    <a href="{% url 'teacher:course_list' %}" class="text-xs text-slate-500 hover:text-slate-700">← بازگشت به دوره‌ها</a>
+  </div>
+
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+    <h3 class="text-xs font-black text-slate-700 mb-4 flex items-center gap-2">
+      <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+      افزودن جلسه جدید
+    </h3>
+    <form method="POST" action="{% url 'teacher:session_create' course.id %}">
+      {% csrf_token %}
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div class="space-y-1">
+          <label class="text-[10px] font-bold text-slate-500">عنوان جلسه</label>
+          <input type="text" name="title" placeholder="مثلاً: جلسه سوم - متغیرها"
+                 class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs">
+        </div>
+        <div class="space-y-1">
+          <label class="text-[10px] font-bold text-slate-500">تاریخ برگزاری *</label>
+          <input type="date" name="date" required
+                 class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs">
+        </div>
+        <div class="space-y-1">
+          <label class="text-[10px] font-bold text-slate-500">ساعت شروع</label>
+          <input type="time" name="start_time"
+                 class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs">
+        </div>
+        <div class="space-y-1">
+          <label class="text-[10px] font-bold text-slate-500">ساعت پایان</label>
+          <input type="time" name="end_time"
+                 class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs">
+        </div>
+      </div>
+      <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="space-y-1">
+          <label class="text-[10px] font-bold text-slate-500">محل برگزاری</label>
+          <input type="text" name="location" placeholder="مثلاً: کلاس ۱، سالن اصلی"
+                 class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs">
+        </div>
+        <div class="space-y-1">
+          <label class="text-[10px] font-bold text-slate-500">لینک کلاس آنلاین (اختیاری)</label>
+          <input type="url" name="meeting_link" placeholder="https://..."
+                 class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs">
+        </div>
+        <div class="space-y-1">
+          <label class="text-[10px] font-bold text-slate-500">توضیحات</label>
+          <textarea name="description" rows="1" placeholder="اختیاری"
+                    class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs resize-none"></textarea>
+        </div>
+      </div>
+
+      <!-- Repeat Options -->
+      <div class="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
+        <div class="flex items-center gap-2 mb-2">
+          <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182"/></svg>
+          <span class="text-[10px] font-bold text-slate-600">تکرار هفتگی</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-slate-500">تعداد هفته</label>
+            <select name="repeat_weeks" class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs">
+              <option value="1">فقط همین جلسه</option>
+              <option value="2">۲ هفته</option>
+              <option value="4">۴ هفته</option>
+              <option value="8">۸ هفته</option>
+              <option value="12">۱۲ هفته (یک ترم)</option>
+            </select>
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-slate-500">روزهای تکرار</label>
+            <div class="flex flex-wrap gap-1.5">
+              <label class="flex items-center gap-1 px-2 py-1 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition has-[:checked]:bg-indigo-50 has-[:checked]:border-indigo-300">
+                <input type="checkbox" name="repeat_days" value="5" class="w-3 h-3 rounded text-indigo-600">
+                <span class="text-[10px] font-bold text-slate-700">شنبه</span>
+              </label>
+              <label class="flex items-center gap-1 px-2 py-1 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition has-[:checked]:bg-indigo-50 has-[:checked]:border-indigo-300">
+                <input type="checkbox" name="repeat_days" value="6" class="w-3 h-3 rounded text-indigo-600">
+                <span class="text-[10px] font-bold text-slate-700">یکشنبه</span>
+              </label>
+              <label class="flex items-center gap-1 px-2 py-1 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition has-[:checked]:bg-indigo-50 has-[:checked]:border-indigo-300">
+                <input type="checkbox" name="repeat_days" value="0" class="w-3 h-3 rounded text-indigo-600">
+                <span class="text-[10px] font-bold text-slate-700">دوشنبه</span>
+              </label>
+              <label class="flex items-center gap-1 px-2 py-1 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition has-[:checked]:bg-indigo-50 has-[:checked]:border-indigo-300">
+                <input type="checkbox" name="repeat_days" value="1" class="w-3 h-3 rounded text-indigo-600">
+                <span class="text-[10px] font-bold text-slate-700">سه‌شنبه</span>
+              </label>
+              <label class="flex items-center gap-1 px-2 py-1 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition has-[:checked]:bg-indigo-50 has-[:checked]:border-indigo-300">
+                <input type="checkbox" name="repeat_days" value="2" class="w-3 h-3 rounded text-indigo-600">
+                <span class="text-[10px] font-bold text-slate-700">چهارشنبه</span>
+              </label>
+              <label class="flex items-center gap-1 px-2 py-1 bg-white border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition has-[:checked]:bg-indigo-50 has-[:checked]:border-indigo-300">
+                <input type="checkbox" name="repeat_days" value="3" class="w-3 h-3 rounded text-indigo-600">
+                <span class="text-[10px] font-bold text-slate-700">پنجشنبه</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="mt-3 px-5 py-2 rounded-lg text-xs font-bold text-white transition"
+              style="background:linear-gradient(to left,#4f46e5,#7c3aed)">
+        <svg class="w-3.5 h-3.5 inline ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        ایجاد جلسه
+      </button>
+    </form>
+  </div>
+
+  {% if sessions %}
+  <div class="space-y-3">
+    {% for session in sessions %}
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 hover:shadow-md transition">
+      <div class="flex items-center justify-between flex-wrap gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-black text-sm">
+            {{ session.session_number }}
+          </div>
+          <div>
+            <h3 class="text-sm font-black text-slate-800">{{ session.title }}</h3>
+            <p class="text-[10px] text-slate-400 mt-0.5">
+              <span>{{ session.date|jalali }}</span>
+              {% if session.start_time %}
+              <span class="mr-2">{{ session.start_time|time:'H:i' }} تا {{ session.end_time|time:'H:i' }}</span>
+              {% endif %}
+              {% if session.has_online_meeting %}
+              <span class="mr-2 inline-flex items-center gap-1 text-emerald-600 font-bold">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                کلاس آنلاین
+              </span>
+              {% endif %}
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          {% if session.has_online_meeting %}
+          <a href="{{ session.get_meeting_link }}" target="_blank"
+             class="px-3 py-1.5 bg-rose-600 text-white rounded-lg text-[10px] font-bold hover:bg-rose-700 transition flex items-center gap-1">
+            شروع کلاس
+          </a>
+          {% endif %}
+          <a href="{% url 'teacher:attendance' session.id %}"
+             class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[10px] font-bold hover:bg-emerald-700 transition">
+            حضور و غیاب
+          </a>
+          <a href="{% url 'teacher:material_list' session.id %}"
+             class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-[10px] font-bold hover:bg-blue-700 transition">
+            محتوا
+          </a>
+          {% if session.description %}
+          <div class="group relative">
+            <span class="px-2 py-1 bg-slate-100 text-slate-500 rounded-lg text-[10px] cursor-default">توضیحات</span>
+            <div class="absolute bottom-full left-0 mb-1 bg-slate-800 text-white text-[10px] px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition pointer-events-none whitespace-nowrap z-10">
+              {{ session.description }}
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 text-center">
+    <div class="text-4xl mb-3">📅</div>
+    <p class="text-slate-500 font-medium">هنوز جلسه‌ای برای این دوره ایجاد نشده</p>
+    <p class="text-xs text-slate-400 mt-1">از فرم بالا اولین جلسه را اضافه کنید</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends 'academy/dashboard/base.html' %}
+{% load custom_filters %}
+{% block content %}
+<div class="p-4 md:p-6 space-y-4 text-right" dir="rtl">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <div>
+      <h1 class="text-xl font-black text-slate-800">برنامه فضاها</h1>
+      <p class="text-xs text-slate-400 mt-1">{{ week_start_jalali }} تا {{ week_end_jalali }} — کدام کلاس کی پر/خالی است</p>
+    </div>
+    <div class="flex items-center gap-1.5">
+      <a href="?week={{ prev_week }}" class="px-3 h-9 rounded-xl bg-white border border-slate-200 flex items-center gap-1 text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
+        <svg class="w-3.5 h-3.5 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+        هفته قبل
+      </a>
+      <a href="{% url 'academy:room_timetable' %}" class="px-3 h-9 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition flex items-center gap-1">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
+        این هفته
+      </a>
+      <a href="?week={{ next_week }}" class="px-3 h-9 rounded-xl bg-white border border-slate-200 flex items-center gap-1 text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
+        هفته بعد
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+      </a>
+    </div>
+  </div>
+
+  {% if locations %}
+
+  <!-- Per Room Timetables -->
+  {% for location in locations %}
+  <div class="bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden">
+    <!-- Room Header -->
+    <div class="px-5 py-3 bg-gradient-to-l from-slate-800 to-slate-700 flex items-center gap-2">
+      <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+      <span class="text-sm font-black text-white">{{ location }}</span>
+    </div>
+
+    <!-- Grid -->
+    <div class="overflow-x-auto">
+      <table class="w-full border-collapse min-w-[700px]">
+        <thead>
+          <tr>
+            <th class="w-16 p-1.5 bg-slate-50 text-[9px] font-black text-slate-500 border-b border-slate-200">ساعت</th>
+            {% for d in week_dates %}
+            <th class="p-1.5 bg-slate-50 text-center border-b border-slate-200 border-l border-l-slate-200">
+              <div class="text-[10px] font-black text-slate-700">
+                {% with wd=d.weekday %}
+                  {% if wd == 5 %}شنبه{% elif wd == 6 %}یکشنبه{% elif wd == 0 %}دوشنبه{% elif wd == 1 %}سه‌شنبه{% elif wd == 2 %}چهارشنبه{% elif wd == 3 %}پنجشنبه{% elif wd == 4 %}جمعه{% endif %}
+                {% endwith %}
+              </div>
+              <div class="text-[8px] text-slate-400 font-mono">{{ d|jalali }}</div>
+              {% if today.day == d.day and today.month == d.month %}
+              <div class="mt-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 mx-auto"></div>
+              {% endif %}
+            </th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for hour in hours %}
+          <tr class="border-b border-slate-100">
+            <td class="p-1 bg-slate-50 text-center border-l border-slate-200">
+              <div class="text-[9px] font-bold text-slate-600">{{ hour }}:00</div>
+            </td>
+            {% for day_idx in "0,1,2,3,4,5,6" %}
+            {% with di=day_idx|add:0 %}
+            <td class="p-0.5 border-l border-l-slate-100 min-h-[40px] align-top
+                        {% if today.day == week_dates.0.day and forloop.counter0 == 0 %}bg-indigo-50/30{% endif %}">
+              {% if room_grid %}
+                {% for loc_name, days_dict in room_grid.items %}
+                  {% if loc_name == location %}
+                    {% for g_day, hours_dict in days_dict.items %}
+                      {% if g_day == di %}
+                        {% for h, session_list in hours_dict.items %}
+                          {% if h == hour %}
+                            {% for s in session_list %}
+                            <div class="m-0.5 p-1 rounded border text-[8px] leading-tight bg-emerald-50 border-emerald-200">
+                              <div class="font-bold text-emerald-700 truncate">{{ s.course.title|truncatechars:12 }}</div>
+                              <div class="text-emerald-500 font-mono">{{ s.start_time|time:"H:i" }}{% if s.end_time %}-{{ s.end_time|time:"H:i" }}{% endif %}</div>
+                              <div class="text-emerald-400 truncate">{{ s.course.teacher.user.get_full_name|default:"-" }}</div>
+                            </div>
+                            {% endfor %}
+                          {% endif %}
+                        {% endfor %}
+                      {% endif %}
+                    {% endfor %}
+                  {% endif %}
+                {% endfor %}
+              {% endif %}
+            </td>
+            {% endwith %}
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endfor %}
+
+  {% else %}
+  <div class="bg-white border border-slate-200 shadow-sm rounded-2xl p-10 text-center">
+    <div class="w-16 h-16 mx-auto rounded-2xl bg-slate-100 flex items-center justify-center text-3xl mb-3">
+      <svg class="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
+    </div>
+    <p class="text-slate-500 font-medium">هنوز فضایی تعریف نشده</p>
+    <p class="text-xs text-slate-400 mt-1">وقتی جلسات با محل برگزاری ثبت بشن، اینجا نمایش داده می‌شن</p>
+  </div>
+  {% endif %}
+
+  <!-- Legend -->
+  <div class="flex flex-wrap gap-4 text-[10px] text-slate-500 px-1">
+    <span class="flex items-center gap-1.5">
+      <span class="w-3 h-3 rounded bg-emerald-100 border border-emerald-300"></span>
+      رزرو شده (پر)
+    </span>
+    <span class="flex items-center gap-1.5">
+      <span class="w-3 h-3 rounded bg-slate-50 border border-slate-200"></span>
+      خالی
+    </span>
+  </div>
+</div>
+{% endblock %}

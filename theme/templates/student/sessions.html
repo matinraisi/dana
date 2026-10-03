@@ -1,0 +1,53 @@
+{% extends "student/base.html" %}
+{% block title %}کلاس‌های آنلاین{% endblock %}
+{% block nav_sessions %}active{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-5 text-right">
+
+  <div class="bg-gradient-to-r from-indigo-500 via-blue-600 to-sky-500 rounded-2xl p-6 text-white shadow-lg">
+    <h1 class="text-lg font-black">کلاس‌های آنلاین</h1>
+    <p class="text-sm text-white/80 mt-1">جلسات دارای کلاس آنلاین دوره‌های شما</p>
+  </div>
+
+  {% if sessions %}
+  <div class="space-y-3">
+    {% for session in sessions %}
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 hover:shadow-md transition">
+      <div class="flex items-center justify-between flex-wrap gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-black text-sm">
+            {{ session.session_number }}
+          </div>
+          <div>
+            <h3 class="text-sm font-black text-slate-800">{{ session.title }}</h3>
+            <p class="text-[10px] text-slate-400 mt-0.5">
+              <span>{{ session.course.title }}</span>
+              <span class="mx-1">•</span>
+              <span>{{ session.date|date:'Y/m/d' }}</span>
+              {% if session.start_time %}
+              <span class="mr-1">{{ session.start_time|time:'H:i' }}</span>
+              {% endif %}
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          {% if session.has_online_meeting and session.get_meeting_link %}
+          <a href="{{ session.get_meeting_link }}" target="_blank"
+             class="px-4 py-2 bg-rose-600 text-white rounded-lg text-xs font-bold hover:bg-rose-700 transition flex items-center gap-1.5 shadow-sm">
+            ورود به کلاس
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 text-center">
+    <div class="text-5xl mb-4">💻</div>
+    <p class="text-slate-500 font-medium">جلسه آنلاینی برای شما یافت نشد</p>
+    <p class="text-xs text-slate-400 mt-1">جلسات دارای کلاس آنلاین در اینجا نمایش داده می‌شوند</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

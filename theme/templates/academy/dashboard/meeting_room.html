@@ -1,0 +1,127 @@
+{% load static tailwind_tags %}
+<!doctype html>
+<html lang="fa" dir="rtl" class="h-full scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ school_title }} | {{ room_id }}</title>
+  {% tailwind_css %}
+  <style>
+    @font-face { font-family:"Vazirmatn"; src:url("{% static 'font/fonts/webfonts/Vazirmatn-Regular.woff2' %}") format("woff2"); font-weight:400; }
+    @font-face { font-family:"Vazirmatn"; src:url("{% static 'font/fonts/webfonts/Vazirmatn-Black.woff2' %}") format("woff2"); font-weight:900; }
+    body { font-family:"Vazirmatn",sans-serif; margin:0; padding:0; }
+    #jitsi-container { width:100%; height:100vh; }
+    #fallback { display:none; }
+    @media (max-width: 640px) {
+      #toolbar { top: 8px; left: 8px; right: 8px; }
+      #toolbar a, #toolbar button { font-size: 10px; padding: 6px 10px; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100">
+
+  <!-- ─── Jitsi Container ─── -->
+  <div id="jitsi-container"></div>
+
+  <!-- ─── Fallback (if Jitsi doesn't load) ─── -->
+  <div id="fallback" class="fixed inset-0 z-40 bg-white flex items-center justify-center p-4">
+    <div class="w-full max-w-md text-center space-y-5">
+      <div class="w-16 h-16 mx-auto bg-amber-100 rounded-2xl flex items-center justify-center">
+        <svg class="w-8 h-8 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+      </div>
+      <h2 class="text-lg font-black text-slate-800">سرور جیتسی در دسترس نیست</h2>
+      <p class="text-sm text-slate-500">از لینک زیر می‌توانید مستقیم وارد جلسه شوید یا از پلتفرم دلخواه استفاده کنید.</p>
+      <div class="bg-slate-50 rounded-xl p-3 text-left" dir="ltr">
+        <p class="text-xs font-mono text-slate-600 break-all" id="directLink">https://{{ jitsi_domain }}/{{ room_id }}</p>
+      </div>
+      <div class="flex gap-2 justify-center">
+        <a href="#" id="openDirectBtn"
+           class="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition shadow-sm text-sm"
+           target="_blank" rel="noopener noreferrer">
+          باز کردن مستقیم جلسه
+        </a>
+        <a href="{% url 'academy:meeting_home' %}"
+           class="px-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition text-sm">
+          بازگشت
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Toolbar ─── -->
+  <div id="toolbar" class="fixed top-4 left-4 z-50 flex gap-2 flex-wrap">
+    <a href="{% url 'academy:meeting_home' %}"
+       class="bg-white/90 hover:bg-white text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold shadow-lg transition flex items-center gap-1.5 backdrop-blur-sm border border-white/50">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+      جلسه جدید
+    </a>
+    <button id="copyLinkBtn"
+            onclick="copyMeetingLink()"
+            class="bg-white/90 hover:bg-white text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold shadow-lg transition flex items-center gap-1.5 backdrop-blur-sm border border-white/50">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+      <span id="copyLabel">کپی لینک</span>
+    </button>
+  </div>
+
+  <script src="https://{{ jitsi_domain }}/external_api.js" onerror="showFallback()"></script>
+  <script>
+    const domain = "{{ jitsi_domain }}";
+    const room = "{{ room_id }}";
+    const displayName = "{{ request.user.get_full_name|default:'' }}" || "مهمان";
+
+    let api = null;
+    let fallbackShown = false;
+
+    function showFallback() {
+      if (fallbackShown) return;
+      fallbackShown = true;
+      document.getElementById('jitsi-container').style.display = 'none';
+      document.getElementById('fallback').style.display = 'flex';
+      const directLink = `https://${domain}/${room}`;
+      document.getElementById('directLink').textContent = directLink;
+      document.getElementById('openDirectBtn').href = directLink;
+    }
+
+    setTimeout(() => {
+      if (!api) showFallback();
+    }, 10000);
+
+    const options = {
+      roomName: room,
+      parentNode: document.querySelector('#jitsi-container'),
+      configOverrides: {
+        startWithAudioMuted: true,
+        startWithVideoMuted: true,
+        disableDeepLinking: true,
+        prejoinPageEnabled: false,
+      },
+      interfaceConfigOverrides: {
+        SHOW_CHROME_EXTENSION_BANNER: false,
+        TOOLBAR_ALWAYS_VISIBLE: false,
+        DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
+        FILM_STRIP_MAX_HEIGHT: 100,
+        SHOW_BRAND_WATERMARK: false,
+        SHOW_WATERMARK_FOR_GUESTS: false,
+      },
+      userInfo: {
+        displayName: displayName,
+      },
+    };
+
+    try {
+      api = new JitsiMeetExternalAPI(domain, options);
+    } catch(e) {
+      showFallback();
+    }
+
+    function copyMeetingLink() {
+      const link = window.location.href;
+      navigator.clipboard.writeText(link).then(() => {
+        const label = document.getElementById('copyLabel');
+        label.textContent = '✅ کپی شد!';
+        setTimeout(() => { label.textContent = 'کپی لینک'; }, 2000);
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,377 @@
+{% extends 'academy/dashboard/base.html' %}
+{% load custom_filters %}
+
+{% block title %}{{ school_title }} | مدیریت اقساط شهریه{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-lg font-black text-slate-800">مدیریت اقساط شهریه</h1>
+    <p class="text-xs text-slate-400 mt-1">رصد و مدیریت پرداخت‌های هنرجویان</p>
+  </div>
+</div>
+
+<!-- ═══ جستجو ═══ -->
+<div class="bg-white border border-slate-200 rounded-xl p-4 mb-6">
+  <form method="GET" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+    <div class="flex-1 relative">
+      <input type="text" name="q" value="{{ search_query|default:'' }}"
+             placeholder="جستجو بر اساس نام، شماره موبایل، یا عنوان دوره..."
+             class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 pr-10 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-50 transition bg-white">
+      <div class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      </div>
+    </div>
+    <button type="submit" class="px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm">
+      جستجو
+    </button>
+    {% if search_query %}
+    <a href="{% url 'academy:finance_management' %}" class="px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition text-center">
+      پاک کردن
+    </a>
+    {% endif %}
+  </form>
+</div>
+
+<!-- ═══ KPI Cards ═══ -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-[10px] font-bold text-slate-400">کل هنرجویان</span>
+      <div class="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+      </div>
+    </div>
+    <p class="text-xl font-black text-slate-800">{{ total_students|toman }}</p>
+    <p class="text-[10px] text-slate-400 mt-1">نفر</p>
+  </div>
+
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-[10px] font-bold text-slate-400">شهریه کل</span>
+      <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625m0 0v-.375c0-.621.504-1.125 1.125-1.125H3.75v-.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125v.375m0 0H12v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125v3.375m0 0H19.5"/></svg>
+      </div>
+    </div>
+    <p class="text-xl font-black text-blue-600">{{ total_debt|toman }}</p>
+    <p class="text-[10px] text-slate-400 mt-1">تومان</p>
+  </div>
+
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-[10px] font-bold text-slate-400">دریافت شده</span>
+      <div class="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+    </div>
+    <p class="text-xl font-black text-emerald-600">{{ total_revenue|toman }}</p>
+    <p class="text-[10px] text-slate-400 mt-1">تومان</p>
+  </div>
+
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-[10px] font-bold text-slate-400">باقی‌مانده</span>
+      <div class="w-8 h-8 bg-rose-50 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+      </div>
+    </div>
+    <p class="text-xl font-black text-rose-600">{{ total_remaining|toman }}</p>
+    <p class="text-[10px] text-slate-400 mt-1">تومان — {% if overdue_count > 0 %}<span class="text-rose-500 font-bold">{{ overdue_count }} مورد معوق</span>{% else %}بدون معوقه{% endif %}</p>
+  </div>
+</div>
+
+<!-- ═══ جدول هنرجویان ═══ -->
+<div class="bg-white border border-slate-200 rounded-xl overflow-hidden mb-6">
+  <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+    <h3 class="text-sm font-black text-slate-700">لیست هنرجویان و وضعیت مالی</h3>
+    <span class="text-[10px] text-slate-400">{{ enrollments|length }} هنرجو</span>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead>
+        <tr class="bg-slate-50 border-b border-slate-200">
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">هنرجو / دوره</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">نوع پرداخت</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">شهریه کل</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">پرداخت شده</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">مانده</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">اقساط</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-center">عملیات</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for enroll in enrollments %}
+        <tr class="hover:bg-slate-50/50 transition">
+          <!-- هنرجو / دوره -->
+          <td class="px-4 py-3">
+            <p class="text-xs font-bold text-slate-800">{{ enroll.student.first_name }} {{ enroll.student.last_name }}</p>
+            <p class="text-[10px] text-indigo-600 mt-0.5">{{ enroll.course.title }}</p>
+          </td>
+
+          <!-- نوع پرداخت -->
+          <td class="px-4 py-3">
+            {% if enroll.payment_method == 'installment' %}
+              <span class="text-[10px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">اقساطی</span>
+            {% elif enroll.payment_method == 'cash' %}
+              <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">نقدی</span>
+            {% else %}
+              <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">پرداخت نشده</span>
+            {% endif %}
+          </td>
+
+          <!-- شهریه کل -->
+          <td class="px-4 py-3 text-xs font-bold font-mono text-slate-700">{{ enroll.total_amount|toman }}</td>
+
+          <!-- پرداخت شده -->
+          <td class="px-4 py-3 text-xs font-bold font-mono text-emerald-600">{{ enroll.paid_amount|toman }}</td>
+
+          <!-- مانده -->
+          <td class="px-4 py-3">
+            {% if enroll.remaining_amount > 0 %}
+              <span class="text-xs font-bold font-mono text-rose-600">{{ enroll.remaining_amount|toman }}</span>
+            {% else %}
+              <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">تسویه</span>
+            {% endif %}
+          </td>
+
+          <!-- اقساط -->
+          <td class="px-4 py-3">
+            {% with insts=enroll.installments.all %}
+            {% if insts %}
+              <div class="flex flex-wrap gap-1.5">
+                {% for inst in insts %}
+                <div class="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg border text-center min-w-[80px]
+                  {% if inst.status == 'paid' %}bg-emerald-50 border-emerald-200
+                  {% elif inst.status == 'overdue' %}bg-rose-50 border-rose-200
+                  {% else %}bg-slate-50 border-slate-200{% endif %}">
+                  <span class="text-[10px] font-bold font-mono {% if inst.status == 'paid' %}text-emerald-700{% elif inst.status == 'overdue' %}text-rose-700{% else %}text-slate-700{% endif %}">
+                    {{ inst.amount|toman }}
+                  </span>
+                  <span class="text-[8px] text-slate-400 font-mono">{{ inst.due_date|jalali }}</span>
+                  <form action="{% url 'academy:toggle_installment' inst.id %}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit"
+                      class="text-[8px] font-bold px-2 py-0.5 rounded transition mt-0.5
+                        {% if inst.status == 'paid' %}bg-emerald-500 text-white hover:bg-emerald-600
+                        {% elif inst.status == 'overdue' %}bg-rose-500 text-white hover:bg-rose-600
+                        {% else %}bg-slate-200 text-slate-600 hover:bg-slate-300{% endif %}">
+                      {% if inst.status == 'paid' %}پرداخت شده
+                      {% elif inst.status == 'overdue' %}تأیید
+                      {% else %}تأیید{% endif %}
+                    </button>
+                  </form>
+                </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <span class="text-[10px] text-slate-400">—</span>
+            {% endif %}
+            {% endwith %}
+          </td>
+
+          <!-- عملیات -->
+          <td class="px-4 py-3 text-center">
+            {% if enroll.remaining_amount > 0 %}
+              <div class="flex items-center justify-center gap-1.5">
+                <button onclick="openPaymentModal({{ enroll.id }}, '{{ enroll.student.first_name }} {{ enroll.student.last_name }}', '{{ enroll.course.title }}', {{ enroll.remaining_amount }})"
+                        class="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition" title="ثبت پرداخت">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>
+                </button>
+                <form method="POST" action="{% url 'academy:payment_initiate' %}" class="inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="enrollment_id" value="{{ enroll.id }}">
+                  <input type="hidden" name="amount" value="{{ enroll.remaining_amount }}">
+                  <button type="submit"
+                          class="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition" title="پرداخت آنلاین">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75m-10.5 6h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+                  </button>
+                </form>
+              </div>
+            {% else %}
+              <span class="text-[10px] font-bold text-emerald-600">تسویه شده</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="px-4 py-12 text-center">
+            <div class="flex flex-col items-center gap-3">
+              <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center">
+                <svg class="w-6 h-6 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </div>
+              <p class="text-sm font-bold text-slate-400">هیچ هنرجویی یافت نشد</p>
+              <a href="{% url 'academy:student_create' %}" class="text-xs font-bold text-indigo-600 hover:text-indigo-700">+ ثبت‌نام هنرجوی جدید</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══ صفحه‌بندی ═══ -->
+  {% if page_obj.has_other_pages %}
+  <div class="px-4 py-4 border-t border-slate-100 flex items-center justify-between">
+    <p class="text-[10px] text-slate-400">
+      صفحه {{ page_obj.number }} از {{ page_obj.paginator.num_pages }}
+    </p>
+    <div class="flex items-center gap-1">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}"
+           class="px-3 py-1.5 text-[11px] font-bold text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition">
+          ← قبلی
+        </a>
+      {% endif %}
+
+      {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+          <span class="px-3 py-1.5 text-[11px] font-bold text-white bg-indigo-600 rounded-lg">{{ num }}</span>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+          <a href="?page={{ num }}{% if search_query %}&q={{ search_query }}{% endif %}"
+             class="px-3 py-1.5 text-[11px] font-bold text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition">
+            {{ num }}
+          </a>
+        {% elif num == page_obj.number|add:'-3' or num == page_obj.number|add:'3' %}
+          <span class="px-2 text-slate-400">...</span>
+        {% endif %}
+      {% endfor %}
+
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}"
+           class="px-3 py-1.5 text-[11px] font-bold text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition">
+          بعدی ←
+        </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ═══ مودال ثبت پرداخت ═══ -->
+<div id="paymentModal" class="fixed inset-0 z-50 hidden bg-black/40 backdrop-blur-sm flex items-center justify-center p-4" onclick="if(event.target===this)closePaymentModal()">
+  <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md" onclick="event.stopPropagation()">
+
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+      <h3 class="text-sm font-black text-slate-800">ثبت پرداخت شهریه</h3>
+      <button onclick="closePaymentModal()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition">
+        <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+
+    <form method="POST" action="{% url 'academy:record_payment' %}" class="p-6 space-y-4">
+      {% csrf_token %}
+      <input type="hidden" name="enrollment_id" id="modal_enrollment_id">
+
+      <!-- اطلاعات هنرجو -->
+      <div class="bg-slate-50 rounded-xl p-4 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-slate-500">هنرجو:</span>
+          <span class="text-xs font-bold text-slate-800" id="modal_student_name">—</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-slate-500">دوره:</span>
+          <span class="text-xs font-bold text-slate-800" id="modal_course_name">—</span>
+        </div>
+        <div class="flex items-center justify-between pt-2 border-t border-slate-200">
+          <span class="text-xs text-slate-500">بدهی باقی‌مانده:</span>
+          <span class="text-sm font-black text-rose-600" id="modal_remaining">—</span>
+        </div>
+      </div>
+
+      <!-- مبلغ -->
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-2">مبلغ پرداختی (تومان) <span class="text-red-400">*</span></label>
+        <input type="text" name="amount" id="modal_amount" required inputmode="numeric"
+               class="currency-input w-full border-2 border-slate-200 rounded-xl px-4 py-3.5 pr-10 text-sm font-mono text-slate-800 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition bg-white text-left"
+               dir="ltr">
+        <div class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hidden">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+      </div>
+
+      <!-- روش پرداخت -->
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-2">روش پرداخت</label>
+        <select name="payment_method"
+                class="w-full border-2 border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-800 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition bg-white">
+          <option value="cash">نقدی</option>
+          <option value="pos">کارت‌خوان</option>
+          <option value="card">کارت به کارت</option>
+          <option value="gateway">پرداخت آنلاین</option>
+          <option value="installment">قسط</option>
+        </select>
+      </div>
+
+      <!-- شماره کارت -->
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-2">شماره کارت (اختیاری)</label>
+        <input type="text" name="card_number" placeholder="۴ رقم آخر کارت" maxlength="4" dir="ltr"
+               class="w-full border-2 border-slate-200 rounded-xl px-4 py-3.5 text-sm font-mono text-slate-800 placeholder-slate-300 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition bg-white text-center tracking-widest">
+      </div>
+
+      <!-- توضیحات -->
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-2">توضیحات (اختیاری)</label>
+        <input type="text" name="description" placeholder="مثلاً: پرداخت قسط اول"
+               class="w-full border-2 border-slate-200 rounded-xl px-4 py-3.5 text-sm text-slate-800 placeholder-slate-300 focus:outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-50 transition bg-white">
+      </div>
+
+      <!-- دکمه‌ها -->
+      <div class="flex gap-3 pt-2">
+        <button type="button" onclick="closePaymentModal()"
+                class="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-200 transition">
+          انصراف
+        </button>
+        <button type="submit"
+                class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm active:scale-[0.98]">
+          ثبت پرداخت
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function formatNumber(num) {
+    if (!num || num === '0') return '';
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+function parseNumber(str) {
+    return str.replace(/,/g, '');
+}
+
+function openPaymentModal(enrollmentId, studentName, courseName, remaining) {
+    document.getElementById('modal_enrollment_id').value = enrollmentId;
+    document.getElementById('modal_student_name').textContent = studentName;
+    document.getElementById('modal_course_name').textContent = courseName;
+    document.getElementById('modal_remaining').textContent = remaining.toLocaleString('fa-IR') + ' تومان';
+    document.getElementById('modal_amount').value = formatNumber(remaining);
+    document.getElementById('paymentModal').classList.remove('hidden');
+}
+
+function closePaymentModal() {
+    document.getElementById('paymentModal').classList.add('hidden');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.currency-input').forEach(function(input) {
+        input.addEventListener('input', function() {
+            var raw = parseNumber(this.value);
+            if (/^\d*$/.test(raw)) {
+                this.value = formatNumber(raw);
+            }
+        });
+    });
+
+    document.querySelectorAll('form').forEach(function(form) {
+        form.addEventListener('submit', function() {
+            form.querySelectorAll('.currency-input').forEach(function(input) {
+                input.value = parseNumber(input.value);
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,187 @@
+{% extends 'academy/dashboard/base.html' %}
+{% load custom_filters %}
+
+{% block title %}مدیریت هنرجویان | داشبورد{% endblock %}
+
+{% block content %}
+<style>
+  @media (min-width: 768px) {
+    .d-student-table { display: table !important; }
+    .d-student-cards { display: none !important; }
+  }
+  @media (max-width: 767.98px) {
+    .d-student-table { display: none !important; }
+    .d-student-cards { display: block !important; }
+  }
+</style>
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 md:mb-6">
+  <div>
+    <h2 class="text-base md:text-lg font-black text-slate-800">مدیریت هنرجویان</h2>
+    <p class="text-xs text-slate-500 mt-1">جستجو، فیلتر و مدیریت تمام هنرجویان</p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <a href="{% url 'academy:student_create' %}"
+       class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2 px-3.5 rounded-lg transition shadow-sm">
+      <span>➕</span> هنرجوی جدید
+    </a>
+    <a href="{% url 'academy:import_excel' %}"
+       class="inline-flex items-center gap-1.5 bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold py-2 px-3.5 rounded-lg transition shadow-sm">
+      <span>📥</span> ورود اکسل
+    </a>
+  </div>
+</div>
+
+<section class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+  <div class="p-3 md:p-4 border-b border-slate-100 bg-[#f8fafc] space-y-3">
+    <form method="GET" action="{% url 'academy:student_list' %}" class="flex flex-col sm:flex-row gap-2 md:gap-3">
+      <select name="course" class="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:border-blue-500">
+        <option value="">همه دوره‌ها</option>
+        {% for course in courses %}
+          <option value="{{ course.id }}" {% if selected_course == course.id|stringformat:'s' %}selected{% endif %}>{{ course.title }}</option>
+        {% endfor %}
+      </select>
+      <input type="text" name="search" value="{{ search_query }}" placeholder="جستجوی نام / کد ملی / موبایل..."
+             class="px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:border-blue-500 font-medium flex-1">
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-blue-700 transition">اعمال فیلتر</button>
+      {% if selected_course or search_query %}
+        <a href="{% url 'academy:student_list' %}" class="inline-flex items-center px-3 py-2 text-xs font-bold text-slate-500 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition">❌ پاک کردن</a>
+      {% endif %}
+    </form>
+  </div>
+
+  {% if page_obj|length > 0 %}
+    <div class="px-3 md:px-4 py-2 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
+      <span class="text-[10px] font-bold text-slate-400">نمایش {{ page_obj.start_index }}–{{ page_obj.end_index }} از {{ page_obj.paginator.count|toman }} هنرجو</span>
+    </div>
+  {% endif %}
+
+  <div class="overflow-x-auto">
+    <table class="d-student-table w-full text-right border-collapse">
+      <thead>
+        <tr class="bg-[#f8fafc] border-b border-slate-200 text-[11px] font-black text-slate-500 tracking-wide">
+          <th class="py-3 px-5">ردیف</th>
+          <th class="py-3 px-5">نام و نام خانوادگی</th>
+          <th class="py-3 px-5">کد ملی</th>
+          <th class="py-3 px-5">موبایل</th>
+          <th class="py-3 px-5">وضعیت مدارک</th>
+          <th class="py-3 px-5">دوره‌ها</th>
+          <th class="py-3 px-5">تاریخ ثبت</th>
+          <th class="py-3 px-5 text-left">عملیات</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-200/80 text-xs text-slate-600">
+        {% for student in page_obj %}
+          <tr class="hover:bg-slate-50 transition-colors">
+            <td class="py-3 px-5 text-slate-400 font-mono">{{ page_obj.start_index|add:forloop.counter0 }}</td>
+            <td class="py-3 px-5 font-bold text-slate-800">{{ student.first_name }} {{ student.last_name }}</td>
+            <td class="py-3 px-5 text-slate-500 font-mono tabular-nums" dir="ltr">{{ student.national_code }}</td>
+            <td class="py-3 px-5 text-slate-500 font-mono tabular-nums" dir="ltr">{{ student.phone_number }}</td>
+            <td class="py-3 px-5">
+              {% if student.is_documents_approved %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100/60 text-emerald-800 border border-emerald-200">✅ تأیید شده</span>
+              {% else %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100/60 text-amber-800 border border-amber-200">⏳ در انتظار</span>
+              {% endif %}
+            </td>
+            <td class="py-3 px-5">
+              <div class="flex flex-wrap gap-1">
+                {% for enrollment in student.active_enrollments.all %}
+                  <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200 whitespace-nowrap">{{ enrollment.course.title }}</span>
+                {% empty %}
+                  <span class="text-slate-300 text-[10px]">—</span>
+                {% endfor %}
+              </div>
+            </td>
+            <td class="py-3 px-5 text-slate-400 font-mono text-[10px]">{{ student.created_at|jalali }}</td>
+            <td class="py-3 px-5 text-left whitespace-nowrap">
+              <a href="{% url 'academy:student_edit' student.short_slug %}" class="inline-flex items-center bg-amber-500 hover:bg-amber-600 text-white font-bold py-1 px-2.5 rounded text-[11px] transition shadow-sm">✏️ ویرایش</a>
+              {% if student.id_card %}
+                <a href="{% url 'academy:student_id_card' student.short_slug %}" target="_blank"
+                   class="inline-flex items-center bg-emerald-100 text-emerald-700 font-bold py-1 px-2.5 rounded text-[11px] transition hover:bg-emerald-200 shadow-sm">🪪 کارت صادر شده</a>
+              {% else %}
+                <form action="{% url 'academy:issue_id_card' student.id %}" method="POST" class="inline">
+                  {% csrf_token %}
+                  <button type="submit" class="inline-flex items-center bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-1 px-2.5 rounded text-[11px] transition shadow-sm">🪪 صدور کارت</button>
+                </form>
+              {% endif %}
+              <a href="{% url 'academy:student_profile' student.short_slug %}" target="_blank" class="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2.5 rounded text-[11px] transition shadow-sm">👁️ پروفایل</a>
+              <form action="{% url 'academy:student_delete' student.short_slug %}" method="POST" class="inline" onsubmit="return confirm('آیا از حذف «{{ student.full_name }}» اطمینان دارید؟')">
+                {% csrf_token %}
+                <button type="submit" class="inline-flex items-center bg-rose-500 hover:bg-rose-600 text-white font-bold py-1 px-2.5 rounded text-[11px] transition shadow-sm">🗑 حذف</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="d-student-cards divide-y divide-slate-200/80">
+      {% for student in page_obj %}
+        <div class="p-3 space-y-2 text-xs">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-800">{{ student.first_name }} {{ student.last_name }}</span>
+            {% if student.is_documents_approved %}
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100/60 text-emerald-800 border border-emerald-200">✅ تأیید شده</span>
+            {% else %}
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100/60 text-amber-800 border border-amber-200">⏳ در انتظار</span>
+            {% endif %}
+          </div>
+          <div class="flex items-center gap-3 text-slate-500 font-mono tabular-nums">
+            <span>کد: {{ student.national_code }}</span>
+            <span dir="ltr">{{ student.phone_number }}</span>
+          </div>
+          <div class="flex flex-wrap gap-1">
+            {% for enrollment in student.active_enrollments.all %}
+              <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">{{ enrollment.course.title }}</span>
+            {% empty %}
+              <span class="text-slate-300 text-[10px]">بدون دوره</span>
+            {% endfor %}
+          </div>
+          <div class="text-[10px] text-slate-400">{{ student.created_at|jalali }}</div>
+          <div class="flex gap-1.5 flex-wrap">
+            <a href="{% url 'academy:student_edit' student.short_slug %}" class="bg-amber-500 text-white font-bold py-1 px-2.5 rounded text-[11px] transition shadow-sm">✏️ ویرایش</a>
+            {% if student.id_card %}
+              <a href="{% url 'academy:student_id_card' student.short_slug %}" target="_blank" class="bg-emerald-100 text-emerald-700 font-bold py-1 px-2.5 rounded text-[11px] transition shadow-sm">🪪 کارت صادر شده</a>
+            {% else %}
+              <form action="{% url 'academy:issue_id_card' student.id %}" method="POST" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="bg-indigo-500 text-white font-bold py-1 px-2.5 rounded text-[11px] transition shadow-sm">🪪 صدور کارت</button>
+              </form>
+            {% endif %}
+            <a href="{% url 'academy:student_profile' student.short_slug %}" target="_blank" class="bg-blue-600 text-white font-bold py-1 px-2.5 rounded text-[11px] transition shadow-sm">👁️ پروفایل</a>
+            <form action="{% url 'academy:student_delete' student.short_slug %}" method="POST" class="inline" onsubmit="return confirm('آیا از حذف «{{ student.full_name }}» اطمینان دارید؟')">
+              {% csrf_token %}
+              <button type="submit" class="bg-rose-500 text-white font-bold py-1 px-2.5 rounded text-[11px] transition shadow-sm">🗑 حذف</button>
+            </form>
+          </div>
+        </div>
+      {% empty %}
+        <div class="py-12 text-center text-slate-400">هیچ هنرجویی یافت نشد</div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="flex items-center justify-center gap-2 mt-6">
+  {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}"
+       class="inline-flex items-center px-3 py-1.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition">‹ قبلی</a>
+  {% endif %}
+
+  {% for p in page_obj.paginator.page_range %}
+    {% if p == page_obj.number %}
+      <span class="inline-flex items-center px-3 py-1.5 text-xs font-black text-white bg-blue-600 rounded-lg">{{ p }}</span>
+    {% elif p >= page_obj.number|add:'-2' and p <= page_obj.number|add:'2' %}
+      <a href="?page={{ p }}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}"
+         class="inline-flex items-center px-3 py-1.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition">{{ p }}</a>
+    {% endif %}
+  {% endfor %}
+
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if selected_course %}&course={{ selected_course }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}"
+       class="inline-flex items-center px-3 py-1.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition">بعدی ›</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

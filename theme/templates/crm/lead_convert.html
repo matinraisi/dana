@@ -1,0 +1,108 @@
+{% extends 'academy/dashboard/base.html' %}
+{% block nav_crm %}active{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-5 text-right">
+
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm px-6 py-5">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white text-lg">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+      </div>
+      <div>
+        <h1 class="text-base font-black text-slate-800">تبدیل سرنخ به هنرجو</h1>
+        <p class="text-xs text-slate-400 mt-0.5">{{ lead.full_name }} — {{ lead.phone_number }}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+    {% if messages %}
+    <div class="mb-4 space-y-2">
+      {% for message in messages %}
+      <div class="px-4 py-3 rounded-xl text-xs font-semibold
+        {% if message.tags == 'success' %}bg-emerald-50 text-emerald-700 border border-emerald-200
+        {% elif message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200
+        {% elif message.tags == 'warning' %}bg-amber-50 text-amber-700 border border-amber-200
+        {% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
+        {{ message }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="POST" class="space-y-4 text-xs">
+      {% csrf_token %}
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block font-bold text-slate-600 mb-1.5">نام <span class="text-red-500">*</span></label>
+          <input type="text" name="first_name" value="{{ post.first_name|default:lead.first_name }}" required
+            class="w-full border border-slate-200 rounded-xl p-3 text-slate-800 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-50">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1.5">نام خانوادگی <span class="text-red-500">*</span></label>
+          <input type="text" name="last_name" value="{{ post.last_name|default:lead.last_name }}" required
+            class="w-full border border-slate-200 rounded-xl p-3 text-slate-800 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-50">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1.5">شماره موبایل <span class="text-red-500">*</span></label>
+          <input type="text" name="phone_number" value="{{ post.phone_number|default:lead.phone_number }}" required maxlength="11"
+            class="w-full border border-slate-200 rounded-xl p-3 text-slate-800 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-50 font-mono text-left">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1.5">کد ملی <span class="text-red-500">*</span></label>
+          <input type="text" name="national_code" value="{{ post.national_code|default:'' }}" required maxlength="10"
+            class="w-full border border-slate-200 rounded-xl p-3 text-slate-800 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-50 font-mono text-left">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block font-bold text-slate-600 mb-1.5">دوره <span class="text-red-500">*</span></label>
+           <select name="course" id="course-select" required
+             class="w-full border border-slate-200 rounded-xl p-3 text-slate-800 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-50">
+             <option value="">انتخاب دوره...</option>
+             {% for c in courses %}
+               <option value="{{ c.id }}" data-fee="{{ c.fee }}" {% if post.course|add:0 == c.id or lead.interested_course_id == c.id %}selected{% endif %}>{{ c.title }} ({{ c.code }})</option>
+             {% endfor %}
+           </select>
+         </div>
+         <div>
+           <label class="block font-bold text-slate-600 mb-1.5">مبلغ کل شهریه (تومان)</label>
+           <input type="number" name="total_amount" id="total-amount" value="{{ post.total_amount|default:lead.interested_course.fee|default:'0' }}" min="0"
+            class="w-full border border-slate-200 rounded-xl p-3 text-slate-800 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-50 font-mono text-left">
+        </div>
+        <div>
+          <label class="block font-bold text-slate-600 mb-1.5">مبلغ پرداختی (تومان)</label>
+          <input type="number" name="paid_amount" value="{{ post.paid_amount|default:'0' }}" min="0"
+            class="w-full border border-slate-200 rounded-xl p-3 text-slate-800 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-50 font-mono text-left">
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <a href="{% url 'crm:lead_detail' lead.id %}"
+          class="bg-slate-100 text-slate-600 px-5 py-2.5 rounded-xl font-bold hover:bg-slate-200 transition">
+          انصراف
+        </a>
+        <button type="submit"
+          class="bg-emerald-600 text-white px-7 py-2.5 rounded-xl font-bold hover:bg-emerald-700 active:scale-95 transition shadow-sm">
+          <svg class="w-4 h-4 inline ml-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+          تبدیل به هنرجو و ثبت‌نام در دوره
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var sel = document.getElementById('course-select');
+    if (sel) {
+        sel.addEventListener('change', function() {
+            var opt = sel.options[sel.selectedIndex];
+            document.getElementById('total-amount').value = (opt && opt.dataset.fee) ? opt.dataset.fee : '';
+        });
+    }
+});
+</script>
+{% endblock %}

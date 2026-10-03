@@ -1,0 +1,101 @@
+{% extends "academy/dashboard/base.html" %}
+{% load custom_filters %}
+{% block title %}هنرجویان هر دوره{% endblock %}
+{% block content %}
+<div class="p-6 pb-16 text-right" dir="rtl">
+  <div class="flex items-center justify-between mb-5 flex-wrap gap-4">
+    <div>
+      <h1 class="text-xl font-black text-slate-800">هنرجویان به تفکیک دوره</h1>
+      <p class="text-xs text-slate-500 mt-0.5">مشاهده، جستجو و خروجی اکسل لیست هنرجویان هر دوره</p>
+    </div>
+    <a href="{% url 'academy:reports_dashboard' %}" class="text-xs text-slate-500 hover:text-slate-700">← بازگشت</a>
+  </div>
+
+  <form class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-5">
+    <div class="flex items-center gap-3 flex-wrap">
+      <select name="course_id" class="px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs font-medium" onchange="this.form.submit()">
+        <option value="">انتخاب دوره...</option>
+        {% for c in courses %}
+        <option value="{{ c.id }}" {% if selected_course and selected_course.id == c.id %}selected{% endif %}>{{ c.title }} ({{ c.code }})</option>
+        {% endfor %}
+      </select>
+      {% if selected_course %}
+      <a href="{% url 'academy:course_students_export' selected_course.id %}"
+         class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition">
+        {% include 'academy/dashboard/_svg_excel.html' %} خروجی اکسل
+      </a>
+      {% endif %}
+      <span class="text-xs text-slate-400 mr-auto">{{ students|length }} هنرجو</span>
+    </div>
+  </form>
+
+  {% if selected_course %}
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-right border-collapse">
+        <thead>
+          <tr class="bg-slate-50 border-b border-slate-200 text-slate-700 text-[11px] font-black">
+            <th class="p-3">ردیف</th>
+            <th class="p-3">نام و نام خانوادگی</th>
+            <th class="p-3">کد ملی</th>
+            <th class="p-3">موبایل</th>
+            <th class="p-3">شهریه کل</th>
+            <th class="p-3">پرداختی</th>
+            <th class="p-3">بدهی</th>
+            <th class="p-3">نوع پرداخت</th>
+            <th class="p-3">اقساط</th>
+            <th class="p-3">حضور</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100 text-xs">
+          {% for item in students %}
+          <tr class="hover:bg-slate-50/80 transition">
+            <td class="p-3 text-slate-400 font-mono">{{ forloop.counter }}</td>
+            <td class="p-3">
+              <div class="font-bold text-slate-900">{{ item.student.first_name }} {{ item.student.last_name }}</div>
+            </td>
+            <td class="p-3 font-mono text-slate-600 text-[10px]">{{ item.student.national_code }}</td>
+            <td class="p-3 font-mono text-slate-600 text-[10px]">{{ item.student.phone_number|toman }}</td>
+            <td class="p-3 font-mono font-bold text-slate-700 tabular-nums">{{ item.enrollment.total_amount|toman }}</td>
+            <td class="p-3 font-mono font-bold text-emerald-600 tabular-nums">{{ item.enrollment.paid_amount|toman }}</td>
+            <td class="p-3">
+              {% if item.enrollment.remaining_amount > 0 %}
+              <span class="font-mono font-bold text-rose-600 tabular-nums">{{ item.enrollment.remaining_amount|toman }}</span>
+              {% else %}
+              <span class="text-emerald-600 font-bold">✓ تسویه</span>
+              {% endif %}
+            </td>
+            <td class="p-3">
+              <span class="px-2 py-0.5 rounded font-bold text-[10px] {% if item.enrollment.payment_method == 'cash' %}bg-emerald-100 text-emerald-700{% else %}bg-purple-100 text-purple-700{% endif %}">
+                {{ item.enrollment.get_payment_method_display }}
+              </span>
+            </td>
+            <td class="p-3">
+              <span class="text-[10px]">{{ item.paid_installments|toman }}/{{ item.total_installments |toman }}
+                {% if item.overdue_installments > 0 %}
+                <span class="text-rose-600 font-bold">({{ item.overdue_installments|toman }} معوقه)</span>
+                {% endif %}
+              </span>
+            </td>
+            <td class="p-3">
+              <span class="text-[10px]">{{ item.attendance_count|toman }}/{{ item.total_sessions|toman }}</span>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="10" class="p-10 text-center text-slate-400 font-medium">هنرجویی برای این دوره یافت نشد</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 text-center">
+    <div class="text-4xl mb-3">📊</div>
+    <p class="text-slate-500 font-medium">یک دوره را از منوی بالا انتخاب کنید</p>
+    <p class="text-xs text-slate-400 mt-1">لیست کامل هنرجویان آن دوره به همراه جزئیات مالی و حضور قابل مشاهده است</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

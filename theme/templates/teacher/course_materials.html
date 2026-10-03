@@ -1,0 +1,69 @@
+{% extends "teacher/base.html" %}
+{% load custom_filters %}
+{% block title %}محتوای {{ course.title }}{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-5 text-right">
+
+  <div class="flex items-center justify-between flex-wrap gap-4">
+    <div>
+      <h1 class="text-lg font-black text-slate-800">محتوای آموزشی دوره</h1>
+      <p class="text-xs text-slate-500 mt-0.5">{{ course.title }} — تمام محتوای جلسات</p>
+    </div>
+    <a href="{% url 'teacher:course_list' %}" class="text-xs text-slate-500 hover:text-slate-700">← بازگشت</a>
+  </div>
+
+  {% regroup materials by session as session_groups %}
+
+  {% if session_groups %}
+    {% for group in session_groups %}
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="px-5 py-3 bg-slate-50 border-b border-slate-100">
+        <h3 class="text-xs font-black text-slate-700">
+          {% if group.grouper %}
+            جلسه {{ group.grouper.session_number }} — {{ group.grouper.title }}
+          {% else %}
+            محتوای عمومی دوره
+          {% endif %}
+        </h3>
+      </div>
+      <div class="divide-y divide-slate-50">
+        {% for mat in group.list %}
+        <div class="px-5 py-3 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0
+              {% if mat.material_type == 'assignment' %}bg-amber-100
+              {% elif mat.material_type == 'video' %}bg-rose-100
+              {% elif mat.material_type == 'link' %}bg-blue-100
+              {% elif mat.material_type == 'source_code' %}bg-emerald-100
+              {% else %}bg-slate-100{% endif %}">
+              {% if mat.material_type == 'assignment' %}📝{% elif mat.material_type == 'video' %}🎬{% elif mat.material_type == 'link' %}🔗{% elif mat.material_type == 'source_code' %}💻{% else %}📎{% endif %}
+            </div>
+            <div>
+              <span class="text-xs font-bold text-slate-800">{{ mat.title }}</span>
+              <span class="text-[9px] text-slate-400 mr-2">{{ mat.get_material_type_display }}</span>
+              {% if not mat.is_active %}<span class="text-[9px] text-rose-400">(غیرفعال)</span>{% endif %}
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[9px] text-slate-400">{{ mat.created_at|jalali }}</span>
+            {% if mat.file %}
+            <a href="{{ mat.file.url }}" target="_blank" class="text-[10px] text-blue-600 font-bold">دانلود</a>
+            {% endif %}
+            {% if mat.link_url %}
+            <a href="{{ mat.link_url }}" target="_blank" class="text-[10px] text-blue-600 font-bold">لینک</a>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-10 text-center">
+    <div class="text-4xl mb-3">📂</div>
+    <p class="text-slate-500 font-medium">هنوز محتوایی برای این دوره اضافه نشده</p>
+    <p class="text-xs text-slate-400 mt-1">از بخش مدیریت جلسات، برای هر جلسه محتوا اضافه کنید</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+# Environment
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Django
+*.sqlite3
+staticfiles/
+media/
+*.log
+stderr.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+tmp/
+apps.zip
+check_login.py
+generate_proposal.py
+temp_check_forms.py
+test_reverse.py
+test_url.py
+
+# Tailwind
+theme/static/css/dist/
+
+# MiMoCode
+.mimocode/
+.claude/

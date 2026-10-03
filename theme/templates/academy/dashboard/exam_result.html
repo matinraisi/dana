@@ -1,0 +1,98 @@
+{% extends 'academy/dashboard/base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% block content %}
+<div class="p-6 text-right" dir="rtl">
+    <div class="max-w-4xl mx-auto space-y-6">
+
+        <!-- نتیجه کلی -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-lg font-black text-slate-800">نتیجه آزمون</h1>
+                    <p class="text-xs text-slate-400 mt-0.5">{{ attempt.exam.title }}</p>
+                </div>
+                {% if is_owner %}
+                <a href="{% url 'academy:student_exams' %}"
+                   class="text-xs text-slate-500 hover:text-slate-700 transition">← بازگشت</a>
+                {% else %}
+                <a href="{% url 'academy:exam_results' attempt.exam_id %}"
+                   class="text-xs text-slate-500 hover:text-slate-700 transition">← بازگشت</a>
+                {% endif %}
+            </div>
+
+            <div class="grid grid-cols-4 gap-4 mt-6">
+                <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-200">
+                    <span class="text-2xl font-black {% if attempt.is_passed %}text-emerald-600{% else %}text-red-600{% endif %}">
+                        {{ attempt.score|floatformat:1|default:'—' }}
+                    </span>
+                    <p class="text-[10px] font-bold text-slate-500 mt-1">نمره</p>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-200">
+                    <span class="text-2xl font-black text-slate-700">{{ attempt.exam.total_score }}</span>
+                    <p class="text-[10px] font-bold text-slate-500 mt-1">نمره کل</p>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-200">
+                    <span class="text-2xl font-black text-slate-700">{{ attempt.exam.pass_score_percent }}%</span>
+                    <p class="text-[10px] font-bold text-slate-500 mt-1">درصد قبولی</p>
+                </div>
+                <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-200">
+                    <span class="text-2xl font-black {% if attempt.is_passed %}text-emerald-600{% else %}text-red-600{% endif %}">
+                        {% if attempt.is_passed %}قبول✓{% else %}رد✗{% endif %}
+                    </span>
+                    <p class="text-[10px] font-bold text-slate-500 mt-1">نتیجه</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- پاسخ‌ها -->
+        <div class="space-y-4">
+            {% for answer in answers %}
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                <div class="flex items-start gap-3">
+                    <span class="text-xs font-bold text-slate-400 mt-0.5 shrink-0">#{{ forloop.counter }}</span>
+                    <div class="flex-1 space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-bold text-slate-800">{{ answer.question.title }}</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">{{ answer.question.get_question_type_display }}</span>
+                            {% if answer.score != None %}
+                            <span class="text-[10px] px-2 py-0.5 rounded-full
+                                {% if answer.score >= answer.question.points %}bg-emerald-50 text-emerald-700
+                                {% elif answer.score > 0 %}bg-amber-50 text-amber-700
+                                {% else %}bg-red-50 text-red-700{% endif %}">
+                                {{ answer.score|floatformat:1 }}/{{ answer.question.points }}
+                            </span>
+                            {% else %}
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">تصحیح نشده</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="text-xs text-slate-600">
+                            <span class="font-bold text-slate-700">پاسخ شما: </span>
+                            {% if answer.question.question_type == 'essay' %}
+                            <div class="mt-1 p-3 bg-slate-50 rounded-lg">{{ answer.text_answer|default:'پاسخی ثبت نشده'|linebreaks }}</div>
+                            {% else %}
+                            {{ answer.text_answer|default:'پاسخی ثبت نشده' }}
+                            {% endif %}
+                        </div>
+
+                        {% if show_answers and answer.question.question_type == 'multiple_choice' or show_answers and answer.question.question_type == 'true_false' %}
+                        <div class="text-xs text-emerald-600">
+                            <span class="font-bold">پاسخ صحیح: </span>
+                            {% for c in answer.question.choices.all %}{% if c.is_correct %}{{ c.text }}{% endif %}{% endfor %}
+                        </div>
+                        {% elif show_answers and answer.question.question_type == 'short_answer' %}
+                        <div class="text-xs text-emerald-600">
+                            {% for c in answer.question.choices.all %}
+                            <div><span class="font-bold">پاسخ صحیح: </span>{{ c.text }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

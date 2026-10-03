@@ -1,0 +1,68 @@
+{% extends "academy/dashboard/base.html" %}
+{% block title %}فرم جدید{% endblock %}
+
+{% block content %}
+<div class="flex items-center gap-3 mb-5">
+  <a href="{% url 'forms_builder:form_list' %}" class="text-slate-400 hover:text-slate-700 transition">←</a>
+  <h1 class="text-lg font-black text-slate-800">ایجاد فرم جدید</h1>
+</div>
+
+<div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 max-w-2xl">
+  <form method="post">
+    {% csrf_token %}
+    <div class="space-y-4">
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-1">عنوان فرم *</label>
+        <input type="text" name="title" required
+               class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-indigo-400 transition"
+               placeholder="مثلاً: فرم پیش‌ثبت‌نام دوره هوش مصنوعی">
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-1">توضیحات</label>
+        <textarea name="description" rows="2"
+                  class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-indigo-400 transition resize-none"
+                  placeholder="توضیح کوتاه درباره فرم..."></textarea>
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-1">دوره مرتبط (اختیاری)</label>
+        <select name="linked_course"
+                class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-indigo-400 transition">
+          <option value="">— بدون دوره —</option>
+          {% for course in courses %}
+          <option value="{{ course.id }}">{{ course.title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-bold text-slate-600 mb-1">پیام پس از ارسال</label>
+        <textarea name="submit_message" rows="2"
+                  class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-indigo-400 transition resize-none">پاسخ شما ثبت شد. ممنون از شما!</textarea>
+      </div>
+      <div class="flex flex-col gap-2 pt-2">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" name="is_public" checked class="rounded">
+          <span class="text-sm text-slate-700">فرم عمومی (قابل دسترس بدون ورود)</span>
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" name="requires_login" class="rounded">
+          <span class="text-sm text-slate-700">نیاز به ورود داشته باشد</span>
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" name="one_response_per_user" class="rounded">
+          <span class="text-sm text-slate-700">هر کاربر فقط یک بار پاسخ دهد</span>
+        </label>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button type="submit"
+              class="px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition">
+        ایجاد فرم و ادامه
+      </button>
+      <a href="{% url 'forms_builder:form_list' %}"
+         class="px-6 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200 transition">
+        انصراف
+      </a>
+    </div>
+  </form>
+</div>
+{% endblock %}

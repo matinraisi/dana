@@ -1,0 +1,66 @@
+{% extends 'academy/dashboard/base.html' %}
+{% block title %}گزارش حضور هنرجو{% endblock %}
+{% block content %}
+<div class="p-6" dir="rtl">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-gray-800">گزارش حضور و غیاب هنرجو</h1>
+    <a href="javascript:history.back()" class="text-sm text-gray-500 hover:text-gray-700">← بازگشت</a>
+  </div>
+
+  <!-- آمار خلاصه -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center">
+      <p class="text-3xl font-bold text-gray-800">{{ total }}</p>
+      <p class="text-xs text-gray-400 mt-1">کل جلسات</p>
+    </div>
+    <div class="bg-green-50 rounded-2xl border border-green-100 p-5 text-center">
+      <p class="text-3xl font-bold text-green-600">{{ present }}</p>
+      <p class="text-xs text-green-500 mt-1">حاضر</p>
+    </div>
+    <div class="bg-red-50 rounded-2xl border border-red-100 p-5 text-center">
+      <p class="text-3xl font-bold text-red-600">{{ absent }}</p>
+      <p class="text-xs text-red-500 mt-1">غایب</p>
+    </div>
+    <div class="bg-blue-50 rounded-2xl border border-blue-100 p-5 text-center">
+      <p class="text-3xl font-bold text-blue-600">{{ percent }}%</p>
+      <p class="text-xs text-blue-500 mt-1">درصد حضور</p>
+    </div>
+  </div>
+
+  <!-- جدول جزئیات -->
+  <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 border-b border-gray-100">
+        <tr>
+          <th class="text-right px-6 py-3 font-semibold text-gray-600">جلسه</th>
+          <th class="text-right px-4 py-3 font-semibold text-gray-600">تاریخ</th>
+          <th class="text-center px-4 py-3 font-semibold text-gray-600">وضعیت</th>
+          <th class="text-right px-4 py-3 font-semibold text-gray-600">یادداشت</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-50">
+        {% for att in attendances %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-3 font-medium text-gray-800">{{ att.session.title }}</td>
+          <td class="px-4 py-3 text-gray-500">{{ att.session.date }}</td>
+          <td class="px-4 py-3 text-center">
+            {% if att.status == 'present' %}
+              <span class="bg-green-100 text-green-700 px-2.5 py-1 rounded-lg text-xs font-medium">حاضر</span>
+            {% elif att.status == 'absent' %}
+              <span class="bg-red-100 text-red-700 px-2.5 py-1 rounded-lg text-xs font-medium">غایب</span>
+            {% elif att.status == 'late' %}
+              <span class="bg-yellow-100 text-yellow-700 px-2.5 py-1 rounded-lg text-xs font-medium">تأخیر</span>
+            {% elif att.status == 'excused' %}
+              <span class="bg-blue-100 text-blue-700 px-2.5 py-1 rounded-lg text-xs font-medium">موجه</span>
+            {% endif %}
+          </td>
+          <td class="px-4 py-3 text-gray-400 text-xs">{{ att.note|default:"—" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="px-6 py-16 text-center text-gray-400">داده‌ای یافت نشد.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

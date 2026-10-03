@@ -1,0 +1,163 @@
+{% extends "academy/dashboard/base.html" %}
+{% load custom_filters %}
+
+{% block title %}{{ school_title }} | گزارش سودآوری دوره‌ها{% endblock %}
+{% block nav_accounting %}active{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-lg font-black text-slate-800">گزارش سودآوری دوره‌ها</h1>
+    <p class="text-xs text-slate-400 mt-1">مقایسه درآمد، هزینه و سود هر دوره</p>
+  </div>
+  <a href="{% url 'academy:accounting_dashboard' %}"
+     class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 transition">
+    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+    بازگشت به داشبورد
+  </a>
+</div>
+
+<!-- ═══ خلاصه کلی ═══ -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+  <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-5">
+    <div class="flex items-center justify-between mb-2">
+      <p class="text-[10px] font-bold text-emerald-600">کل درآمد دوره‌ها</p>
+      <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+    </div>
+    <p class="text-xl font-black text-emerald-700">{{ grand_revenue|toman }}</p>
+    <p class="text-[10px] text-emerald-500 mt-1">تومان — مجموع پرداختی هنرجویان</p>
+  </div>
+  <div class="bg-rose-50 border border-rose-100 rounded-xl p-5">
+    <div class="flex items-center justify-between mb-2">
+      <p class="text-[10px] font-bold text-rose-600">کل هزینه‌ها</p>
+      <div class="w-8 h-8 bg-rose-100 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>
+      </div>
+    </div>
+    <p class="text-xl font-black text-rose-700">{{ grand_expenses|toman }}</p>
+    <p class="text-[10px] text-rose-500 mt-1">تومان — مدرس + سایر هزینه‌ها</p>
+  </div>
+  <div class="bg-blue-50 border border-blue-100 rounded-xl p-5">
+    <div class="flex items-center justify-between mb-2">
+      <p class="text-[10px] font-bold text-blue-600">سود خالص</p>
+      <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941"/></svg>
+      </div>
+    </div>
+    <p class="text-xl font-black text-blue-700">{{ grand_net|toman }}</p>
+    <p class="text-[10px] text-blue-500 mt-1">تومان — درآمد - هزینه</p>
+  </div>
+</div>
+
+<!-- ═══ فرمول محاسباتی ═══ -->
+<div class="bg-white border border-slate-200 rounded-xl p-5 mb-6">
+  <h3 class="text-sm font-black text-slate-700 mb-3">فرمول محاسباتی هر دوره</h3>
+  <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+    <div class="bg-emerald-50 rounded-lg p-3 border border-emerald-100">
+      <p class="text-[10px] font-bold text-emerald-600">درآمد</p>
+      <p class="text-[10px] text-emerald-700 font-mono mt-1">Σ(CourseEnrollment.paid_amount)</p>
+    </div>
+    <div class="bg-amber-50 rounded-lg p-3 border border-amber-100">
+      <p class="text-[10px] font-bold text-amber-600">پرداخت مدرس</p>
+      <p class="text-[10px] text-amber-700 font-mono mt-1">Σ(teacher_payout)</p>
+    </div>
+    <div class="bg-rose-50 rounded-lg p-3 border border-rose-100">
+      <p class="text-[10px] font-bold text-rose-600">سایر هزینه‌ها</p>
+      <p class="text-[10px] text-rose-700 font-mono mt-1">Σ(expense)</p>
+    </div>
+    <div class="bg-blue-50 rounded-lg p-3 border border-blue-100">
+      <p class="text-[10px] font-bold text-blue-600">سود خالص</p>
+      <p class="text-[10px] text-blue-700 font-mono mt-1">درآمد - هزینه‌ها</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ جدول سودآوری دوره‌ها ═══ -->
+<div class="bg-white border border-slate-200 rounded-xl overflow-hidden mb-6">
+  <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+    <h3 class="text-sm font-black text-slate-700">جزئیات سودآوری هر دوره</h3>
+    <span class="text-[10px] text-slate-400">{{ course_stats|length }} دوره</span>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead>
+        <tr class="bg-slate-50 border-b border-slate-200">
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">دوره</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">مدرس</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-center">هنرجو</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-center">جلسه</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">درآمد</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">مدرس</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">هزینه</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-right">سود</th>
+          <th class="px-4 py-3 text-[11px] font-bold text-slate-500 text-center">وضعیت</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for cs in course_stats %}
+        <tr class="hover:bg-slate-50/50 transition">
+          <td class="px-4 py-3">
+            <p class="text-xs font-bold text-slate-800">{{ cs.course.title }}</p>
+            <p class="text-[10px] text-slate-400">{{ cs.course.code }}</p>
+          </td>
+          <td class="px-4 py-3 text-xs text-slate-500">{{ cs.teacher_name }}</td>
+          <td class="px-4 py-3 text-center">
+            <span class="text-xs font-bold text-slate-700">{{ cs.student_count }}</span>
+          </td>
+          <td class="px-4 py-3 text-center">
+            <span class="text-xs font-bold text-slate-700">{{ cs.session_count }}</span>
+          </td>
+          <td class="px-4 py-3">
+            <span class="text-xs font-bold font-mono text-emerald-600">{{ cs.revenue|toman }}</span>
+          </td>
+          <td class="px-4 py-3">
+            <span class="text-xs font-bold font-mono text-amber-600">{{ cs.teacher_payouts|toman }}</span>
+          </td>
+          <td class="px-4 py-3">
+            <span class="text-xs font-bold font-mono text-rose-600">{{ cs.other_expenses|toman }}</span>
+          </td>
+          <td class="px-4 py-3">
+            <span class="text-xs font-bold font-mono {% if cs.net_profit >= 0 %}text-blue-600{% else %}text-rose-600{% endif %}">
+              {{ cs.net_profit|toman }}
+            </span>
+          </td>
+          <td class="px-4 py-3 text-center">
+            {% if cs.net_profit > 0 %}
+              <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                سودآور
+              </span>
+            {% elif cs.net_profit == 0 %}
+              <span class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
+                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                سربه‌سر
+              </span>
+            {% else %}
+              <span class="inline-flex items-center gap-1 text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-full">
+                <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                زیان‌ده
+              </span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="9" class="px-4 py-12 text-center">
+            <div class="flex flex-col items-center gap-3">
+              <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center">
+                <svg class="w-6 h-6 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+              </div>
+              <p class="text-sm font-bold text-slate-400">هنوز دوره‌ای ثبت نشده</p>
+              <a href="{% url 'academy:course_create' %}" class="text-xs font-bold text-indigo-600 hover:text-indigo-700">+ ایجاد اولین دوره</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

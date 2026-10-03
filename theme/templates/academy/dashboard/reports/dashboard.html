@@ -1,0 +1,247 @@
+{% extends "academy/dashboard/base.html" %}
+{% load custom_filters %}
+
+{% block title %}{{ school_title }} | داشبورد گزارشات{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-lg font-black text-slate-800">داشبورد گزارشات</h1>
+    <p class="text-xs text-slate-400 mt-1">بررسی جامع وضعیت {{ school_title }}</p>
+  </div>
+  <div class="flex items-center gap-2">
+    <a href="{% url 'academy:all_students_report' %}"
+       class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 px-4 rounded-lg transition shadow-sm">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+      لیست هنرجویان
+    </a>
+    <a href="{% url 'academy:course_students_report' %}"
+       class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 px-4 rounded-lg transition shadow-sm">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      هنرجویان دوره‌ها
+    </a>
+  </div>
+</div>
+
+<!-- ═══ KPI Cards ═══ -->
+<div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-[10px] font-bold text-slate-400">هنرجویان</span>
+      <div class="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+      </div>
+    </div>
+    <p class="text-xl font-black text-slate-800">{{ total_students|toman }}</p>
+    <p class="text-[10px] text-slate-400 mt-1">نفر</p>
+  </div>
+
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-[10px] font-bold text-slate-400">دوره‌ها</span>
+      <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      </div>
+    </div>
+    <p class="text-xl font-black text-slate-800">{{ total_courses|toman }}</p>
+    <p class="text-[10px] text-slate-400 mt-1">دوره</p>
+  </div>
+
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-[10px] font-bold text-slate-400">ثبت‌نام‌ها</span>
+      <div class="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      </div>
+    </div>
+    <p class="text-xl font-black text-slate-800">{{ total_enrollments|toman }}</p>
+    <p class="text-[10px] text-slate-400 mt-1">مورد</p>
+  </div>
+
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-[10px] font-bold text-slate-400">درآمد</span>
+      <div class="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+    </div>
+    <p class="text-xl font-black text-emerald-600">{{ total_revenue|toman }}</p>
+    <p class="text-[10px] text-slate-400 mt-1">تومان</p>
+  </div>
+
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-[10px] font-bold text-slate-400">بدهی معوق</span>
+      <div class="w-8 h-8 bg-rose-50 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+      </div>
+    </div>
+    <p class="text-xl font-black text-rose-600">{{ total_outstanding|toman }}</p>
+    <p class="text-[10px] text-slate-400 mt-1">تومان</p>
+  </div>
+
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <div class="flex items-center justify-between mb-2">
+      <span class="text-[10px] font-bold text-slate-400">حضور ثبت شده</span>
+      <div class="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center">
+        <svg class="w-4 h-4 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+    </div>
+    <p class="text-xl font-black text-slate-800">{{ total_attendance|toman }}</p>
+    <p class="text-[10px] text-slate-400 mt-1">جلسه</p>
+  </div>
+</div>
+
+<!-- ═══ نمودار درآمد ماهانه ═══ -->
+<div class="bg-white border border-slate-200 rounded-xl p-5 mb-6">
+  <h3 class="text-sm font-black text-slate-700 mb-1">درآمد ماهانه</h3>
+  <p class="text-[10px] text-slate-400 mb-4">روند درآمد در ۱۲ ماه اخیر</p>
+  <div class="relative" style="height: 260px;">
+    <canvas id="monthlyRevenueChart"></canvas>
+  </div>
+</div>
+
+<!-- ═══ توزیع هنرجویان + آخرین ثبت‌نام‌ها ═══ -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
+  <!-- توزیع هنرجویان -->
+  <div class="bg-white border border-slate-200 rounded-xl p-5">
+    <h3 class="text-sm font-black text-slate-700 mb-4">توزیع هنرجویان در دوره‌ها</h3>
+    <div class="space-y-4">
+      {% for item in enrollment_stats %}
+      <div>
+        <div class="flex justify-between text-xs mb-1.5">
+          <span class="font-bold text-slate-700">{{ item.title }}</span>
+          <span class="text-slate-500 font-mono">{{ item.count|toman }} نفر</span>
+        </div>
+        <div class="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+          {% widthratio item.count total_enrollments 100 as bar_width %}
+          <div class="h-full bg-gradient-to-l from-indigo-500 to-indigo-400 rounded-full" style="width: {{ bar_width }}%"></div>
+        </div>
+        <div class="flex justify-between text-[10px] text-slate-400 mt-1">
+          <span>پرداختی: {{ item.total_paid|toman }} تومان</span>
+          <span>کل: {{ item.total_amount|toman }} تومان</span>
+        </div>
+      </div>
+      {% empty %}
+      <div class="text-center py-6">
+        <p class="text-xs text-slate-400">هنوز ثبت‌نامی ثبت نشده</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- آخرین ثبت‌نام‌ها -->
+  <div class="bg-white border border-slate-200 rounded-xl p-5">
+    <h3 class="text-sm font-black text-slate-700 mb-4">آخرین ثبت‌نام‌ها</h3>
+    <div class="space-y-2">
+      {% for enroll in recent_enrollments %}
+      <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+        <div class="min-w-0">
+          <p class="text-xs font-bold text-slate-700 truncate">{{ enroll.student.first_name }} {{ enroll.student.last_name }}</p>
+          <p class="text-[10px] text-indigo-600 truncate">{{ enroll.course.title }}</p>
+        </div>
+        <div class="text-left shrink-0 ml-3">
+          <p class="text-[10px] text-emerald-600 font-mono font-bold">{{ enroll.paid_amount|toman }}</p>
+          <p class="text-[9px] text-slate-400">{{ enroll.enrolled_at|jalali }}</p>
+        </div>
+      </div>
+      {% empty %}
+      <div class="text-center py-6">
+        <p class="text-xs text-slate-400">هنوز ثبت‌نامی انجام نشده</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- ═══ لینک‌های گزارش ═══ -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+  <a href="{% url 'academy:course_students_report' %}"
+     class="bg-white border border-slate-200 rounded-xl p-5 hover:border-indigo-200 hover:shadow-md transition group">
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center group-hover:bg-indigo-100 transition">
+        <svg class="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      </div>
+      <div>
+        <h3 class="text-sm font-black text-slate-800">هنرجویان هر دوره</h3>
+        <p class="text-[10px] text-slate-400">لیست هنرجویان به تفکیک دوره + خروجی اکسل</p>
+      </div>
+    </div>
+    <div class="flex items-center justify-between text-xs">
+      <span class="text-slate-500">{{ total_enrollments|toman }} ثبت‌نام در {{ total_courses|toman }} دوره</span>
+      <span class="text-indigo-600 font-bold">مشاهده ←</span>
+    </div>
+  </a>
+
+  <a href="{% url 'academy:all_students_report' %}"
+     class="bg-white border border-slate-200 rounded-xl p-5 hover:border-emerald-200 hover:shadow-md transition group">
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition">
+        <svg class="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+      </div>
+      <div>
+        <h3 class="text-sm font-black text-slate-800">گزارش جامع هنرجویان</h3>
+        <p class="text-[10px] text-slate-400">جستجو و مشاهده وضعیت مالی همه هنرجویان + خروجی اکسل</p>
+      </div>
+    </div>
+    <div class="flex items-center justify-between text-xs">
+      <span class="text-slate-500">{{ total_students|toman }} هنرجو در سیستم</span>
+      <span class="text-emerald-600 font-bold">مشاهده ←</span>
+    </div>
+  </a>
+</div>
+
+<!-- ═══ Chart.js ═══ -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+var revenueLabels = [{% for item in monthly_revenue %}'{{ item.month }}/{{ item.year }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+var revenueData = [{% for item in monthly_revenue %}{{ item.total }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+new Chart(document.getElementById('monthlyRevenueChart'), {
+  type: 'bar',
+  data: {
+    labels: revenueLabels,
+    datasets: [{
+      label: 'درآمد',
+      data: revenueData,
+      backgroundColor: 'rgba(99, 102, 241, 0.8)',
+      borderColor: 'rgb(99, 102, 241)',
+      borderWidth: 0,
+      borderRadius: 8,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: 'rgba(15,23,42,0.9)',
+        titleFont: { size: 12, family: 'Vazirmatn' },
+        bodyFont: { size: 11, family: 'Vazirmatn' },
+        padding: 12,
+        cornerRadius: 8,
+        callbacks: {
+          label: function(ctx) {
+            return ctx.raw.toLocaleString('fa-IR') + ' تومان';
+          }
+        }
+      }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+      y: {
+        beginAtZero: true,
+        grid: { color: 'rgba(0,0,0,0.04)' },
+        ticks: {
+          font: { size: 10 },
+          callback: function(val) { return val >= 1000000 ? (val/1000000).toFixed(0) + 'M' : val >= 1000 ? (val/1000).toFixed(0) + 'K' : val; }
+        }
+      }
+    }
+  }
+});
+</script>
+{% endblock %}

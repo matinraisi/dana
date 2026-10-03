@@ -1,0 +1,75 @@
+{% extends 'student/base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% block title %}آزمون‌های من | {{ school_title }}{% endblock %}
+{% block nav_exams %}active{% endblock %}
+{% block nav_exams_m %}active{% endblock %}
+{% block content %}
+<div class="space-y-5">
+  <div class="bg-gradient-to-br from-indigo-500 via-blue-600 to-sky-500 rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden">
+    <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNMjAgMjBhMjAgMjAgMCAwIDEgMjAgMjAgMjAgMjAgMCAwIDAgMjAgMjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA0KSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2EpIi8+PC9zdmc+')] opacity-50"></div>
+    <div class="relative z-10">
+      <h1 class="text-xl md:text-2xl font-black drop-shadow-sm">📝 آزمون‌های من</h1>
+      <p class="text-blue-100/90 text-sm mt-1">لیست آزمون‌های فعال دوره‌های شما</p>
+    </div>
+  </div>
+
+  <div class="space-y-3">
+    {% for item in exam_data %}
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 hover:shadow-md transition-shadow">
+      <div class="flex items-start justify-between flex-wrap gap-3">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-1.5 flex-wrap">
+            <span class="text-sm font-bold text-slate-800">{{ item.exam.title }}</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold
+              {% if item.exam.status == 'active' %}bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200
+              {% elif item.exam.status == 'upcoming' %}bg-amber-50 text-amber-700 ring-1 ring-amber-200
+              {% elif item.exam.status == 'closed' %}bg-red-50 text-red-700 ring-1 ring-red-200
+              {% else %}bg-slate-100 text-slate-500 ring-1 ring-slate-200{% endif %}">
+              {{ item.exam.status_display }}
+            </span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 ring-1 ring-blue-200 font-semibold">{{ item.exam.get_exam_type_display }}</span>
+          </div>
+          <div class="text-xs text-slate-500 flex flex-wrap gap-x-4 gap-y-1">
+            <span>📚 {{ item.exam.course.title }}</span>
+            <span>📝 {{ item.exam.total_questions }} سوال</span>
+            <span>🏆 {{ item.exam.total_score }} نمره</span>
+            <span>⏱ {{ item.exam.duration_minutes }} دقیقه</span>
+            <span>🔄 {{ item.remaining_attempts }} تلاش باقی</span>
+          </div>
+          {% if item.best_attempt %}
+          <div class="mt-2.5 text-xs bg-slate-50 rounded-xl px-3.5 py-2 inline-block">
+            <span class="font-bold text-slate-500">بهترین نتیجه: </span>
+            <span class="font-bold {% if item.best_attempt.is_passed %}text-emerald-600{% else %}text-red-600{% endif %}">
+              {{ item.best_attempt.score|floatformat:1 }}/{{ item.exam.total_score }}
+              {% if item.best_attempt.is_passed %}(قبول)✓{% else %}(رد)✗{% endif %}
+            </span>
+          </div>
+          {% endif %}
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          {% if item.has_in_progress %}
+          <a href="{% url 'academy:take_exam' item.exam.id %}"
+             class="text-xs px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold transition shadow-sm">ادامه آزمون</a>
+          {% elif item.can_take and item.exam.status == 'active' %}
+          <a href="{% url 'academy:take_exam' item.exam.id %}"
+             class="text-xs px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition shadow-sm">شروع آزمون</a>
+          {% elif item.best_attempt %}
+          <a href="{% url 'academy:exam_result' item.best_attempt.id %}"
+             class="text-xs px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition ring-1 ring-slate-200">مشاهده نتیجه</a>
+          {% else %}
+          <span class="text-xs px-4 py-2 rounded-xl bg-slate-100 text-slate-400 ring-1 ring-slate-200">غیرقابل دسترسی</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="bg-white rounded-2xl p-12 text-center border border-slate-100 shadow-sm">
+      <div class="text-5xl mb-4">📝</div>
+      <p class="text-sm font-bold text-slate-500">هیچ آزمونی برای شما یافت نشد</p>
+      <p class="text-xs text-slate-400 mt-1">پس از ثبت‌نام در دوره‌ها، آزمون‌ها در این بخش نمایش داده می‌شوند</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

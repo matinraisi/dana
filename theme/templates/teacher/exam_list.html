@@ -1,0 +1,69 @@
+{% extends 'teacher/base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% block nav_exams %}text-indigo-600 bg-indigo-50 font-black{% endblock %}
+{% block content %}
+<div class="space-y-4 md:space-y-6 text-right" dir="rtl">
+    <div class="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-0 justify-between">
+        <div>
+            <h1 class="text-base font-black text-slate-800">آزمون‌های من</h1>
+            <p class="text-xs text-slate-400 mt-0.5">مدیریت آزمون‌های دوره‌های شما</p>
+        </div>
+        <a href="{% url 'teacher:exam_create' %}" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-indigo-700 transition w-full sm:w-auto text-center">+ آزمون جدید</a>
+    </div>
+
+    {% if courses %}
+    <form method="GET" class="flex gap-3 items-end">
+        <div class="space-y-1 w-full sm:w-auto">
+            <label class="text-[11px] font-bold text-slate-600">فیلتر دوره</label>
+            <select name="course" onchange="this.form.submit()" class="px-3 py-2 text-xs rounded-lg border border-slate-200 w-full sm:w-auto">
+                <option value="">همه دوره‌ها</option>
+                {% for c in courses %}
+                <option value="{{ c.id }}" {% if selected_course_id == c.id %}selected{% endif %}>{{ c.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+    {% endif %}
+
+    <div class="grid grid-cols-1 gap-3">
+        {% for exam in exams %}
+        <div class="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-sm transition">
+            <div class="flex flex-col sm:flex-row items-start justify-between gap-3">
+                <div class="flex-1 min-w-0 w-full">
+                    <div class="flex flex-wrap items-center gap-1.5 mb-1.5">
+                        <span class="text-sm font-bold text-slate-800 truncate max-w-full">{{ exam.title }}</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full shrink-0
+                            {% if exam.status == 'active' %}bg-emerald-50 text-emerald-700
+                            {% elif exam.status == 'upcoming' %}bg-amber-50 text-amber-700
+                            {% elif exam.status == 'closed' %}bg-red-50 text-red-700
+                            {% else %}bg-slate-100 text-slate-500{% endif %}">{{ exam.status_display }}</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 shrink-0">{{ exam.get_exam_type_display }}</span>
+                    </div>
+                    <div class="text-xs text-slate-500 flex flex-wrap gap-x-3 gap-y-1">
+                        <span>دوره: {{ exam.course.title }}</span>
+                        <span>سوالات: {{ exam.total_questions |toman }}</span>
+                        <span>نمره کل: {{ exam.total_score|toman }}</span>
+                        <span>مدت: {{ exam.duration_minutes }} دقیقه</span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap shrink-0 w-full sm:w-auto">
+                    <a href="{% url 'teacher:exam_questions' exam.id %}" class="text-[11px] md:text-xs px-2.5 md:px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition text-center flex-1 sm:flex-none">سوالات</a>
+                    <a href="{% url 'teacher:exam_results' exam.id %}" class="text-[11px] md:text-xs px-2.5 md:px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition text-center flex-1 sm:flex-none">نتایج</a>
+                    <a href="{% url 'teacher:exam_edit' exam.id %}" class="text-[11px] md:text-xs px-2.5 md:px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold transition text-center flex-1 sm:flex-none">ویرایش</a>
+                    <form method="POST" action="{% url 'teacher:exam_delete' exam.id %}" onsubmit="return confirm('آیا از حذف این آزمون اطمینان دارید؟')" class="inline flex-1 sm:flex-none">
+                        {% csrf_token %}
+                        <button type="submit" class="text-[11px] md:text-xs px-2.5 md:px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 font-bold transition w-full">حذف</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-12 text-slate-400">
+            <p class="text-sm font-bold">هنوز آزمونی تعریف نشده</p>
+            <p class="text-xs mt-1">اولین آزمون را برای دوره‌های خود ایجاد کنید</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

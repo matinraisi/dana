@@ -1,0 +1,187 @@
+{% extends 'academy/dashboard/base.html' %}
+{% load custom_filters %}
+{% block content %}
+<div class="mb-4 md:mb-6">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div>
+      <h2 class="text-base md:text-lg font-black text-slate-800">بررسی مدارک هنرجویان</h2>
+      <p class="text-xs text-slate-500 mt-1">تأیید یا اعلام نقص تصاویر هویتی بارگذاری شده</p>
+    </div>
+    {% if page_obj.paginator.count > 0 %}
+    <div class="text-xs text-slate-400 bg-slate-100 px-3 py-1.5 rounded-lg font-bold">
+      {{ page_obj.paginator.count|toman }} هنرجو &middot; صفحه {{ page_obj.number }} از {{ page_obj.paginator.num_pages }}
+    </div>
+    {% endif %}
+  </div>
+
+  {% if messages %}
+  <div class="mt-4 space-y-2">
+    {% for message in messages %}
+      <div class="p-3 border rounded-lg text-xs font-bold {% if message.tags == 'success' %} bg-emerald-100/70 text-emerald-900 border-emerald-300/60 {% elif message.tags == 'warning' %} bg-amber-100/70 text-amber-900 border-amber-300/60 {% else %} bg-rose-100/70 text-rose-900 border-rose-300/60 {% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+<div class="space-y-4 md:space-y-5">
+  {% for student in page_obj %}
+  {% with status=student.document_status %}
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition hover:shadow-md">
+    <!-- Header -->
+    <div class="px-4 md:px-5 py-3.5 flex flex-wrap items-center justify-between gap-3 {% if status == 'verified' %}bg-emerald-50/50{% elif status == 'rejected' %}bg-rose-50/50{% else %}bg-amber-50/30{% endif %} border-b border-slate-100">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-sm shrink-0 overflow-hidden">
+          {% if student.avatar_3x4 %}
+            <img src="{{ student.avatar_3x4.url }}" class="w-full h-full object-cover">
+          {% else %}
+            <span>🎓</span>
+          {% endif %}
+        </div>
+        <div class="min-w-0">
+          <h3 class="text-sm font-black text-slate-800 truncate">{{ student.first_name }} {{ student.last_name }}</h3>
+          <p class="text-[11px] text-slate-500 font-mono truncate" dir="ltr">{{ student.phone_number }} &middot; {{ student.national_code }}</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        {% if status == 'verified' %}
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 border border-emerald-200 shadow-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> تأیید شده
+          </span>
+        {% elif status == 'rejected' %}
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-rose-100 text-rose-700 border border-rose-200 shadow-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> رد شده
+          </span>
+        {% else %}
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-700 border border-amber-200 shadow-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> در انتظار بررسی
+          </span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Images -->
+    <div class="px-4 md:px-5 py-4">
+      <div class="grid grid-cols-3 gap-3 md:gap-4">
+        <div class="space-y-1.5">
+          <span class="text-[10px] font-bold text-slate-500 block">عکس ۳×۴</span>
+          {% if student.avatar_3x4 %}
+            <a href="{{ student.avatar_3x4.url }}" target="_blank"
+               class="group relative block rounded-lg overflow-hidden border border-slate-200 bg-slate-100 aspect-[4/3]">
+              <img src="{{ student.avatar_3x4.url }}" class="w-full h-full object-cover transition group-hover:scale-105">
+              <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition flex items-center justify-center">
+                <span class="text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition">👁 مشاهده</span>
+              </div>
+            </a>
+          {% else %}
+            <div class="flex flex-col items-center justify-center aspect-[4/3] rounded-lg border border-dashed border-slate-200 bg-slate-50 text-slate-300 gap-1">
+              <span class="text-lg">📭</span>
+              <span class="text-[10px]">ندارد</span>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="space-y-1.5">
+          <span class="text-[10px] font-bold text-slate-500 block">کارت ملی</span>
+          {% if student.national_card_img %}
+            <a href="{{ student.national_card_img.url }}" target="_blank"
+               class="group relative block rounded-lg overflow-hidden border border-slate-200 bg-slate-100 aspect-[4/3]">
+              <img src="{{ student.national_card_img.url }}" class="w-full h-full object-cover transition group-hover:scale-105">
+              <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition flex items-center justify-center">
+                <span class="text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition">👁 مشاهده</span>
+              </div>
+            </a>
+          {% else %}
+            <div class="flex flex-col items-center justify-center aspect-[4/3] rounded-lg border border-dashed border-slate-200 bg-slate-50 text-slate-300 gap-1">
+              <span class="text-lg">📭</span>
+              <span class="text-[10px]">ندارد</span>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="space-y-1.5">
+          <span class="text-[10px] font-bold text-slate-500 block">شناسنامه</span>
+          {% if student.identity_img %}
+            <a href="{{ student.identity_img.url }}" target="_blank"
+               class="group relative block rounded-lg overflow-hidden border border-slate-200 bg-slate-100 aspect-[4/3]">
+              <img src="{{ student.identity_img.url }}" class="w-full h-full object-cover transition group-hover:scale-105">
+              <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition flex items-center justify-center">
+                <span class="text-white text-[10px] font-bold opacity-0 group-hover:opacity-100 transition">👁 مشاهده</span>
+              </div>
+            </a>
+          {% else %}
+            <div class="flex flex-col items-center justify-center aspect-[4/3] rounded-lg border border-dashed border-slate-200 bg-slate-50 text-slate-300 gap-1">
+              <span class="text-lg">📭</span>
+              <span class="text-[10px]">ندارد</span>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="px-4 md:px-5 py-3.5 bg-slate-50/80 border-t border-slate-100">
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <!-- Approve -->
+        <form action="{% url 'academy:approve_reject_doc' student.id %}" method="POST" class="order-2 sm:order-1">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="verify">
+          <button type="submit" {% if status == 'verified' %}disabled{% endif %}
+                  class="w-full sm:w-auto flex items-center justify-center gap-1.5 {% if status == 'verified' %}bg-emerald-100 text-emerald-400 cursor-not-allowed{% else %}bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-200{% endif %} px-5 py-2 rounded-lg text-xs font-bold transition">
+            {% if status == 'verified' %}✅ تأیید شده{% else %}✅ تأیید مدارک{% endif %}
+          </button>
+        </form>
+
+        <!-- Reject -->
+        <form action="{% url 'academy:approve_reject_doc' student.id %}" method="POST" class="flex-1 order-3 sm:order-2">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="reject">
+          <div class="flex flex-col sm:flex-row gap-2">
+            <div class="flex-1 relative">
+              <input type="text" name="rejection_reason"
+                     placeholder="علت نقص مدارک را وارد کنید..."
+                     value="{% if status == 'rejected' %}{{ student.document_rejection_reason }}{% endif %}"
+                     class="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 bg-white text-slate-800 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-100 font-medium"
+                     {% if status == 'verified' %}disabled{% endif %}>
+            </div>
+            <button type="submit" {% if status == 'verified' %}disabled{% endif %}
+                    class="whitespace-nowrap flex items-center justify-center gap-1.5 {% if status == 'verified' %}bg-rose-50 text-rose-300 cursor-not-allowed border border-rose-100{% else %}bg-white text-rose-600 hover:bg-rose-50 border border-rose-200 hover:border-rose-300{% endif %} px-4 py-2 rounded-lg text-xs font-bold transition">
+              ⛔ اعلام نقص
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endwith %}
+  {% empty %}
+  <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-12 text-center">
+    <div class="text-5xl mb-4">📋</div>
+    <p class="text-slate-400 text-sm font-bold">هنوز هیچ هنرجویی مدارک خود را بارگذاری نکرده</p>
+    <p class="text-xs text-slate-300 mt-1">به محض آپلود مدارک توسط هنرجویان، در اینجا نمایش داده می‌شود</p>
+  </div>
+  {% endfor %}
+</div>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="flex items-center justify-center gap-2 mt-8">
+  {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}"
+       class="inline-flex items-center px-3 py-1.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition">‹ قبلی</a>
+  {% endif %}
+  {% for p in page_obj.paginator.page_range %}
+    {% if p == page_obj.number %}
+      <span class="inline-flex items-center px-3 py-1.5 text-xs font-black text-white bg-emerald-600 rounded-lg shadow-sm">{{ p }}</span>
+    {% elif p >= page_obj.number|add:'-2' and p <= page_obj.number|add:'2' %}
+      <a href="?page={{ p }}"
+         class="inline-flex items-center px-3 py-1.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition">{{ p }}</a>
+    {% endif %}
+  {% endfor %}
+  {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}"
+       class="inline-flex items-center px-3 py-1.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition">بعدی ›</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

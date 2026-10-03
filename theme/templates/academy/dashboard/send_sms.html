@@ -1,0 +1,41 @@
+{% extends "academy/dashboard/base.html" %}
+{% block title %}ارسال پیامک{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <div class="flex items-center gap-3 mb-5">
+    <a href="{% url 'academy:dashboard_home' %}" class="text-slate-400 hover:text-slate-700 transition">←</a>
+    <h1 class="text-lg font-black text-slate-800">ارسال پیامک گروهی</h1>
+  </div>
+
+  <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
+    <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-5">
+      <p class="text-xs font-bold text-blue-700">
+        {% include '_svg_icon.html' with icon='users' class='w-4 h-4 inline ml-1' %} تعداد دریافت‌کنندگان: {{ receptors_count }} نفر
+      </p>
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="space-y-1 mb-5">
+        <label class="block text-xs font-bold text-slate-600 mb-1">متن پیامک</label>
+        <textarea name="message_text" rows="6" required
+                  class="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm bg-white text-slate-800 focus:outline-none focus:border-indigo-400 transition resize-none"
+                  placeholder="متن پیامک را وارد کنید..."></textarea>
+        <p class="text-xs text-slate-400">حداکثر ۳۲۰ کاراکتر</p>
+      </div>
+
+      <div class="flex gap-3">
+        <button type="submit"
+                class="px-6 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition">
+          {% include '_svg_icon.html' with icon='paper-plane' class='w-4 h-4 inline ml-1' %} ارسال پیامک
+        </button>
+        <a href="{% url 'academy:dashboard_home' %}"
+           class="px-6 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200 transition">
+          انصراف
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

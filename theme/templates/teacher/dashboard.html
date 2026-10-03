@@ -1,0 +1,203 @@
+{% extends "teacher/base.html" %}
+{% block title %}داشبورد استاد{% endblock %}
+{% block nav_dash %}bg-indigo-50 text-indigo-700{% endblock %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6 text-right">
+
+  <!-- Welcome -->
+  <div class="rounded-2xl p-6 md:p-8 text-white shadow-lg" style="background:linear-gradient(135deg,#4f46e5,#7c3aed)">
+    <div class="flex items-start justify-between flex-wrap gap-4">
+      <div>
+        <h1 class="text-xl md:text-2xl font-black">سلام، {{ teacher.full_name }}</h1>
+        <p class="text-white/70 text-xs md:text-sm mt-1">پنل مدیریت تدریس</p>
+        {% if teacher.specialization %}
+        <span class="inline-block mt-2 px-3 py-1 bg-white/20 rounded-lg text-[10px] font-bold">{{ teacher.specialization }}</span>
+        {% endif %}
+      </div>
+      <a href="{% url 'teacher:profile' %}" class="flex items-center gap-2 bg-white/10 rounded-xl px-4 py-2 backdrop-blur hover:bg-white/20 transition">
+        <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm font-black">{{ teacher.full_name|first }}</div>
+        <div class="text-xs">
+          <div class="font-bold">{{ teacher.full_name }}</div>
+          <div class="text-white/60">مشاهده پروفایل</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        </div>
+        <div>
+          <div class="text-2xl font-black text-slate-800">{{ stats.course_count|toman }}</div>
+          <div class="text-[10px] text-slate-400">دوره فعال</div>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
+        </div>
+        <div>
+          <div class="text-2xl font-black text-slate-800">{{ stats.total_sessions|toman }}</div>
+          <div class="text-[10px] text-slate-400">جلسه تدریس</div>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+        </div>
+        <div>
+          <div class="text-2xl font-black text-slate-800">{{ stats.student_count|toman }}</div>
+          <div class="text-[10px] text-slate-400">هنرجو</div>
+        </div>
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div>
+          <div class="text-xl font-black text-slate-800">{{ teacher.total_salary_due|toman }}</div>
+          <div class="text-[10px] text-slate-400">تومان حق‌الزحمه</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+    <!-- Upcoming Sessions -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-sm font-black text-slate-800 flex items-center gap-2">
+          <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
+          جلسات پیش رو
+        </h2>
+        <a href="{% url 'teacher:course_list' %}" class="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold">مشاهده همه</a>
+      </div>
+      {% if upcoming_sessions %}
+      <div class="space-y-2">
+        {% for s in upcoming_sessions %}
+        <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition">
+          <div class="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-700 font-black text-sm shrink-0">
+            {{ s.session_number }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="font-bold text-slate-800 text-xs truncate">{{ s.course.title }}</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">{{ s.date|jalali }} {% if s.start_time %}| {{ s.start_time|time:'H:i' }}{% endif %}</div>
+          </div>
+          <div class="flex gap-1.5">
+            <a href="{% url 'teacher:attendance' s.id %}"
+               class="px-2.5 py-1.5 bg-emerald-600 text-white rounded-lg text-[10px] font-bold hover:bg-emerald-700 transition">
+              حضور
+            </a>
+            <a href="{% url 'teacher:material_list' s.id %}"
+               class="px-2.5 py-1.5 bg-blue-600 text-white rounded-lg text-[10px] font-bold hover:bg-blue-700 transition">
+              محتوا
+            </a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-8">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-slate-100 flex items-center justify-center text-2xl mb-3">
+          <svg class="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
+        </div>
+        <p class="text-xs text-slate-400">جلسه پیش رویی وجود ندارد</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Quick Links -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+      <h2 class="text-sm font-black text-slate-800 mb-4 flex items-center gap-2">
+        <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+        دسترسی سریع
+      </h2>
+      <div class="grid grid-cols-2 gap-3">
+        <a href="{% url 'teacher:course_list' %}"
+           class="flex items-center gap-3 p-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 transition group">
+          <div class="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-slate-800">دوره‌های من</div>
+            <div class="text-[10px] text-slate-400">مشاهده و مدیریت</div>
+          </div>
+        </a>
+        <a href="{% url 'teacher:earnings' %}"
+           class="flex items-center gap-3 p-3 rounded-xl bg-amber-50 hover:bg-amber-100 transition group">
+          <div class="w-9 h-9 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center group-hover:scale-110 transition">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-slate-800">درآمد من</div>
+            <div class="text-[10px] text-slate-400">گزارش مالی</div>
+          </div>
+        </a>
+        <a href="{% url 'teacher:exam_list' %}"
+           class="flex items-center gap-3 p-3 rounded-xl bg-rose-50 hover:bg-rose-100 transition group">
+          <div class="w-9 h-9 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center group-hover:scale-110 transition">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/></svg>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-slate-800">آزمون‌ها</div>
+            <div class="text-[10px] text-slate-400">طراحی و مدیریت</div>
+          </div>
+        </a>
+        <a href="{% url 'teacher:profile' %}"
+           class="flex items-center gap-3 p-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 transition group">
+          <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-slate-800">پروفایل</div>
+            <div class="text-[10px] text-slate-400">اطلاعات و قرارداد</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- My Courses -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-sm font-black text-slate-800 flex items-center gap-2">
+        <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        دوره‌های من
+      </h2>
+      <a href="{% url 'teacher:course_list' %}" class="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold">همه دوره‌ها</a>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {% for course in request.user.teacher_profile.courses.all %}
+      <a href="{% url 'teacher:session_list' course.id %}"
+         class="flex items-center justify-between p-3 rounded-xl bg-slate-50 hover:bg-slate-100 transition group">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-sm">
+            {{ course.title|first }}
+          </div>
+          <div>
+            <div class="text-xs font-bold text-slate-800">{{ course.title }}</div>
+            <div class="text-[10px] text-slate-400 mt-0.5">{{ course.student_count|toman }} هنرجو · {{ course.total_sessions|toman }} جلسه</div>
+          </div>
+        </div>
+        <svg class="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/></svg>
+      </a>
+      {% empty %}
+      <p class="text-xs text-slate-400 col-span-2 text-center py-4">دوره‌ای به شما اختصاص نیافته</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

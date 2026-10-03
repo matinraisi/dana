@@ -1,0 +1,27 @@
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+  image: docker:27
+  script:
+    - docker compose build
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+
+deploy:
+  stage: deploy
+  image: docker:27
+  before_script:
+    - mkdir -p ~/.ssh
+    - echo "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+    - chmod 600 ~/.ssh/id_ed25519
+    - ssh-keyscan -p 2200 -H 62.220.123.64 >> ~/.ssh/known_hosts 2>/dev/null
+  script:
+    - ssh -p 2200 kiwi@62.220.123.64 "cd ~/panel.aihousesb.ir && git pull && docker compose build && docker compose up -d --remove-orphans"
+  environment:
+    name: production
+    url: https://panel.aihousesb.ir
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'

@@ -1,0 +1,62 @@
+{% extends "academy/dashboard/base.html" %}
+{% block title %}پاسخ‌ها — {{ form_obj.title }}{% endblock %}
+
+{% block content %}
+<div class="flex items-center gap-3 mb-5">
+  <a href="{% url 'forms_builder:form_builder' form_obj.pk %}" class="text-slate-400 hover:text-slate-700 transition">←</a>
+  <div class="flex-1">
+    <h1 class="text-lg font-black text-slate-800">پاسخ‌های فرم</h1>
+    <p class="text-xs text-slate-400">{{ form_obj.title }} — {{ form_obj.response_count }} پاسخ</p>
+  </div>
+</div>
+
+{% if submissions %}
+<div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-x-auto">
+  <table class="w-full text-sm min-w-max">
+    <thead class="bg-slate-50 border-b border-slate-100">
+      <tr>
+        <th class="px-4 py-3 text-right text-xs font-black text-slate-500">#</th>
+        <th class="px-4 py-3 text-right text-xs font-black text-slate-500">تاریخ</th>
+        <th class="px-4 py-3 text-right text-xs font-black text-slate-500">کاربر</th>
+        {% for field in fields %}
+        <th class="px-4 py-3 text-right text-xs font-black text-slate-500">{{ field.label }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-50">
+      {% for submission in submissions %}
+      <tr class="hover:bg-slate-50 transition">
+        <td class="px-4 py-3 text-slate-400 text-xs">{{ forloop.counter }}</td>
+        <td class="px-4 py-3 text-slate-500 text-xs">{{ submission.submitted_at|date:"Y/m/d H:i" }}</td>
+        <td class="px-4 py-3 text-slate-500 text-xs">
+          {% if submission.submitted_by %}{{ submission.submitted_by.get_full_name|default:submission.submitted_by.username }}{% else %}ناشناس{% endif %}
+        </td>
+        {% for field in fields %}
+        <td class="px-4 py-3 text-slate-700 text-xs max-w-xs truncate">
+          {% for response in submission.responses.all %}
+            {% if response.field_id == field.pk %}
+              {% if response.file_upload %}
+                <a href="{{ response.file_upload.url }}" target="_blank" class="text-indigo-600 hover:underline">فایل</a>
+              {% else %}
+                {{ response.value|default:"—" }}
+              {% endif %}
+            {% endif %}
+          {% endfor %}
+        </td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<div class="bg-white rounded-2xl p-12 text-center border border-slate-100">
+  <div class="text-4xl mb-3">📭</div>
+  <p class="text-slate-400 text-sm">هنوز پاسخی ثبت نشده</p>
+  <a href="{% url 'forms_builder:form_public' form_obj.slug %}" target="_blank"
+     class="mt-4 inline-block px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl text-xs font-bold hover:bg-indigo-100 transition">
+    مشاهده فرم
+  </a>
+</div>
+{% endif %}
+{% endblock %}

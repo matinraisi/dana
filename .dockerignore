@@ -1,0 +1,25 @@
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+__pycache__
+*.pyc
+*.sqlite3
+*.log
+.venv
+venv
+env
+media/
+staticfiles/
+.vscode
+.idea
+.DS_Store
+.claude
+.mimocode
+theme/node_modules
+theme/static_src/node_modules
+# theme/static/css/dist — committed, needed in the image
+tmp/
+apps.zip
+node_modules

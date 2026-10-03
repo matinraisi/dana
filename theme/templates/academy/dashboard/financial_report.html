@@ -1,0 +1,90 @@
+{% extends 'academy/dashboard/base.html' %}
+{% block content %}
+<div class="p-6 space-y-8 text-right" dir="rtl">
+    
+    <div class="flex justify-between items-center border-b border-slate-200 pb-4">
+        <div>
+            <h1 class="text-xl font-black text-slate-800">گزارش جامع مالی و جریان نقدی</h1>
+            <p class="text-xs text-slate-500 mt-1">پیش‌بینی صندوق، مطالبات معوقه و وضعیت پرداختی اقساط {{ school_title }}</p>
+        </div>
+        <div class="text-xs bg-slate-100 px-3 py-1.5 rounded-lg font-bold text-slate-600 font-mono">
+            {% now "Y/m/d" %}
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between relative overflow-hidden">
+            <div class="space-y-1">
+                <span class="text-xs font-bold text-slate-400 block">کل درآمد وصول شده</span>
+                <span class="text-xl font-black text-emerald-600 font-mono">{{ total_revenue|floatformat:"0" }}</span>
+                <span class="text-[10px] text-slate-400 block">تومان</span>
+            </div>
+            <div class="bg-emerald-50 p-3 rounded-xl text-xl">💰</div>
+            <div class="absolute bottom-0 left-0 right-0 h-1 bg-emerald-500"></div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between relative overflow-hidden">
+            <div class="space-y-1">
+                <span class="text-xs font-bold text-slate-400 block">مطالبات معوقه (اقساط گذشته)</span>
+                <span class="text-xl font-black text-rose-600 font-mono">{{ overdue_payments|floatformat:"0" }}</span>
+                <span class="text-[10px] text-slate-400 block">تومان</span>
+            </div>
+            <div class="bg-rose-50 p-3 rounded-xl text-xl">🚨</div>
+            <div class="absolute bottom-0 left-0 right-0 h-1 bg-rose-500"></div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between relative overflow-hidden">
+            <div class="space-y-1">
+                <span class="text-xs font-bold text-slate-400 block">پیش‌بینی ورودی (۳۰ روز آینده)</span>
+                <span class="text-xl font-black text-blue-600 font-mono">{{ upcoming_cashflow|floatformat:"0" }}</span>
+                <span class="text-[10px] text-slate-400 block">تومان</span>
+            </div>
+            <div class="bg-blue-50 p-3 rounded-xl text-xl">📈</div>
+            <div class="absolute bottom-0 left-0 right-0 h-1 bg-blue-500"></div>
+        </div>
+
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-4 bg-slate-50 border-b border-slate-200">
+            <span class="text-xs font-black text-slate-700">آخرین وضعیت اقساط سررسید شده شهریه‌ها</span>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-right border-collapse">
+                <thead>
+                    <tr class="bg-slate-100/70 border-b border-slate-200 text-slate-600 text-[11px] font-bold">
+                        <th class="p-4">هنرجو</th>
+                        <th class="p-4">دوره</th>
+                        <th class="p-4">مبلغ قسط</th>
+                        <th class="p-4">تاریخ سررسید</th>
+                        <th class="p-4">وضعیت قسط</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs">
+                    {% for installment in recent_installments %}
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="p-4 font-bold text-slate-800">{{ installment.enrollment.student }}</td>
+                        <td class="p-4 text-slate-600">{{ installment.enrollment.course.title }}</td>
+                        <td class="p-4 font-mono font-bold text-slate-700">{{ installment.amount|floatformat:"0" }} تومان</td>
+                        <td class="p-4 text-slate-500 font-mono">{{ installment.due_date }}</td>
+                        <td class="p-4">
+                            {% if installment.status == 'paid' %}
+                                <span class="bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-full text-[10px] font-black border border-emerald-200">پرداخت شده</span>
+                            {% else %}
+                                <span class="bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full text-[10px] font-black border border-amber-200">در انتظار پرداخت</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="p-8 text-center text-slate-400 font-medium">هیچ اقساطی در سیستم ثبت نشده است.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

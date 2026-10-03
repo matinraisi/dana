@@ -1,0 +1,300 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ثبت‌نام در دوره {{ course.title }} — {{ school_title }}</title>
+  <link rel="stylesheet" href="{% static 'css/dist/styles.css' %}">
+  <style>
+    @font-face{font-family:"Vazirmatn";src:url("{% static 'font/fonts/webfonts/Vazirmatn-Regular.woff2' %}")format("woff2");font-weight:400}
+    @font-face{font-family:"Vazirmatn";src:url("{% static 'font/fonts/webfonts/Vazirmatn-Black.woff2' %}")format("woff2");font-weight:900}
+    body{font-family:"Vazirmatn",sans-serif}
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50">
+
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200">
+    <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        {% if school_logo %}
+          <img src="{{ school_logo }}" alt="{{ school_title }}" class="w-10 h-10 rounded-xl object-cover">
+        {% else %}
+          <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-sm">{{ school_title|first }}</div>
+        {% endif %}
+        <div>
+          <h1 class="text-sm font-black text-slate-800">{{ school_title }}</h1>
+          <p class="text-[10px] text-slate-400">سامانه ثبت‌نام آنلاین</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+      <!-- Right: Course Info (2/5) -->
+      <div class="lg:col-span-2">
+
+        <!-- Course Card -->
+        <div class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+
+          <!-- Cover Image or Title Banner -->
+          {% if course.cover_image %}
+            <img src="{{ course.cover_image.url }}" alt="{{ course.title }}" class="w-full h-44 object-cover">
+          {% else %}
+            <div class="bg-gradient-to-l from-indigo-500 to-indigo-600 px-5 py-6">
+              <h2 class="text-lg font-black text-white leading-relaxed">{{ course.title }}</h2>
+            </div>
+          {% endif %}
+
+          <!-- Content -->
+          <div class="p-5">
+            {% if course.cover_image %}
+              <h2 class="text-base font-black text-slate-800 mb-3">{{ course.title }}</h2>
+            {% endif %}
+
+            {% if course.description %}
+              <p class="text-xs text-slate-500 leading-relaxed mb-4">{{ course.description }}</p>
+            {% endif %}
+
+            <!-- Info Grid -->
+            <div class="grid grid-cols-2 gap-3">
+              {% if course.teacher %}
+              <div class="bg-slate-50 rounded-lg px-3 py-2.5">
+                <p class="text-[10px] text-slate-400 mb-0.5">استاد</p>
+                <p class="text-xs font-bold text-slate-700">{{ course.teacher.full_name }}</p>
+              </div>
+              {% endif %}
+
+              <div class="bg-slate-50 rounded-lg px-3 py-2.5">
+                <p class="text-[10px] text-slate-400 mb-0.5">شهریه</p>
+                {% if course.fee > 0 %}
+                  <p class="text-xs font-bold text-indigo-600">{{ course.fee|default_if_none:"0" }} <span class="text-[10px] text-slate-400">تومان</span></p>
+                {% else %}
+                  <p class="text-xs font-bold text-emerald-600">رایگان</p>
+                {% endif %}
+              </div>
+
+              <div class="bg-slate-50 rounded-lg px-3 py-2.5">
+                <p class="text-[10px] text-slate-400 mb-0.5">ظرفیت</p>
+                <p class="text-xs font-bold text-slate-700">{{ course.student_count }} / {{ course.max_students }} نفر</p>
+              </div>
+
+              {% if course.start_date %}
+              <div class="bg-slate-50 rounded-lg px-3 py-2.5">
+                <p class="text-[10px] text-slate-400 mb-0.5">تاریخ شروع</p>
+                <p class="text-xs font-bold text-slate-700 font-mono">{{ course.start_date|date:'Y/m/d' }}</p>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Left: Registration Form (3/5) -->
+      <div class="lg:col-span-3">
+
+        <!-- Messages -->
+        {% if messages %}
+        <div class="space-y-2 mb-5">
+          {% for msg in messages %}
+          <div class="px-4 py-3 rounded-xl text-sm font-semibold flex items-center gap-2
+            {% if msg.tags == 'error' %}bg-red-50 text-red-600 border border-red-100
+            {% elif msg.tags == 'success' %}bg-emerald-50 text-emerald-600 border border-emerald-100
+            {% else %}bg-indigo-50 text-indigo-600 border border-indigo-100{% endif %}">
+            {% if msg.tags == 'error' %}
+            <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            {% endif %}
+            {{ msg }}
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Form Card -->
+        <div class="bg-white border border-slate-200 rounded-xl p-6">
+          <div class="mb-6">
+            <h2 class="text-base font-black text-slate-800">فرم ثبت‌نام</h2>
+            <p class="text-xs text-slate-400 mt-1">اطلاعات خود را وارد کنید</p>
+          </div>
+
+          <form method="post" class="space-y-4">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-600 mb-2">نام <span class="text-red-400">*</span></label>
+                <input type="text" name="first_name" value="{{ post.first_name|default:'' }}" required
+                       placeholder="نام"
+                       class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-50 transition bg-white">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600 mb-2">نام خانوادگی <span class="text-red-400">*</span></label>
+                <input type="text" name="last_name" value="{{ post.last_name|default:'' }}" required
+                       placeholder="نام خانوادگی"
+                       class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-50 transition bg-white">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-2">کد ملی <span class="text-red-400">*</span></label>
+              <input type="text" name="national_code" maxlength="10" value="{{ post.national_code|default:'' }}" required
+                     placeholder="کد ملی ۱۰ رقمی"
+                     class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-50 transition bg-white"
+                     dir="ltr">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-2">شماره موبایل <span class="text-red-400">*</span></label>
+              <input type="tel" name="phone_number" maxlength="11" value="{{ post.phone_number|default:'' }}" required
+                     placeholder="09123456789"
+                     class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-50 transition bg-white"
+                     dir="ltr">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-2">مقطع تحصیلی <span class="text-slate-300 text-[10px]">(اختیاری)</span></label>
+              <select name="education_level"
+                      class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-50 transition bg-white">
+                <option value="">انتخاب کنید...</option>
+                <option value="under_diploma" {% if post.education_level == 'under_diploma' %}selected{% endif %}>زیر دیپلم</option>
+                <option value="diploma" {% if post.education_level == 'diploma' %}selected{% endif %}>دیپلم</option>
+                <option value="associate" {% if post.education_level == 'associate' %}selected{% endif %}>فوق دیپلم</option>
+                <option value="bachelor" {% if post.education_level == 'bachelor' %}selected{% endif %}>کارشناسی</option>
+                <option value="master" {% if post.education_level == 'master' %}selected{% endif %}>کارشناسی ارشد</option>
+                <option value="phd" {% if post.education_level == 'phd' %}selected{% endif %}>دکتری</option>
+              </select>
+            </div>
+
+            <!-- کد تخفیف -->
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-2">کد تخفیف <span class="text-slate-300 text-[10px]">(اختیاری)</span></label>
+              <div class="flex gap-2">
+                <input type="text" name="discount_code" id="discount_code"
+                       value="{{ post.discount_code|default:'' }}"
+                       placeholder="کد تخفیف را وارد کنید"
+                       class="flex-1 border border-slate-200 rounded-xl px-4 py-3 text-sm font-mono text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-50 transition bg-white uppercase"
+                       dir="ltr">
+                <button type="button" onclick="validateDiscount()"
+                        class="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition">
+                  بررسی
+                </button>
+              </div>
+              <p id="discount-message" class="text-[10px] mt-1.5 hidden"></p>
+            </div>
+
+            <!-- قیمت نهایی -->
+            {% if course.fee > 0 %}
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs text-slate-500">شهریه دوره</span>
+                <span class="text-sm font-bold text-slate-700">{{ course.fee|default_if_none:"0" }} تومان</span>
+              </div>
+              <div id="discount-info" class="hidden flex items-center justify-between mb-1 text-emerald-600">
+                <span class="text-xs">تخفیف</span>
+                <span id="discount-amount" class="text-sm font-bold">-</span>
+              </div>
+              <div class="flex items-center justify-between pt-2 border-t border-slate-200">
+                <span class="text-xs font-bold text-slate-600">مبلغ نهایی</span>
+                <span id="final-amount" class="text-base font-black text-indigo-600">{{ course.fee|default_if_none:"0" }} تومان</span>
+              </div>
+            </div>
+            {% endif %}
+
+            <button type="submit"
+                    class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm transition shadow-sm mt-2">
+              ثبت‌نام در این دوره
+            </button>
+          </form>
+        </div>
+
+        <!-- Trust Badges -->
+        <div class="mt-4 grid grid-cols-3 gap-3">
+          <div class="bg-white border border-slate-200 rounded-xl p-3 text-center">
+            <div class="w-8 h-8 bg-emerald-50 rounded-lg flex items-center justify-center mx-auto mb-2">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <p class="text-[10px] font-bold text-slate-600">ثبت‌نام آنلاین</p>
+            <p class="text-[9px] text-slate-400">بدون مراجعه حضوری</p>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-xl p-3 text-center">
+            <div class="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center mx-auto mb-2">
+              <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </div>
+            <p class="text-[10px] font-bold text-slate-600">اطلاعات امن</p>
+            <p class="text-[9px] text-slate-400">محرمانه و محافظت شده</p>
+          </div>
+          <div class="bg-white border border-slate-200 rounded-xl p-3 text-center">
+            <div class="w-8 h-8 bg-amber-50 rounded-lg flex items-center justify-center mx-auto mb-2">
+              <svg class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <p class="text-[10px] font-bold text-slate-600">تأیید فوری</p>
+            <p class="text-[9px] text-slate-400">پاسخ در کوتاه‌ترین زمان</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-200 bg-white mt-12">
+    <div class="max-w-4xl mx-auto px-4 py-4 text-center">
+      <p class="text-[11px] text-slate-400">{{ school_title }} — {{ school_phone|default:"" }}</p>
+    </div>
+  </footer>
+
+  <script>
+    var courseFee = {{ course.fee|default_if_none:"0" }};
+
+    function validateDiscount() {
+      var code = document.getElementById('discount_code').value.trim();
+      var msgEl = document.getElementById('discount-message');
+      var infoEl = document.getElementById('discount-info');
+      var amountEl = document.getElementById('discount-amount');
+      var finalEl = document.getElementById('final-amount');
+
+      if (!code) {
+        msgEl.className = 'text-[10px] mt-1.5 text-red-500';
+        msgEl.textContent = 'کد تخفیف را وارد کنید';
+        msgEl.classList.remove('hidden');
+        return;
+      }
+
+      // AJAX call
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/dashboard/discounts/ajax/validate/?code=' + code + '&course_id={{ course.id }}');
+      xhr.onload = function() {
+        var data = JSON.parse(xhr.responseText);
+        if (data.valid) {
+          msgEl.className = 'text-[10px] mt-1.5 text-emerald-600';
+          msgEl.textContent = '✓ ' + data.message;
+          msgEl.classList.remove('hidden');
+
+          // محاسبه تخفیف
+          var discount = 0;
+          if (data.discount_type === 'percent') {
+            discount = Math.round(courseFee * data.discount_value / 100);
+          } else {
+            discount = Math.min(data.discount_value, courseFee);
+          }
+
+          infoEl.classList.remove('hidden');
+          amountEl.textContent = '-' + discount.toLocaleString('fa-IR') + ' تومان';
+          finalEl.textContent = (courseFee - discount).toLocaleString('fa-IR') + ' تومان';
+        } else {
+          msgEl.className = 'text-[10px] mt-1.5 text-red-500';
+          msgEl.textContent = '✗ ' + data.message;
+          msgEl.classList.remove('hidden');
+          infoEl.classList.add('hidden');
+          finalEl.textContent = courseFee.toLocaleString('fa-IR') + ' تومان';
+        }
+      };
+      xhr.send();
+    }
+  </script>
+
+</body>
+</html>
