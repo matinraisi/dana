@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'theme',
     'django_jalali',
     'apps.users',
+    'apps.installation',
     # ``users.StudentAccount`` is a legacy academy relation. The academy app
     # must remain registered until that model is migrated safely, even in a
     # school/control installation. Its URLs remain product-gated below.
@@ -94,6 +95,7 @@ TEMPLATES = [
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
+                'apps.installation.context_processors.installation',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'apps.schools.context_processors.school_context',

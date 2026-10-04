@@ -231,3 +231,7 @@ python manage.py tailwind build
 ---
 
 **دانا (Dana)** — پلتفرم اتوماسیون هوشمند آموزشگاه مبتنی بر هوش مصنوعی
+
+## Documentation
+- [Installation & Branding Module ()](./docs/installation.md)
+- [Architecture & Roadmap](./docs/architecture-roadmap.md)
