@@ -1,0 +1,44 @@
+{% load static tailwind_tags %}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}پنل مدرسه{% endblock %}</title>
+  {% include "includes/pwa_head.html" %}
+  {% tailwind_css %}
+  <style>
+    @font-face{font-family:"Vazirmatn";src:url("{% static 'font/fonts/webfonts/Vazirmatn-Regular.woff2' %}")format("woff2");font-weight:400}
+    @font-face{font-family:"Vazirmatn";src:url("{% static 'font/fonts/webfonts/Vazirmatn-Black.woff2' %}")format("woff2");font-weight:900}
+    body{font-family:"Vazirmatn",sans-serif}
+    .nav-link{display:block;padding:0.55rem 0.85rem;border-radius:0.75rem;font-size:0.8rem;font-weight:700;color:#475569}
+    .nav-link.active,.nav-link:hover{background:#eef2ff;color:#4338ca}
+  </style>
+</head>
+<body class="min-h-screen bg-slate-100 text-slate-800">
+  <div class="mx-auto flex min-h-screen max-w-7xl flex-col md:flex-row">
+    <aside class="w-full border-b border-slate-200 bg-white md:w-56 md:border-b-0 md:border-l">
+      <div class="border-b border-slate-100 px-4 py-4">
+        <p class="text-xs font-bold text-indigo-600">School Profile</p>
+        <h1 class="text-sm font-black">{{ installation.organization_name|default:"پنل مدرسه" }}</h1>
+      </div>
+      <nav class="space-y-1 p-3">
+        <a class="nav-link {% if nav == 'home' %}active{% endif %}" href="{% url 'school_management:home' %}">میز کار</a>
+        <a class="nav-link {% if nav == 'profile' %}active{% endif %}" href="{% url 'school_management:profile' %}">مشخصات مدرسه</a>
+        <a class="nav-link {% if nav == 'years' %}active{% endif %}" href="{% url 'school_management:years' %}">سال تحصیلی</a>
+        <a class="nav-link {% if nav == 'structure' %}active{% endif %}" href="{% url 'school_management:structure' %}">پایه / رشته / کلاس</a>
+        <a class="nav-link {% if nav == 'students' %}active{% endif %}" href="{% url 'school_management:students' %}">دانش‌آموزان</a>
+        <a class="nav-link {% if nav == 'guardians' %}active{% endif %}" href="{% url 'school_management:guardians' %}">اولیا</a>
+        <a class="nav-link {% if nav == 'enrollments' %}active{% endif %}" href="{% url 'school_management:enrollments' %}">ثبت‌نام‌ها</a>
+        <a class="nav-link" href="/admin/">Django Admin</a>
+      </nav>
+    </aside>
+    <main class="flex-1 p-4 md:p-8">
+      {% if messages %}{% for message in messages %}
+      <div class="mb-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">{{ message }}</div>
+      {% endfor %}{% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</body>
+</html>

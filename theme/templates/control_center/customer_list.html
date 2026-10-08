@@ -1,0 +1,33 @@
+{% extends "control_center/base.html" %}
+{% block title %}مشتریان | کنترل دانا{% endblock %}
+{% block heading %}مشتریان{% endblock %}
+{% block content %}
+<form class="mb-5 flex flex-wrap gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+  <input name="q" value="{{ query }}" placeholder="جستجو" class="min-w-60 flex-1 rounded-xl border border-slate-200 px-4 py-2.5 text-sm">
+  <select name="status" class="rounded-xl border border-slate-200 px-3 py-2.5 text-sm">
+    <option value="">همه وضعیت‌ها</option>
+    {% for value, label in statuses %}<option value="{{ value }}" {% if active_status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+  </select>
+  <button class="rounded-xl bg-slate-800 px-4 py-2.5 text-sm font-bold text-white">فیلتر</button>
+  <a href="{% url 'control_center:customer_create' %}" class="rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-bold text-white">مشتری جدید</a>
+</form>
+<div class="space-y-3">
+{% for item in page_obj %}
+  <article class="rounded-2xl border border-slate-200 bg-white p-5">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div>
+        <h2 class="font-black">{{ item.organization_name }}</h2>
+        <p class="mt-1 text-sm text-slate-500">{{ item.get_product_profile_display }} · {{ item.contact_name }} · {{ item.phone_number }}</p>
+      </div>
+      <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold">{{ item.get_status_display }}</span>
+    </div>
+    <div class="mt-3 flex gap-2 text-xs font-bold">
+      <a class="rounded-lg bg-slate-100 px-3 py-1.5" href="{% url 'control_center:customer_edit' item.pk %}">ویرایش</a>
+      <span class="rounded-lg bg-slate-50 px-3 py-1.5 text-slate-500">{{ item.licenses.count }} لایسنس · {{ item.installs.count }} نصب</span>
+    </div>
+  </article>
+{% empty %}
+  <div class="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center text-sm text-slate-500">مشتری ثبت نشده است.</div>
+{% endfor %}
+</div>
+{% endblock %}

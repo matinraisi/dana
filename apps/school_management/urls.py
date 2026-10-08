@@ -1,16 +1,19 @@
-"""URLs owned exclusively by the school product.
-
-The school dashboard will be introduced with its first approved domain slice.
-Keeping this namespace separate from ``apps.academy`` is an architectural
-boundary, not a compatibility layer.
-"""
+"""URLs owned exclusively by the school product."""
 
 from django.urls import path
 
-from .views import SchoolPanelRedirectView
+from . import views
 
 app_name = "school_management"
 
 urlpatterns = [
-    path('', SchoolPanelRedirectView.as_view(), name='home'),
+    path("", views.SchoolDashboardView.as_view(), name="home"),
+    path("profile/", views.SchoolProfileEditView.as_view(), name="profile"),
+    path("years/", views.AcademicYearListView.as_view(), name="years"),
+    path("structure/", views.StructureListView.as_view(), name="structure"),
+    path("students/", views.StudentListView.as_view(), name="students"),
+    path("students/new/", views.StudentCreateView.as_view(), name="student_create"),
+    path("students/<int:pk>/", views.StudentDetailView.as_view(), name="student_detail"),
+    path("guardians/", views.GuardianListView.as_view(), name="guardians"),
+    path("enrollments/", views.EnrollmentListView.as_view(), name="enrollments"),
 ]

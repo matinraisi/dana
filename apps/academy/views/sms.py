@@ -3,10 +3,9 @@ import json
 from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib import messages
+from django.db.models import Q
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
-from apps.academy.mixins import AdminRequiredMixin, SchoolFilterMixin
+from apps.academy.mixins import AdminRequiredMixin
 
 from ..models import Course, StudentEnrollment, SMSLog
 from ..admin import send_plain_sms
@@ -17,30 +16,28 @@ logger = logging.getLogger(__name__)
 def _get_receivers(request, target_type, message_text):
     """Get list of phone numbers based on target type."""
     from apps.crm.models import Lead
-    from apps.users.models import User, Teacher
-
-    mixin = SchoolFilterMixin()
-    mixin.request = request
+    from apps.users.models import User
+    from apps.academy.models import Teacher
 
     recep_numbers = []
     if target_type == 'all':
-        recep_numbers = list(mixin.filter_by_school(StudentEnrollment.objects.all()).values_list('phone_number', flat=True))
+        recep_numbers = list(StudentEnrollment.objects.all().values_list('phone_number', flat=True))
     elif target_type == 'course':
         course_id = request.POST.get('course_id') or request.GET.get('course_id')
         if course_id:
-            recep_numbers = list(mixin.filter_by_school(StudentEnrollment.objects.filter(
+            recep_numbers = list(StudentEnrollment.objects.filter(
                 active_enrollments__course_id=course_id
-            )).values_list('phone_number', flat=True).distinct())
+            ).values_list('phone_number', flat=True).distinct())
     elif target_type == 'selective':
         student_ids = request.POST.getlist('student_ids') or request.GET.getlist('student_ids')
         if student_ids:
-            recep_numbers = list(mixin.filter_by_school(StudentEnrollment.objects.filter(
+            recep_numbers = list(StudentEnrollment.objects.filter(
                 id__in=student_ids
-            )).values_list('phone_number', flat=True))
+            ).values_list('phone_number', flat=True))
     elif target_type == 'teachers':
-        recep_numbers = list(mixin.filter_by_school(
-            Teacher.objects.filter(is_active=True).select_related('user')
-        ).values_list('phone_number', flat=True))
+        recep_numbers = list(
+            Teacher.objects.filter(is_active=True).values_list('phone_number', flat=True)
+        )
     elif target_type == 'teacher_selective':
         teacher_ids = request.POST.getlist('teacher_ids') or request.GET.getlist('teacher_ids')
         if teacher_ids:
@@ -52,7 +49,7 @@ def _get_receivers(request, target_type, message_text):
         qs = User.objects.filter(is_active=True).exclude(phone_number='')
         if user_role:
             qs = qs.filter(role=user_role)
-        recep_numbers = list(mixin.filter_by_school(qs, school_field='school').values_list('phone_number', flat=True))
+        recep_numbers = list(qs.values_list('phone_number', flat=True))
     elif target_type == 'user_selective':
         user_ids = request.POST.getlist('user_ids') or request.GET.getlist('user_ids')
         if user_ids:
@@ -62,36 +59,37 @@ def _get_receivers(request, target_type, message_text):
     elif target_type == 'leads':
         lead_ids = request.POST.getlist('lead_ids') or request.GET.getlist('lead_ids')
         if lead_ids:
-            recep_numbers = list(mixin.filter_by_school(Lead.objects.filter(
+            recep_numbers = list(Lead.objects.filter(
                 id__in=lead_ids
-            )).values_list('phone_number', flat=True))
-        else:
-            recep_numbers = list(mixin.filter_by_school(
-                Lead.objects.exclude(phone_number='')
             ).values_list('phone_number', flat=True))
+        else:
+            recep_numbers = list(
+                Lead.objects.exclude(phone_number='')
+            .values_list('phone_number', flat=True))
     elif target_type == 'lead_status':
         status = request.POST.get('lead_status') or request.GET.get('lead_status')
         if status:
-            recep_numbers = list(mixin.filter_by_school(
+            recep_numbers = list(
                 Lead.objects.filter(status=status).exclude(phone_number='')
-            ).values_list('phone_number', flat=True))
+            .values_list('phone_number', flat=True))
 
     return list(set([n.strip() for n in recep_numbers if n and n.strip()]))
 
 
-class SMSDashboardView(AdminRequiredMixin, SchoolFilterMixin, View):
+class SMSDashboardView(AdminRequiredMixin, View):
     def get(self, request):
-        from apps.users.models import User, Teacher
-        courses = self.filter_by_school(Course.objects.all())
-        students = self.filter_by_school(StudentEnrollment.objects.all())
-        teachers = self.filter_by_school(Teacher.objects.filter(is_active=True).select_related('user'), school_field='user__school')
-        users = self.filter_by_school(User.objects.filter(is_active=True).exclude(phone_number=''), school_field='school')
+        from apps.users.models import User
+        from apps.academy.models import Teacher
+        courses = Course.objects.all()
+        students = StudentEnrollment.objects.all()
+        teachers = Teacher.objects.filter(is_active=True).select_related('user')
+        users = User.objects.filter(is_active=True).exclude(phone_number='')
         from apps.crm.models import Lead
-        leads = self.filter_by_school(Lead.objects.exclude(phone_number=''))
+        leads = Lead.objects.exclude(phone_number='')
 
         # جستجو در لاگ‌ها
         search = request.GET.get('search', '').strip()
-        sms_logs = self.filter_by_school(SMSLog.objects.all())
+        sms_logs = SMSLog.objects.all()
 
         if search:
             sms_logs = sms_logs.filter(
@@ -104,8 +102,8 @@ class SMSDashboardView(AdminRequiredMixin, SchoolFilterMixin, View):
         paginator = Paginator(sms_logs, 15)
         page_obj = paginator.get_page(page_number)
 
-        total_sms = self.filter_by_school(SMSLog.objects.all()).count()
-        success_sms = self.filter_by_school(SMSLog.objects.filter(is_sent=True)).count()
+        total_sms = SMSLog.objects.all().count()
+        success_sms = SMSLog.objects.filter(is_sent=True).count()
 
         return render(request, 'academy/dashboard/sms_management.html', {
             'courses': courses,
@@ -122,11 +120,11 @@ class SMSDashboardView(AdminRequiredMixin, SchoolFilterMixin, View):
         })
 
 
-class SMSManagementView(AdminRequiredMixin, SchoolFilterMixin, View):
+class SMSManagementView(AdminRequiredMixin, View):
     def get(self, request):
-        sms_logs = self.filter_by_school(SMSLog.objects.all())[:100]
-        total_sms = self.filter_by_school(SMSLog.objects.all()).count()
-        success_sms = self.filter_by_school(SMSLog.objects.filter(is_sent=True)).count()
+        sms_logs = SMSLog.objects.all()[:100]
+        total_sms = SMSLog.objects.all().count()
+        success_sms = SMSLog.objects.filter(is_sent=True).count()
         return render(request, 'academy/dashboard/sms_management.html', {
             'sms_logs': sms_logs,
             'total_sms': total_sms,
@@ -135,7 +133,7 @@ class SMSManagementView(AdminRequiredMixin, SchoolFilterMixin, View):
         })
 
 
-class SendBulkSMSView(AdminRequiredMixin, SchoolFilterMixin, View):
+class SendBulkSMSView(AdminRequiredMixin, View):
     def post(self, request):
         target_type = request.POST.get('target_type')
         message_text = request.POST.get('message', '').strip()
@@ -160,7 +158,6 @@ class SendBulkSMSView(AdminRequiredMixin, SchoolFilterMixin, View):
         return redirect('academy:sms_dashboard')
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class SMSAjaxSendView(AdminRequiredMixin, View):
     """AJAX endpoint: send SMS to one number at a time with progress."""
 
@@ -183,7 +180,6 @@ class SMSAjaxSendView(AdminRequiredMixin, View):
         })
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class SMSAjaxPreviewView(AdminRequiredMixin, View):
     """AJAX endpoint: get receiver count before sending."""
 

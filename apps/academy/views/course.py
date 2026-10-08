@@ -1,17 +1,17 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.contrib import messages
-from apps.academy.mixins import AdminRequiredMixin, SchoolFilterMixin
+from apps.academy.mixins import AdminRequiredMixin
 
 from ..models import Course
 from ..utils.date_helper import to_gregorian
-from apps.users.models import Teacher
-from apps.schools.models import School
+from apps.academy.models import Teacher
+from apps.academy.org import get_instance_organization
 
 
-class CourseListView(AdminRequiredMixin, SchoolFilterMixin, View):
+class CourseListView(AdminRequiredMixin, View):
     def get(self, request):
-        courses = self.filter_by_school(Course.objects.all()).order_by('-start_date')
+        courses = Course.objects.all().order_by('-start_date')
         context = {
             'courses': courses,
             'active_count': courses.filter(status__in=['open', 'active']).count(),
@@ -21,15 +21,13 @@ class CourseListView(AdminRequiredMixin, SchoolFilterMixin, View):
         return render(request, 'academy/dashboard/course_list.html', context)
 
 
-class CourseCreateView(AdminRequiredMixin, SchoolFilterMixin, View):
+class CourseCreateView(AdminRequiredMixin, View):
     def get(self, request):
-        teachers = self.filter_by_school(Teacher.objects.filter(is_active=True), school_field='user__school')
-        all_courses = self.filter_by_school(Course.objects.all())
-        schools = School.objects.filter(is_active=True) if request.user.is_superuser else None
+        teachers = Teacher.objects.filter(is_active=True)
+        all_courses = Course.objects.all()
         return render(request, 'academy/dashboard/course_create.html', {
             'teachers': teachers,
             'all_courses': all_courses,
-            'schools': schools,
         })
 
     def post(self, request):
@@ -65,13 +63,6 @@ class CourseCreateView(AdminRequiredMixin, SchoolFilterMixin, View):
         prerequisite = Course.objects.filter(id=prerequisite_id).first() if prerequisite_id else None
         cover_image = request.FILES.get('cover_image')
 
-        # تعیین مدرسه
-        if request.user.is_superuser:
-            school_id = request.POST.get('school_id')
-            school = School.objects.filter(id=school_id).first() if school_id else None
-        else:
-            school = getattr(request.user, 'school', None)
-
         course = Course(
             title=title, code=code, description=description,
             level=level, status=status,
@@ -80,7 +71,7 @@ class CourseCreateView(AdminRequiredMixin, SchoolFilterMixin, View):
             start_date=start_date, end_date=end_date,
             is_active=is_active,
             allow_public_registration=allow_public_registration,
-            school=school,
+            school=get_instance_organization(),
         )
         if cover_image:
             course.cover_image = cover_image
@@ -102,11 +93,11 @@ class CourseCreateView(AdminRequiredMixin, SchoolFilterMixin, View):
         return redirect('academy:course_list')
 
 
-class CourseEditView(AdminRequiredMixin, SchoolFilterMixin, View):
+class CourseEditView(AdminRequiredMixin, View):
     def get(self, request, pk):
         course = self.school_object_or_404(Course, pk=pk)
-        teachers = self.filter_by_school(Teacher.objects.filter(is_active=True), school_field='user__school')
-        all_courses = self.filter_by_school(Course.objects.exclude(pk=pk))
+        teachers = Teacher.objects.filter(is_active=True)
+        all_courses = Course.objects.exclude(pk=pk)
         return render(request, 'academy/dashboard/course_edit.html', {
             'course': course,
             'teachers': teachers,
@@ -169,7 +160,7 @@ class CourseEditView(AdminRequiredMixin, SchoolFilterMixin, View):
         return redirect('academy:course_list')
 
 
-class CourseDeleteView(AdminRequiredMixin, SchoolFilterMixin, View):
+class CourseDeleteView(AdminRequiredMixin, View):
     def post(self, request, pk):
         course = self.school_object_or_404(Course, pk=pk)
         title = course.title

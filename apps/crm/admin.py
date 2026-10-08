@@ -1,20 +1,12 @@
 from django.contrib import admin
 from .models import Lead, LeadActivity
-from apps.admin_base import SchoolAdminMixin
+from apps.academy.admin_mixins import SchoolAdminMixin
 
 
 class LeadActivityInline(admin.TabularInline):
     model = LeadActivity
     extra = 1
     fields = ('activity_type', 'description', 'created_by')
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        if school_id := getattr(request.user, 'school_id', None):
-            return qs.filter(lead__school_id=school_id)
-        return qs.none()
 
 
 @admin.register(Lead)

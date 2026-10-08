@@ -1,237 +1,136 @@
-# دانا (Dana) — پلتفرم اتوماسیون هوشمند آموزشگاه
+# دانا (Dana) — Education Platform
 
 <p dir="rtl">
 
-سیستم جامع مدیریت آموزشگاه مبتنی بر Django با رابط کاربری فارسی، چندمستاجری، و اتوماسیون هوشمند پیامکی.
+پلتفرم مدیریت آموزش با یک codebase و سه پروفایل نصب: آموزشگاه، مدرسه، و کنترل مرکزی.
+هر مشتری یک Instance مستقل (دیتابیس، دامنه، media، تنظیمات) دریافت می‌کند.
 
 </p>
 
 ---
 
-## خلاصه پروژه
+## قرارداد معماری
 
-**دانا** یک پلتفرم اتوماسیون هوشمند آموزشگاه است که مدیریت دوره‌ها، هنرجویان، حسابداری، آزمون‌ها، پیامک و پنل‌های اختصاصی استاد/هنرجو را در یک سیستم یکپارچه فراهم می‌کند.
+منبع حقیقت: [`docs/architecture-contract.md`](docs/architecture-contract.md)
 
-| ویژگی | توضیح |
+| مفهوم | معنی |
 |---|---|
-| **چندمستاجری** | هر آموزشگاه پنل جداگانه با دسترسی مجزا |
-| **رابط فارسی** | UI/UX کاملاً فارسی با فونت وزیرمتن |
-| **پرداخت آنلاین** | درگاه آقای پرداخت با وریفای خودکار |
-| **پیامک هوشمند** | ارسال خودکار خوش‌آمد، یادآوری، غیبت (Kavenegar) |
-| **آزمون آنلاین** | ۸ نوع سوال با تصحیح خودکار |
-| **کارت شناسایی** | کارت دیجیتال با QR Code |
+| یک محصول | Education Platform |
+| دو پروفایل مشتری | `academy` / `school` |
+| پروفایل داخلی | `control` |
+| Tenancy | یک مشتری = یک Instance = یک DB |
+| Website | اختیاری (`WEBSITE_ENABLED`) |
+| PWA | همیشه برای پنل مشتری |
 
 ---
 
-## استک فناوری
+## استک
 
 | لایه | فناوری |
 |---|---|
-| Backend | Django 6.0 + Python 3.10-3.12 |
-| Frontend | Tailwind CSS v4 (django-tailwind) |
-| دیتابیس | SQLite (لوکال) / MySQL (هاست cPanel) |
-| پیامک | Kavenegar API |
-| پرداخت | آقای پرداخت (AqayePardakht) |
-| کلاس آنلاین | Jitsi Meet |
-| تقویم شمسی | django-jalali |
-| فایل‌ها | Whitenoise + Pillow |
+| Backend | Django 6.0 + Python 3.10–3.12 |
+| Frontend | Tailwind CSS v4 + قالب Django + PWA |
+| DB | SQLite (لوکال) / MySQL (هاست) |
+| پیامک | IPPanel |
+| پرداخت | آقای پرداخت ± درگاه سان‌تک |
+| تقویم | django-jalali |
 
 ---
 
-## ساختار پروژه
+## ساختار
 
 ```
-cademy/
-├── apps/
-│   ├── academy/          ← هسته اصلی (دوره‌ها، هنرجویان، امتحانات، مالی، پیامک، حضورغیاب)
-│   ├── users/             ← مدل User سفارشی + OTP + استاد/هنرجو
-│   ├── crm/               ← مدیریت لیدها و تبدیل به دانشجو
-│   ├── teacher_panel/     ← پنل استاد
-│   ├── student_panel/     ← پنل هنرجو
-│   ├── forms_builder/     ← فرم‌ساز پویا
-│   ├── schools/           ← مدل مدرسه + Middleware چندمستاجری
-│   └── website/           ← لندینگ دانا + صفحه آموزش
-├── config/                ← تنظیمات Django
-├── theme/                 ← قالب‌ها + Tailwind CSS + static files
-├── static/                ← فایل‌های استاتیک (فونت وزیرمتن)
-├── media/                 ← فایل‌های آپلود شده
-├── manage.py
-├── passenger_wsgi.py      ← ورودی هاست cPanel
-├── requirements.txt
-└── .env                   ← تنظیمات محیطی
+apps/
+  academy/             آموزشگاه (+ CRM/forms/teacher/student panels)
+  schools/             سازمان آموزشگاه (singleton per Academy instance)
+  school_management/   مدرسه (K-12)
+  control_center/      کنترل دانا
+  installation/        برندینگ Instance
+  notifications/       SMS transport (IPPanel)
+  users/
+config/                install_config.py → PRODUCT_MODE → profile.py
+theme/ website/ docs/ scripts/ deploy/
 ```
 
 ---
 
-## بخش‌های کامل شده (۲۲ بخش)
+## راه‌اندازی لوکال / اولین نصب مشتری
 
-### پنل مدیریت (`/dashboard/`)
-| # | بخش | توضیح |
-|---|---|---|
-| ۱ | لاگین و احراز هویت | ورود با رمز عبور برای مدیران |
-| ۲ | مدیریت دوره‌ها | ایجاد، ویرایش، حذف دوره + لینک ثبت‌نام عمومی |
-| ۳ | مدیریت هنرجویان | ثبت‌نام، ویرایش، جستجو + صدور کارت شناسایی |
-| ۴ | کدهای تخفیف | کد تخفیف درصدی/مبلغی با محدودیت استفاده |
-| ۵ | حسابداری | ثبت درآمد/هزینه، تراکنش‌ها، گزارش سودآوری |
-| ۶ | مدیریت اقساط | پیگیری اقساط شهریه + پرداخت آنلاین |
-| ۷ | گزارشات | داشبورد آماری + گزارش هنرجویان + نمودار درآمد |
-| ۸ | کارت شناسایی | کارت دیجیتال دانشجویی با QR Code |
-| ۹ | آزمون‌ها | ۸ نوع سوال + تصحیح خودکار + نتایج |
-| ۱۰ | پیامک | ارسال انبوه + فیلتر + جستجو + تاریخچه |
-| ۱۱ | برنامه کلاس‌ها | تقویم هفتگی + مدیریت فضاها |
-| ۱۲ | پرداخت آنلاین | درگاه آقای پرداخت + وریفای خودکار |
-| ۱۳ | بخش آموزش | راهنمای جامع استفاده از سیستم |
-
-### پنل استاد (`/teacher/`)
-| بخش | توضیح |
-|---|---|
-| داشبورد | آمار دوره‌ها و درآمد |
-| دوره‌ها و جلسات | مشاهده و مدیریت جلسات |
-| حضور و غیاب | ثبت حضور هنرجویان |
-| محتوای آموزشی | آپلود و مدیریت فایل‌ها |
-| آزمون‌ها | طراحی و مدیریت آزمون |
-| درآمد | مشاهده حق‌الزحمه و تاریخچه |
-| پروفایل | ویرایش اطلاعات + شماره کارت/شبا |
-
-### پنل هنرجو (`/my/`)
-| بخش | توضیح |
-|---|---|
-| دوره‌ها | دوره‌های ثبت‌نام شده |
-| حضور و غیاب | مشاهده وضعیت حضور |
-| آزمون‌ها | شرکت در آزمون + مشاهده نتایج |
-| پرداخت شهریه | مشاهده اقساط + پرداخت آنلاین |
-| محتوا | دانلود محتوای آموزشی |
-| کارت شناسایی | مشاهده کارت دیجیتال |
-
-### لندینگ (`/`)
-| بخش | توضیح |
-|---|---|
-| صفحه اصلی | معرفی دانا + مسیر رشد ۵ مرحله‌ای |
-| صفحه آموزش | راهنمای جامع استفاده از سیستم |
-
----
-
-## نقش‌های کاربری
-
-| نقش | دسترسی | پنل |
-|---|---|---|
-| سوپریوزر | همه مدارس + همه داده‌ها | `/dashboard/` |
-| مدیر آموزشگاه | فقط مدرسه خودش | `/dashboard/` |
-| استاد | دوره‌ها و دانشجویان خودش | `/teacher/` |
-| هنرجو | فقط اطلاعات خودش | `/my/` |
-| مهمان | ثبت‌نام عمومی + ورود | `/register/`, `/auth/` |
-
----
-
-## نصب و راه‌اندازی
-
-### پیش‌نیازها
-- Python 3.10+
-- Node.js (برای Tailwind CSS)
-
-### راه‌اندازی لوکال
+راهنمای کامل: [`docs/customer-first-install.md`](./docs/customer-first-install.md)
 
 ```bash
-# کلون پروژه
-git clone https://gitlab.sbsuntech.ir/py/lms-sbstp.git
-cd lms-sbstp
-
-# محیط مجازی
 python -m venv venv
-venv\Scripts\activate          # Windows
-# source venv/bin/activate    # Linux/Mac
-
-# نصب وابستگی‌ها
+venv\Scripts\activate
 pip install -r requirements.txt
-
-# تنظیمات محیطی
+cp install_config.example.py install_config.py
+# Set PRODUCT_MODE = "academy" | "school" | "control" and WEBSITE_ENABLED in install_config.py
 cp .env.example .env
-# ویرایش .env با مقادیر واقعی
-
-# مایگریشن دیتابیس
+# REQUIRED in .env: SECRET_KEY, DATABASE_URL, ALLOWED_HOSTS, CSRF_TRUSTED_ORIGINS (no PRODUCT_MODE)
 python manage.py migrate
-
-# ساخت رمز پیش‌فرض
-python manage.py set_default_passwords
-
-# کامپایل CSS
+python manage.py createsuperuser
 python manage.py tailwind build
-
-# اجرای سرور
 python manage.py runserver
 ```
 
-### دستورات مهم
+Academy org (after superuser; real customer name only):
 
 ```bash
-# کامپایل CSS (وقتی استایل‌ها خراب شد)
-python manage.py tailwind build
+python scripts/init_academy_org.py --title "Customer Academy Name"
+```
 
-# اعمال مایگریشن‌ها
-python manage.py migrate
+School: after login, save SchoolProfile at `/school-panel/profile/` before handover.
 
-# ساخت رمز پیش‌فرض برای کاربران جدید
-python manage.py set_default_passwords
+پروفایل/secrets جدا روی یک checkout:
+
+```bash
+set DANA_INSTALL_FILE=D:\path\to\install_school.py
+set DANA_ENV_FILE=.env.school
+python manage.py runserver
 ```
 
 ---
 
-## استقرار روی هاست cPanel
+## پروفایل‌ها
+
+### Academy (`/dashboard/`, `/teacher/`, `/my/`, `/register/`, `/pay/`)
+دوره، هنرجو، مالی، اقساط، آزمون، پیامک، CRM، فرم‌ساز، کارت شناسایی، پرداخت آنلاین، کلاس آنلاین.  
+یک سازمان per instance؛ ثبت‌نام/پرداخت عمومی روی slug دوره و enrollment.
+
+### School (`/admin/`, `/school-panel/`)
+سال تحصیلی، پایه، رشته، کلاس، دانش‌آموز، ولی، ثبت‌نام سالانه.
+
+### Control (`/control/`)
+درخواست دمو، مشتریان، لایسنس‌ها، چک‌لیست نصب دستی.
+
+---
+
+## مستندات
+
+- [Architecture Contract](./docs/architecture-contract.md)
+- [Customer First Install](./docs/customer-first-install.md)
+- [Hosting & Demo Map](./docs/hosting-and-demo.md)
+- [Architecture Roadmap](./docs/architecture-roadmap.md)
+- [Installation Branding](./docs/installation.md)
+- [School Core](./docs/school-core-architecture.md)
+- [Instance Upgrade](./docs/instance-upgrade.md)
+- [Website Module](./docs/website-module.md)
+- [AGENTS.md](./AGENTS.md) — راهنمای عامل/توسعه‌دهنده
+
+وضعیت QA (architecture checkpoint): Full system regression **172 PASS / 0 FAIL / 2 SKIP**.  
+محدودیت‌ها و deferred: بخش *Known limitations* در [`architecture-contract.md`](./docs/architecture-contract.md).
+
+---
+
+## استقرار
+
+Docker:
 
 ```bash
-# متغیرهای .env روی هاست:
-DEBUG=False
-STATIC_ROOT=/home/bahuloun/panel.aihousesb.ir/static/
-MEDIA_ROOT=/home/bahuloun/panel.aihousesb.ir/media/
-SECRET_KEY=<key_jadid>
-ALLOWED_HOSTS=panel.aihousesb.ir,localhost,127.0.0.1
-CSRF_TRUSTED_ORIGINS=https://panel.aihousesb.ir
-PAYMENT_CALLBACK_URL=https://panel.aihousesb.ir/dashboard/payment/callback/
-
-# فایل ورودی
-# مراحل استقرار:
-python manage.py migrate
-python manage.py tailwind build
-# آپلود فایل‌ها + staticfiles/ + media/
+docker compose build && docker compose up -d
 ```
 
----
-
-## تنظیمات درگاه پرداخت
-
-- **ارائه‌دهنده:** آقای پرداخت (AqayePardakht)
-- **API:** v2 — `panel.aqayepardakht.ir/api/v2/`
-- **callback_method:** GET
-- **callback URL:** `https://panel.aihousesb.ir/dashboard/payment/callback/`
-- **جریان:** ایجاد تراکنش → ریدایرکت درگاه → پرداخت → callback → وریفای → ثبت + SMS
+جزئیات ارتقای هر Instance: [`docs/instance-upgrade.md`](docs/instance-upgrade.md)
 
 ---
 
-## امنیت
-
-- `LoginRequiredMixin` روی تمام ویوهای محافظت‌شده
-- `SchoolFilterMixin` روی تمام ویوهای ادمین (چندمستاجری)
-- CSRF protection روی تمام فرم‌ها
-- اعتبارسنجی فایل آپلودی (MIME type + حداکثر ۵ مگابایت)
-- `school_object_or_404` برای دسترسی ایمن به ابجکت‌ها
-- Whitenoise برای سرو امن فایل‌های استاتیک
-
----
-
-## تاریخچه تغییرات
-
-نسخه فعلی شامل ۲۲ بخش کامل شده با بیش از ۱۵۰ صفحه قالب و بیش از ۵۰ ویو.
-
----
-
-## مجوز
-
-پروژه اختصاصی — استفاده فقط با مجوز صاحب پروژه.
-
----
-
-**دانا (Dana)** — پلتفرم اتوماسیون هوشمند آموزشگاه مبتنی بر هوش مصنوعی
-
-## Documentation
-- [Installation & Branding Module ()](./docs/installation.md)
-- [Architecture & Roadmap](./docs/architecture-roadmap.md)
+**دانا (Dana)** — یک محصول، دو پروفایل مشتری، نصب‌های مستقل

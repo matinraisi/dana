@@ -1,0 +1,20 @@
+{% extends "control_center/base.html" %}
+{% block title %}{{ title }} | کنترل دانا{% endblock %}
+{% block heading %}{{ title }}{% endblock %}
+{% block content %}
+<form method="post" class="mx-auto max-w-2xl space-y-4 rounded-2xl border border-slate-200 bg-white p-6">
+  {% csrf_token %}
+  <div><label class="mb-1 block text-sm font-bold">نام مجموعه</label><input name="organization_name" required value="{{ obj.organization_name|default:'' }}" class="w-full rounded-xl border border-slate-200 px-4 py-3"></div>
+  <div class="grid gap-4 md:grid-cols-2">
+    <div><label class="mb-1 block text-sm font-bold">پروفایل</label><select name="product_profile" class="w-full rounded-xl border border-slate-200 px-4 py-3">{% for value, label in product_choices %}<option value="{{ value }}" {% if obj.product_profile == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    <div><label class="mb-1 block text-sm font-bold">وضعیت</label><select name="status" class="w-full rounded-xl border border-slate-200 px-4 py-3">{% for value, label in statuses %}<option value="{{ value }}" {% if obj.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+  </div>
+  <div class="grid gap-4 md:grid-cols-2">
+    <div><label class="mb-1 block text-sm font-bold">نام مسئول</label><input name="contact_name" required value="{{ obj.contact_name|default:'' }}" class="w-full rounded-xl border border-slate-200 px-4 py-3"></div>
+    <div><label class="mb-1 block text-sm font-bold">موبایل</label><input name="phone_number" required value="{{ obj.phone_number|default:'' }}" class="w-full rounded-xl border border-slate-200 px-4 py-3"></div>
+  </div>
+  <div><label class="mb-1 block text-sm font-bold">ایمیل</label><input name="email" type="email" value="{{ obj.email|default:'' }}" class="w-full rounded-xl border border-slate-200 px-4 py-3"></div>
+  <div><label class="mb-1 block text-sm font-bold">یادداشت</label><textarea name="notes" rows="3" class="w-full rounded-xl border border-slate-200 px-4 py-3">{{ obj.notes|default:'' }}</textarea></div>
+  <button class="rounded-xl bg-purple-600 px-5 py-3 text-sm font-bold text-white">ذخیره</button>
+</form>
+{% endblock %}

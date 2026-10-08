@@ -1,0 +1,17 @@
+{% extends "school_management/base.html" %}
+{% block title %}دانش‌آموزان{% endblock %}
+{% block content %}
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+  <h2 class="text-xl font-black">دانش‌آموزان</h2>
+  <a href="{% url 'school_management:student_create' %}" class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white">ثبت دانش‌آموز</a>
+</div>
+<form class="mb-4"><input name="q" value="{{ query }}" placeholder="جستجو نام / کد ملی / موبایل" class="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm"></form>
+<div class="space-y-2">
+{% for s in page_obj %}
+  <a href="{% url 'school_management:student_detail' s.pk %}" class="flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-sm hover:bg-indigo-50">
+    <div><p class="font-black">{{ s.full_name }}</p><p class="text-xs text-slate-400">{{ s.get_gender_display }}{% if s.mobile_number %} · {{ s.mobile_number }}{% endif %}</p></div>
+    <span class="font-mono text-xs text-slate-500">{{ s.national_code }}</span>
+  </a>
+{% empty %}<p class="text-sm text-slate-400">موردی نیست.</p>{% endfor %}
+</div>
+{% endblock %}

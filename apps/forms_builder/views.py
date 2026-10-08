@@ -99,7 +99,7 @@ class FormBuilderView(AdminRequiredMixin, View):
 class FormPublicView(View):
     def get(self, request, slug):
         try:
-            form_obj = DynamicForm.objects.get(slug=slug, is_active=True)
+            form_obj = DynamicForm.objects.get(slug=slug, is_active=True, is_public=True)
         except DynamicForm.DoesNotExist:
             return render(request, 'forms_builder/form_not_found.html', {'slug': slug}, status=404)
 
@@ -118,7 +118,7 @@ class FormPublicView(View):
 
     def post(self, request, slug):
         try:
-            form_obj = DynamicForm.objects.get(slug=slug, is_active=True)
+            form_obj = DynamicForm.objects.get(slug=slug, is_active=True, is_public=True)
         except DynamicForm.DoesNotExist:
             return render(request, 'forms_builder/form_not_found.html', {'slug': slug}, status=404)
 

@@ -1,0 +1,9 @@
+"""Control product URL tree — selected by ``config.profile``."""
+
+from django.contrib import admin
+from django.urls import include, path
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('control/', include('apps.control_center.urls')),
+]

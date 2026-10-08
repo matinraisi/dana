@@ -1,0 +1,36 @@
+{% extends "school_management/base.html" %}
+{% block title %}ساختار مدرسه{% endblock %}
+{% block content %}
+<h2 class="mb-6 text-xl font-black">پایه، رشته و کلاس</h2>
+<div class="grid gap-6 lg:grid-cols-3">
+  <section class="rounded-2xl bg-white p-5 shadow-sm">
+    <h3 class="mb-3 font-black">پایه‌ها</h3>
+    <form method="post" class="mb-4 space-y-2">{% csrf_token %}<input type="hidden" name="action" value="add_grade"><input name="title" required placeholder="عنوان پایه" class="w-full rounded-xl border px-3 py-2 text-sm"><input name="order" type="number" value="0" class="w-full rounded-xl border px-3 py-2 text-sm"><button class="w-full rounded-xl bg-indigo-600 py-2 text-xs font-bold text-white">افزودن</button></form>
+    <ul class="space-y-1 text-sm">{% for g in grades %}<li class="rounded-lg bg-slate-50 px-3 py-2">{{ g.order }}. {{ g.title }}</li>{% empty %}<li class="text-slate-400">خالی</li>{% endfor %}</ul>
+  </section>
+  <section class="rounded-2xl bg-white p-5 shadow-sm">
+    <h3 class="mb-3 font-black">رشته‌ها</h3>
+    <form method="post" class="mb-4 space-y-2">{% csrf_token %}<input type="hidden" name="action" value="add_field"><input name="title" required placeholder="عنوان رشته" class="w-full rounded-xl border px-3 py-2 text-sm"><input name="code" required placeholder="کد" class="w-full rounded-xl border px-3 py-2 text-sm"><button class="w-full rounded-xl bg-indigo-600 py-2 text-xs font-bold text-white">افزودن</button></form>
+    <ul class="space-y-1 text-sm">{% for f in fields %}<li class="rounded-lg bg-slate-50 px-3 py-2">{{ f.title }} <span class="text-xs text-slate-400">({{ f.code }})</span></li>{% empty %}<li class="text-slate-400">خالی</li>{% endfor %}</ul>
+  </section>
+  <section class="rounded-2xl bg-white p-5 shadow-sm lg:col-span-1">
+    <h3 class="mb-3 font-black">کلاس جدید</h3>
+    <form method="post" class="space-y-2">{% csrf_token %}<input type="hidden" name="action" value="add_classroom">
+      <select name="academic_year_id" required class="w-full rounded-xl border px-3 py-2 text-sm"><option value="">سال تحصیلی</option>{% for y in years %}<option value="{{ y.id }}">{{ y.title }}</option>{% endfor %}</select>
+      <select name="grade_level_id" required class="w-full rounded-xl border px-3 py-2 text-sm"><option value="">پایه</option>{% for g in grades %}<option value="{{ g.id }}">{{ g.title }}</option>{% endfor %}</select>
+      <select name="study_field_id" class="w-full rounded-xl border px-3 py-2 text-sm"><option value="">رشته (اختیاری)</option>{% for f in fields %}<option value="{{ f.id }}">{{ f.title }}</option>{% endfor %}</select>
+      <input name="title" required placeholder="نام کلاس" class="w-full rounded-xl border px-3 py-2 text-sm">
+      <input name="code" required placeholder="کد کلاس" class="w-full rounded-xl border px-3 py-2 text-sm">
+      <input name="capacity" type="number" value="30" class="w-full rounded-xl border px-3 py-2 text-sm">
+      <select name="gender" class="w-full rounded-xl border px-3 py-2 text-sm"><option value="coed">مختلط</option><option value="girls">دخترانه</option><option value="boys">پسرانه</option></select>
+      <button class="w-full rounded-xl bg-indigo-600 py-2 text-xs font-bold text-white">افزودن کلاس</button>
+    </form>
+  </section>
+</div>
+<div class="mt-6 rounded-2xl bg-white p-5 shadow-sm">
+  <h3 class="mb-3 font-black">کلاس‌ها</h3>
+  <div class="space-y-2">{% for c in classrooms %}
+    <div class="rounded-xl bg-slate-50 px-3 py-2 text-sm"><span class="font-bold">{{ c.title }}</span> · {{ c.academic_year }} · {{ c.grade_level }}{% if c.study_field %} · {{ c.study_field }}{% endif %} · ظرفیت {{ c.capacity }}</div>
+  {% empty %}<p class="text-sm text-slate-400">کلاسی نیست.</p>{% endfor %}</div>
+</div>
+{% endblock %}

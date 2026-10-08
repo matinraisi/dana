@@ -1,5 +1,7 @@
 from django.db import transaction
 from django.db.models import Count, Q
+from django.shortcuts import get_object_or_404
+
 from ..models import Attendance, Session, StudentEnrollment
 
 
@@ -15,7 +17,7 @@ class AttendanceService:
     @staticmethod
     @transaction.atomic
     def bulk_save(session_id: int, attendance_data: dict) -> int:
-        session = Session.objects.get(id=session_id)
+        session = get_object_or_404(Session, id=session_id)
         saved = 0
         for student_id, status in attendance_data.items():
             Attendance.objects.update_or_create(
@@ -29,7 +31,7 @@ class AttendanceService:
 
     @staticmethod
     def get_sheet(session_id: int) -> dict:
-        session = Session.objects.select_related('course').get(id=session_id)
+        session = get_object_or_404(Session.objects.select_related('course'), id=session_id)
         enrolled_students = StudentEnrollment.objects.filter(
             active_enrollments__course=session.course
         ).order_by('first_name', 'last_name')

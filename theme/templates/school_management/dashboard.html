@@ -1,0 +1,29 @@
+{% extends "school_management/base.html" %}
+{% block title %}میز کار مدرسه{% endblock %}
+{% block content %}
+<div class="mb-6">
+  <h2 class="text-xl font-black">میز کار</h2>
+  <p class="mt-1 text-sm text-slate-500">{% if profile %}{{ profile.name }}{% else %}ابتدا مشخصات مدرسه را تکمیل کنید{% endif %}{% if active_year %} · سال فعال: {{ active_year.title }}{% endif %}</p>
+</div>
+<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+  <div class="rounded-2xl bg-white p-4 shadow-sm"><p class="text-xs text-slate-400">دانش‌آموز فعال</p><p class="mt-2 text-2xl font-black">{{ stats.students }}</p></div>
+  <div class="rounded-2xl bg-white p-4 shadow-sm"><p class="text-xs text-slate-400">کلاس</p><p class="mt-2 text-2xl font-black">{{ stats.classrooms }}</p></div>
+  <div class="rounded-2xl bg-white p-4 shadow-sm"><p class="text-xs text-slate-400">اولیا</p><p class="mt-2 text-2xl font-black">{{ stats.guardians }}</p></div>
+  <div class="rounded-2xl bg-white p-4 shadow-sm"><p class="text-xs text-slate-400">ثبت‌نام فعال</p><p class="mt-2 text-2xl font-black">{{ stats.enrollments }}</p></div>
+  <div class="rounded-2xl bg-white p-4 shadow-sm"><p class="text-xs text-slate-400">سال تحصیلی</p><p class="mt-2 text-2xl font-black">{{ stats.years }}</p></div>
+</div>
+<div class="mt-8 rounded-2xl bg-white p-5 shadow-sm">
+  <div class="mb-4 flex items-center justify-between">
+    <h3 class="font-black">آخرین دانش‌آموزان</h3>
+    <a href="{% url 'school_management:student_create' %}" class="rounded-xl bg-indigo-600 px-3 py-2 text-xs font-bold text-white">ثبت دانش‌آموز</a>
+  </div>
+  <div class="space-y-2">
+    {% for s in recent_students %}
+    <a href="{% url 'school_management:student_detail' s.pk %}" class="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-sm hover:bg-indigo-50">
+      <span class="font-bold">{{ s.full_name }}</span>
+      <span class="font-mono text-xs text-slate-400">{{ s.national_code }}</span>
+    </a>
+    {% empty %}<p class="text-sm text-slate-400">هنوز دانش‌آموزی ثبت نشده.</p>{% endfor %}
+  </div>
+</div>
+{% endblock %}

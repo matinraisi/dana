@@ -1,0 +1,14 @@
+{% extends "school_management/base.html" %}
+{% block title %}ثبت‌نام‌ها{% endblock %}
+{% block content %}
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+  <h2 class="text-xl font-black">ثبت‌نام‌های تحصیلی</h2>
+  <form><select name="year" onchange="this.form.submit()" class="rounded-xl border bg-white px-3 py-2 text-sm"><option value="">همه سال‌ها</option>{% for y in years %}<option value="{{ y.id }}" {% if active_year == y.id|stringformat:'s' %}selected{% endif %}>{{ y.title }}</option>{% endfor %}</select></form>
+</div>
+<div class="space-y-2">{% for e in page_obj %}
+  <div class="rounded-2xl bg-white px-4 py-3 shadow-sm">
+    <p class="font-black">{{ e.student.full_name }}</p>
+    <p class="text-xs text-slate-500">{{ e.academic_year }} · {{ e.classroom }} · {{ e.get_status_display }}</p>
+  </div>
+{% empty %}<p class="text-sm text-slate-400">ثبت‌نامی نیست.</p>{% endfor %}</div>
+{% endblock %}

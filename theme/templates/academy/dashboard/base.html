@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}{{ school_title }} | اتوماسیون آکادمی{% endblock %}</title>
+  {% include "includes/pwa_head.html" %}
   {% tailwind_css %}
   <style>
     @font-face { font-family:"Vazirmatn"; src:url("{% static 'font/fonts/webfonts/Vazirmatn-Regular.woff2' %}") format("woff2"); font-weight:400; }
@@ -12,7 +13,7 @@
     body { font-family:"Vazirmatn",sans-serif; }
     .nav-item { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:10px; font-size:12px; font-weight:600; transition:all .15s; border-right:3px solid transparent; text-decoration:none; color:#475569; }
     .nav-item:hover { background:#f1f5f9; color:#1e293b; }
-    .nav-item.active { background:#eff6ff; color:#2563eb; border-right-color:#2563eb; }
+    .nav-item.active { background:#eff6ff; color:var(--brand-primary); border-right-color:var(--brand-primary); }
     .nav-section { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.08em; color:#94a3b8; padding:0 12px; margin-bottom:6px; margin-top:4px; }
   </style>
 </head>

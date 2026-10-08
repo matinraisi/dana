@@ -5,17 +5,17 @@ from django.shortcuts import render
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib import messages
 from django.utils.html import format_html
-from django.utils.safestring import mark_safe
-from django.middleware.csrf import get_token
 from django.db.models import Q
 import openpyxl
 
-from .models import (Course, Session, StudentEnrollment, CourseEnrollment,
+from .models import (
+    Course, Session, StudentEnrollment, CourseEnrollment,
     AcademyInstallment, SMSLog, Attendance, SessionMaterial, StudentIDCard,
     Exam, Question, Choice, MatchingPair, FillBlankAnswer, OrderingItem,
     ExamAttempt, StudentAnswer, ExpenseCategory, PaymentGateway, AccountingTransaction,
-    DiscountCode)
-from apps.admin_base import SchoolAdminMixin
+    DiscountCode, Teacher, StudentAccount, OrganizationMembership,
+)
+from apps.academy.admin_mixins import SchoolAdminMixin
 from apps.notifications.sms import send_sms
 
 logger = logging.getLogger(__name__)
@@ -183,7 +183,7 @@ class StudentEnrollmentAdmin(SchoolAdminMixin, admin.ModelAdmin):
                         success_count += 1
                         try:
                             relative_profile_url = reverse('academy:student_profile', kwargs={'slug': student.short_slug})
-                        except:
+                        except Exception:
                             relative_profile_url = reverse('student_profile', kwargs={'slug': student.short_slug})
                         full_profile_link = request.build_absolute_uri(relative_profile_url)
                         full_name = f"{first_name} {last_name}"
@@ -192,44 +192,9 @@ class StudentEnrollmentAdmin(SchoolAdminMixin, admin.ModelAdmin):
                     continue
             messages.success(request, f'تعداد {success_count} ثبت‌نام جدید با موفقیت اعمال و پیامک لینک پروفایل صادر شد.')
             return HttpResponseRedirect("..")
-        csrf_token = get_token(request)
-        html_content = f"""
-        <div class="container mx-auto p-4 md:p-8 max-w-3xl" style="direction: rtl;">
-            <div class="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm">
-                <div class="flex items-start gap-4 mb-8 border-b border-slate-100 pb-6">
-                    <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700 shadow-sm font-black text-xl">📊</div>
-                    <div>
-                        <h1 class="text-lg font-bold text-slate-800 mb-1">سیستم ایمپورت دسته‌جمعی هنرجویان</h1>
-                        <p class="text-xs text-slate-500 leading-relaxed">با بارگذاری فایل اکسل، هنرجویان جدید ثبت‌نام شده و پیامک حاوی لینک پروفایل اختصاصی برای آن‌ها ارسال می‌شود.</p>
-                    </div>
-                </div>
-                <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <h3 class="text-xs font-bold text-slate-700">دریافت ساختار فایل استاندارد</h3>
-                        <p class="text-[11px] text-slate-400 mt-0.5">فرمت مورد نیاز: Microsoft Excel (.xlsx)</p>
-                    </div>
-                    <a href="../download-sample-excel/" class="w-full sm:w-auto text-center text-xs bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-5 rounded-lg transition">دانلود فرم نمونه اکسل</a>
-                </div>
-                <form method="POST" enctype="multipart/form-data" class="space-y-6">
-                    <input type="hidden" name="csrfmiddlewaretoken" value="{csrf_token}">
-                    <div class="space-y-2">
-                        <label class="block text-xs font-bold text-slate-700">انتخاب فایل اکسل تکمیل‌شده:</label>
-                        <div class="relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-200 hover:border-slate-400 rounded-xl bg-slate-50 p-4 text-center">
-                            <input type="file" name="excel_file" accept=".xlsx" required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
-                            <span class="text-xs font-medium text-slate-500">کلیک کنید یا فایل اکسل را اینجا رها کنید</span>
-                        </div>
-                    </div>
-                    <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-100">
-                        <button type="submit" class="flex-1 py-2.5 px-6 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-xs transition">شروع عملیات پردازش اکسل</button>
-                        <a href=".." class="py-2.5 px-6 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs text-center sm:w-28">بازگشت</a>
-                    </div>
-                </form>
-            </div>
-        </div>
-        """
         context = self.admin_site.each_context(request)
-        context.update({"content": mark_safe(html_content), "title": "ورود از اکسل", "opts": self.model._meta})
-        return render(request, "admin/base_site.html", context)
+        context.update({"title": "ورود از اکسل", "opts": self.model._meta})
+        return render(request, "admin/academy_import_excel.html", context)
 
     @admin.display(description="ارسال پیامک دسته‌جمعی به هنرجویان انتخاب شده")
     def send_bulk_sms_action(self, request, queryset):
@@ -256,29 +221,13 @@ class StudentEnrollmentAdmin(SchoolAdminMixin, admin.ModelAdmin):
                     del request.session['sms_receptors']
                 messages.success(request, f"پیامک شما با موفقیت به {success_count} نفر از هنرجویان ارسال شد.")
                 return HttpResponseRedirect("..")
-        csrf_token = get_token(request)
-        html_form = f"""
-        <div class="container mx-auto p-4 md:p-6 max-w-2xl" style="direction: rtl;">
-            <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
-                <h1 class="text-base font-bold text-slate-800 mb-2 flex items-center gap-2">💬 ارسال پیامک سفارشی دسته‌جمعی</h1>
-                <p class="text-xs text-slate-500 mb-6">تعداد مخاطبین انتخاب شده: <span class="text-slate-800 font-bold">{len(receptors)} نفر</span></p>
-                <form method="POST" class="space-y-4">
-                    <input type="hidden" name="csrfmiddlewaretoken" value="{csrf_token}">
-                    <div>
-                        <label class="block text-xs font-bold mb-2 text-slate-700">متن پیامک ارسالی:</label>
-                        <textarea name="message_text" rows="5" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-700" style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 15px;" placeholder="متن پیامک خود را اینجا بنویسید..."></textarea>
-                    </div>
-                    <div class="flex gap-3 pt-2">
-                        <button type="submit" class="py-2.5 px-6 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs" style="background-color: #1e293b; color: white; padding: 10px 20px; border-radius: 8px;">ارسال نهایی پیامک‌ها</button>
-                        <a href=".." class="py-2.5 px-6 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs text-center" style="background-color: #f1f5f9; padding: 10px 20px; border-radius: 8px;">انصراف</a>
-                    </div>
-                </form>
-            </div>
-        </div>
-        """
         context = self.admin_site.each_context(request)
-        context.update({"content": mark_safe(html_form), "title": "ارسال پیامک دسته‌جمعی", "opts": self.model._meta})
-        return render(request, "admin/base_site.html", context)
+        context.update({
+            "title": "ارسال پیامک دسته‌جمعی",
+            "opts": self.model._meta,
+            "receptor_count": len(receptors),
+        })
+        return render(request, "admin/academy_bulk_sms.html", context)
 
     def save_model(self, request, obj, form, change):
         is_new = obj.pk is None
@@ -288,8 +237,9 @@ class StudentEnrollmentAdmin(SchoolAdminMixin, admin.ModelAdmin):
             course_title = enrollment.course.title if enrollment else "عمومی آکادمی"
             try:
                 relative_profile_url = reverse('academy:student_profile', kwargs={'slug': obj.short_slug})
-            except:
-                relative_profile_url = reverse('student_profile', kwargs={'slug': obj.short_slug})
+            except Exception:
+                logger.exception("Could not reverse student profile URL for %s", obj.pk)
+                relative_profile_url = f"/dashboard/students/{obj.short_slug}/"
             full_profile_link = request.build_absolute_uri(relative_profile_url)
             full_name = f"{obj.first_name} {obj.last_name}"
             send_profile_link_sms(obj.phone_number, full_name, course_title, full_profile_link)
@@ -303,13 +253,6 @@ class CourseEnrollmentAdmin(admin.ModelAdmin):
     list_filter = ('payment_method', 'course')
     search_fields = ('student__last_name', 'student__phone_number', 'course__title')
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        if school_id := getattr(request.user, 'school_id', None):
-            return qs.filter(course__school_id=school_id)
-        return qs.none()
 
 
 # --- ۷. اقساط شهریه ---
@@ -320,13 +263,6 @@ class AcademyInstallmentAdmin(admin.ModelAdmin):
     list_filter = ('status',)
     search_fields = ('enrollment__student__last_name', 'enrollment__course__title')
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        if school_id := getattr(request.user, 'school_id', None):
-            return qs.filter(enrollment__student__school_id=school_id)
-        return qs.none()
 
 
 # --- ۸. لاگ پیامک‌ها ---
@@ -368,13 +304,6 @@ class StudentIDCardAdmin(admin.ModelAdmin):
     list_filter = ('is_valid',)
     search_fields = ('student__last_name', 'card_number')
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        if school_id := getattr(request.user, 'school_id', None):
-            return qs.filter(student__school_id=school_id)
-        return qs.none()
 
 
 # --- ۱۲. آزمون‌ها ---
@@ -437,13 +366,6 @@ class ChoiceAdmin(admin.ModelAdmin):
     list_filter = ('is_correct', 'question__exam')
     search_fields = ('text', 'question__title')
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        if school_id := getattr(request.user, 'school_id', None):
-            return qs.filter(question__exam__course__school_id=school_id)
-        return qs.none()
 
 
 @admin.register(MatchingPair)
@@ -451,13 +373,6 @@ class MatchingPairAdmin(admin.ModelAdmin):
     list_display = ('left_text', 'right_text', 'question', 'order')
     search_fields = ('left_text', 'right_text', 'question__title')
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        if school_id := getattr(request.user, 'school_id', None):
-            return qs.filter(question__exam__course__school_id=school_id)
-        return qs.none()
 
 
 @admin.register(FillBlankAnswer)
@@ -465,13 +380,6 @@ class FillBlankAnswerAdmin(admin.ModelAdmin):
     list_display = ('answer_text', 'question', 'order')
     search_fields = ('answer_text', 'question__title')
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        if school_id := getattr(request.user, 'school_id', None):
-            return qs.filter(question__exam__course__school_id=school_id)
-        return qs.none()
 
 
 @admin.register(OrderingItem)
@@ -479,13 +387,6 @@ class OrderingItemAdmin(admin.ModelAdmin):
     list_display = ('text', 'question', 'correct_order')
     search_fields = ('text', 'question__title')
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        if school_id := getattr(request.user, 'school_id', None):
-            return qs.filter(question__exam__course__school_id=school_id)
-        return qs.none()
 
 
 @admin.register(ExamAttempt)
@@ -507,13 +408,6 @@ class StudentAnswerAdmin(admin.ModelAdmin):
     list_filter = ('is_correct', 'graded_by')
     search_fields = ('attempt__student__last_name', 'question__title')
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        if school_id := getattr(request.user, 'school_id', None):
-            return qs.filter(attempt__exam__course__school_id=school_id)
-        return qs.none()
 
 
 # --- ۱۳. دسته‌بندی هزینه‌ها ---
@@ -544,16 +438,6 @@ class AccountingTransactionAdmin(SchoolAdminMixin, admin.ModelAdmin):
     search_fields = ('description', 'receipt_number', 'student__last_name', 'course__title')
     readonly_fields = ('created_at', 'updated_at')
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        if school_id := getattr(request.user, 'school_id', None):
-            return qs.filter(
-                Q(course__school_id=school_id) |
-                Q(student__school_id=school_id)
-            )
-        return qs.none()
 
 
 # --- ۱۶. تأیید مدارک ارسالی ---
@@ -593,13 +477,6 @@ class TuitionPaymentAdmin(admin.ModelAdmin):
     def get_student_last_name(self, obj): return obj.student.last_name
     get_student_last_name.short_description = 'نام خانوادگی'
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        if school_id := getattr(request.user, 'school_id', None):
-            return qs.filter(student__school_id=school_id)
-        return qs.none()
 
 
 # --- ۱۸. صدور و چاپ کارت شناسایی ---
@@ -627,8 +504,8 @@ class IdCardGeneratorAdmin(SchoolAdminMixin, admin.ModelAdmin):
     def print_card_link(self, obj):
         try:
             url = reverse('academy:student_id_card', kwargs={'slug': obj.short_slug})
-        except:
-            url = reverse('student_id_card', kwargs={'slug': obj.short_slug})
+        except Exception:
+            url = f"/dashboard/students/{obj.short_slug}/id-card/"
         return format_html(
             '<a href="{}" target="_blank" class="inline-block bg-slate-800 hover:bg-slate-900 text-white font-bold py-1 px-3 rounded text-xs transition-colors">'
             'نمایش و چاپ کارت'
@@ -647,3 +524,23 @@ class DiscountCodeAdmin(SchoolAdminMixin, admin.ModelAdmin):
     list_filter = ('is_active', 'discount_type')
     search_fields = ('code', 'description')
     readonly_fields = ('used_count', 'created_at')
+
+
+@admin.register(Teacher)
+class TeacherAdmin(admin.ModelAdmin):
+    list_display = ('user', 'phone_number', 'specialization', 'is_active', 'salary_per_session')
+    list_filter = ('is_active',)
+    search_fields = ('user__username', 'user__first_name', 'user__last_name', 'phone_number', 'national_code')
+
+
+@admin.register(StudentAccount)
+class StudentAccountAdmin(admin.ModelAdmin):
+    list_display = ('user', 'enrollment')
+    search_fields = ('user__username', 'enrollment__first_name', 'enrollment__last_name', 'enrollment__national_code')
+
+
+@admin.register(OrganizationMembership)
+class OrganizationMembershipAdmin(admin.ModelAdmin):
+    list_display = ('user', 'organization')
+    search_fields = ('user__username', 'organization__title')
+    autocomplete_fields = ('user', 'organization')

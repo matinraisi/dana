@@ -1,0 +1,38 @@
+{% load static tailwind_tags %}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}کنترل دانا{% endblock %}</title>
+  {% include "includes/pwa_head.html" %}
+  {% tailwind_css %}
+  <style>
+    @font-face{font-family:"Vazirmatn";src:url("{% static 'font/fonts/webfonts/Vazirmatn-Regular.woff2' %}")format("woff2");font-weight:400}
+    body{font-family:"Vazirmatn",sans-serif}
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800">
+  <header class="border-b border-slate-200 bg-white">
+    <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-4">
+      <div>
+        <p class="text-xs font-bold text-purple-600">Dana Control</p>
+        <h1 class="text-lg font-black">{% block heading %}کنترل مرکزی{% endblock %}</h1>
+      </div>
+      <nav class="flex flex-wrap gap-2 text-sm font-bold">
+        <a href="{% url 'control_center:request_list' %}" class="rounded-lg px-3 py-2 {% if nav == 'requests' %}bg-purple-600 text-white{% else %}bg-slate-100{% endif %}">درخواست‌ها</a>
+        <a href="{% url 'control_center:customer_list' %}" class="rounded-lg px-3 py-2 {% if nav == 'customers' %}bg-purple-600 text-white{% else %}bg-slate-100{% endif %}">مشتریان</a>
+        <a href="{% url 'control_center:license_list' %}" class="rounded-lg px-3 py-2 {% if nav == 'licenses' %}bg-purple-600 text-white{% else %}bg-slate-100{% endif %}">لایسنس‌ها</a>
+        <a href="{% url 'control_center:install_list' %}" class="rounded-lg px-3 py-2 {% if nav == 'installs' %}bg-purple-600 text-white{% else %}bg-slate-100{% endif %}">نصب‌ها</a>
+        <a href="{% url 'control_center:request_create' %}" class="rounded-lg bg-slate-800 px-3 py-2 text-white">فرم عمومی</a>
+      </nav>
+    </div>
+  </header>
+  <main class="mx-auto max-w-7xl px-4 py-8">
+    {% if messages %}{% for message in messages %}
+    <div class="mb-4 rounded-xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">{{ message }}</div>
+    {% endfor %}{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

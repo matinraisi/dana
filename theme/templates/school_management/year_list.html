@@ -1,0 +1,21 @@
+{% extends "school_management/base.html" %}
+{% block title %}سال تحصیلی{% endblock %}
+{% block content %}
+<h2 class="mb-4 text-xl font-black">سال‌های تحصیلی</h2>
+<form method="post" class="mb-6 grid gap-3 rounded-2xl bg-white p-5 shadow-sm md:grid-cols-5">
+  {% csrf_token %}
+  <input name="title" required placeholder="عنوان مثل 1404-1405" class="rounded-xl border border-slate-200 px-3 py-2 text-sm md:col-span-2">
+  <input type="date" name="start_date" required class="rounded-xl border border-slate-200 px-3 py-2 text-sm">
+  <input type="date" name="end_date" required class="rounded-xl border border-slate-200 px-3 py-2 text-sm">
+  <label class="flex items-center gap-2 text-sm font-bold"><input type="checkbox" name="is_active"> فعال</label>
+  <button class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white md:col-span-5">افزودن سال</button>
+</form>
+<div class="space-y-2">
+{% for y in years %}
+  <div class="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-white px-4 py-3 shadow-sm">
+    <div><p class="font-black">{{ y.title }}</p><p class="text-xs text-slate-400">{{ y.start_date }} تا {{ y.end_date }} · {{ y.classroom_count }} کلاس</p></div>
+    {% if y.is_active %}<span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">فعال</span>{% endif %}
+  </div>
+{% empty %}<p class="text-sm text-slate-400">سالی ثبت نشده.</p>{% endfor %}
+</div>
+{% endblock %}

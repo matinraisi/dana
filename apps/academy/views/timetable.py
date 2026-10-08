@@ -2,7 +2,7 @@ import calendar
 from datetime import date, timedelta, datetime, time
 from django.shortcuts import render
 from django.views import View
-from apps.academy.mixins import AdminRequiredMixin, SchoolFilterMixin
+from apps.academy.mixins import AdminRequiredMixin
 
 from ..models import Course, Session
 
@@ -52,7 +52,7 @@ def get_week_dates(target_date):
 DAY_NAMES = ['دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه', 'شنبه', 'یکشنبه']
 
 
-class TimetableView(AdminRequiredMixin, SchoolFilterMixin, View):
+class TimetableView(AdminRequiredMixin, View):
     """جدول برنامه کلاس‌ها — مدل هفتگی"""
 
     def get(self, request):
@@ -70,11 +70,10 @@ class TimetableView(AdminRequiredMixin, SchoolFilterMixin, View):
         week_start = week_dates[0]
         week_end = week_dates[6]
 
-        sessions = self.filter_by_school(
+        sessions = (
             Session.objects.filter(date__gte=week_start, date__lte=week_end)
             .select_related('course', 'course__teacher', 'course__teacher__user')
-            .order_by('date', 'start_time'),
-            school_field='course__school'
+            .order_by('date', 'start_time')
         )
 
         hours = list(range(7, 22))
@@ -107,7 +106,7 @@ class TimetableView(AdminRequiredMixin, SchoolFilterMixin, View):
         return render(request, 'academy/dashboard/timetable.html', context)
 
 
-class RoomTimetableView(AdminRequiredMixin, SchoolFilterMixin, View):
+class RoomTimetableView(AdminRequiredMixin, View):
     """نمای فضا — کدوم کلاس کی پره/خالیه"""
 
     def get(self, request):
@@ -125,12 +124,7 @@ class RoomTimetableView(AdminRequiredMixin, SchoolFilterMixin, View):
         week_start = week_dates[0]
         week_end = week_dates[6]
 
-        sessions = self.filter_by_school(
-            Session.objects.filter(date__gte=week_start, date__lte=week_end)
-            .select_related('course', 'course__teacher', 'course__teacher__user')
-            .order_by('date', 'start_time'),
-            school_field='course__school'
-        )
+        sessions = Session.objects.filter(date__gte=week_start, date__lte=week_end).select_related('course', 'course__teacher', 'course__teacher__user').order_by('date', 'start_time')
 
         # Get unique locations
         locations = sorted(set(s.location for s in sessions if s.location))

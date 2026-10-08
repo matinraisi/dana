@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
-from apps.academy.mixins import AdminRequiredMixin, SchoolFilterMixin
+from apps.academy.mixins import AdminRequiredMixin
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
@@ -11,14 +11,15 @@ from .models import Lead, LeadActivity
 from apps.academy.models import Course, StudentEnrollment, CourseEnrollment
 from apps.academy.models.accounting import AccountingTransaction, PaymentGateway
 from apps.academy.services.sms_service import SmsService
-from apps.users.models import User, StudentAccount
+from apps.users.models import User
+from apps.academy.models import StudentAccount
+from apps.academy.org import get_instance_organization, set_organization
 
 
-class LeadListView(AdminRequiredMixin, SchoolFilterMixin, View):
+class LeadListView(AdminRequiredMixin, View):
     def get(self, request):
-        qs = self.filter_by_school(
-            Lead.objects.select_related('interested_course', 'assigned_to').order_by('-created_at')
-        )
+        qs = Lead.objects.select_related('interested_course', 'assigned_to').order_by('-created_at')
+
         status_filter = request.GET.get('status')
         search = request.GET.get('q')
         if status_filter:
@@ -38,9 +39,9 @@ class LeadListView(AdminRequiredMixin, SchoolFilterMixin, View):
         })
 
 
-class LeadCreateView(AdminRequiredMixin, SchoolFilterMixin, View):
+class LeadCreateView(AdminRequiredMixin, View):
     def get(self, request):
-        courses = self.filter_by_school(Course.objects.filter(status__in=['upcoming', 'open', 'active']))
+        courses = Course.objects.filter(status__in=['upcoming', 'open', 'active'])
         return render(request, 'crm/lead_form.html', {
             'courses': courses,
             'source_choices': Lead.SOURCE_CHOICES,
@@ -67,13 +68,13 @@ class LeadCreateView(AdminRequiredMixin, SchoolFilterMixin, View):
             source=source,
             note=note,
             assigned_to=request.user,
-            school=getattr(request.user, 'school', None),
+            school=get_instance_organization(),
         )
         messages.success(request, f'سرنخ «{lead.full_name}» ثبت شد.')
         return redirect('crm:lead_list')
 
 
-class LeadDetailView(AdminRequiredMixin, SchoolFilterMixin, View):
+class LeadDetailView(AdminRequiredMixin, View):
     def get(self, request, pk):
         lead = self.school_object_or_404(Lead, pk=pk)
         return render(request, 'crm/lead_detail.html', {
@@ -107,7 +108,7 @@ class LeadDetailView(AdminRequiredMixin, SchoolFilterMixin, View):
         return redirect('crm:lead_detail', pk=pk)
 
 
-class LeadUpdateStatusView(AdminRequiredMixin, SchoolFilterMixin, View):
+class LeadUpdateStatusView(AdminRequiredMixin, View):
     def post(self, request, pk):
         lead = self.school_object_or_404(Lead, pk=pk)
         lead.status = request.POST.get('status', lead.status)
@@ -115,7 +116,7 @@ class LeadUpdateStatusView(AdminRequiredMixin, SchoolFilterMixin, View):
         return redirect('crm:lead_detail', pk=pk)
 
 
-class LeadUpdateView(AdminRequiredMixin, SchoolFilterMixin, View):
+class LeadUpdateView(AdminRequiredMixin, View):
     def get(self, request, pk):
         lead = self.school_object_or_404(Lead, pk=pk)
         from apps.academy.models import Course
@@ -144,7 +145,7 @@ class LeadUpdateView(AdminRequiredMixin, SchoolFilterMixin, View):
         return redirect('crm:lead_detail', pk=pk)
 
 
-class LeadAddActivityView(AdminRequiredMixin, SchoolFilterMixin, View):
+class LeadAddActivityView(AdminRequiredMixin, View):
     def post(self, request, pk):
         lead = self.school_object_or_404(Lead, pk=pk)
         note = request.POST.get('note', '').strip()
@@ -159,10 +160,10 @@ class LeadAddActivityView(AdminRequiredMixin, SchoolFilterMixin, View):
         return redirect('crm:lead_detail', pk=pk)
 
 
-class LeadConvertView(AdminRequiredMixin, SchoolFilterMixin, View):
+class LeadConvertView(AdminRequiredMixin, View):
     def get(self, request, pk):
         lead = self.school_object_or_404(Lead, pk=pk)
-        courses = self.filter_by_school(Course.objects.filter(status__in=['upcoming', 'open', 'active']))
+        courses = Course.objects.filter(status__in=['upcoming', 'open', 'active'])
         return render(request, 'crm/lead_convert.html', {
             'lead': lead,
             'courses': courses,
@@ -208,7 +209,7 @@ class LeadConvertView(AdminRequiredMixin, SchoolFilterMixin, View):
                 last_name=last_name,
                 national_code=national_code,
                 phone_number=phone_number,
-                school=getattr(request.user, 'school', None),
+                school=get_instance_organization(),
             )
 
         # Create enrollment
@@ -255,6 +256,7 @@ class LeadConvertView(AdminRequiredMixin, SchoolFilterMixin, View):
         user.phone_number = phone_number
         user.role = 'STUDENT'
         user.save()
+        set_organization(user)
 
         StudentAccount.objects.get_or_create(user=user, defaults={'enrollment': student})
 

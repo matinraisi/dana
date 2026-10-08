@@ -63,19 +63,6 @@
         </select>
       </div>
 
-      {% if schools %}
-      <div>
-        <label class="block text-xs font-bold text-slate-600 mb-2">آموزشگاه <span class="text-red-400">*</span></label>
-        <select name="school_id" required
-                class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-50 transition bg-white">
-          <option value="">انتخاب آموزشگاه</option>
-          {% for s in schools %}
-          <option value="{{ s.id }}">{{ s.title }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      {% endif %}
-
       <div>
         <label class="block text-xs font-bold text-slate-600 mb-2">پیش‌نیاز</label>
         <select name="prerequisite_id"

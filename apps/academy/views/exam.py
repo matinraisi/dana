@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from apps.academy.mixins import AdminRequiredMixin, SchoolFilterMixin
+from apps.academy.mixins import AdminRequiredMixin
 from django.db import transaction
 from django.utils import timezone
 
@@ -11,9 +11,9 @@ from ..models import Course, Exam, Question, Choice, ExamAttempt, StudentAnswer,
 from ..services.exam_service import create_attempt, submit_attempt, auto_grade_attempt
 
 
-class ExamListView(AdminRequiredMixin, SchoolFilterMixin, View):
+class ExamListView(AdminRequiredMixin, View):
     def get(self, request):
-        courses = self.filter_by_school(Course.objects.filter(teacher__isnull=False)).distinct()
+        courses = Course.objects.filter(teacher__isnull=False).distinct()
         selected_course_id = request.GET.get('course')
         if selected_course_id:
             try:
@@ -21,9 +21,9 @@ class ExamListView(AdminRequiredMixin, SchoolFilterMixin, View):
             except (ValueError, TypeError):
                 selected_course_id = None
         if selected_course_id:
-            exams = self.filter_by_school(Exam.objects.filter(course_id=selected_course_id), school_field='course__school').order_by('-created_at')
+            exams = Exam.objects.filter(course_id=selected_course_id).order_by('-created_at')
         else:
-            exams = self.filter_by_school(Exam.objects.all(), school_field='course__school').order_by('-created_at')
+            exams = Exam.objects.all().order_by('-created_at')
         return render(request, 'academy/dashboard/exam_list.html', {
             'exams': exams,
             'courses': courses,
@@ -31,9 +31,9 @@ class ExamListView(AdminRequiredMixin, SchoolFilterMixin, View):
         })
 
 
-class ExamCreateView(AdminRequiredMixin, SchoolFilterMixin, View):
+class ExamCreateView(AdminRequiredMixin, View):
     def get(self, request):
-        courses = self.filter_by_school(Course.objects.filter(is_active=True))
+        courses = Course.objects.filter(is_active=True)
         return render(request, 'academy/dashboard/exam_form.html', {
             'courses': courses,
             'exam': None,
@@ -82,17 +82,17 @@ class ExamCreateView(AdminRequiredMixin, SchoolFilterMixin, View):
         return redirect('academy:exam_questions', exam_id=exam.id)
 
 
-class ExamEditView(AdminRequiredMixin, SchoolFilterMixin, View):
+class ExamEditView(AdminRequiredMixin, View):
     def get(self, request, exam_id):
-        exam = self.school_object_or_404(Exam, id=exam_id, school_field='course__school')
-        courses = self.filter_by_school(Course.objects.filter(is_active=True))
+        exam = self.school_object_or_404(Exam, id=exam_id)
+        courses = Course.objects.filter(is_active=True)
         return render(request, 'academy/dashboard/exam_form.html', {
             'exam': exam,
             'courses': courses,
         })
 
     def post(self, request, exam_id):
-        exam = self.school_object_or_404(Exam, id=exam_id, school_field='course__school')
+        exam = self.school_object_or_404(Exam, id=exam_id)
         exam.title = request.POST.get('title', exam.title)
         exam.description = request.POST.get('description', '')
         exam.exam_type = request.POST.get('exam_type', exam.exam_type)
@@ -123,17 +123,17 @@ class ExamEditView(AdminRequiredMixin, SchoolFilterMixin, View):
         return redirect('academy:exam_list')
 
 
-class ExamDeleteView(AdminRequiredMixin, SchoolFilterMixin, View):
+class ExamDeleteView(AdminRequiredMixin, View):
     def post(self, request, exam_id):
-        exam = self.school_object_or_404(Exam, id=exam_id, school_field='course__school')
+        exam = self.school_object_or_404(Exam, id=exam_id)
         exam.delete()
         messages.success(request, "آزمون با موفقیت حذف شد.")
         return redirect('academy:exam_list')
 
 
-class ExamQuestionsView(AdminRequiredMixin, SchoolFilterMixin, View):
+class ExamQuestionsView(AdminRequiredMixin, View):
     def get(self, request, exam_id):
-        exam = self.school_object_or_404(Exam, id=exam_id, school_field='course__school')
+        exam = self.school_object_or_404(Exam, id=exam_id)
         questions = exam.questions.all()
         return render(request, 'academy/dashboard/exam_questions.html', {
             'exam': exam,
@@ -141,7 +141,7 @@ class ExamQuestionsView(AdminRequiredMixin, SchoolFilterMixin, View):
         })
 
     def post(self, request, exam_id):
-        exam = self.school_object_or_404(Exam, id=exam_id, school_field='course__school')
+        exam = self.school_object_or_404(Exam, id=exam_id)
         action = request.POST.get('action')
 
         if action == 'add_question':
@@ -192,9 +192,11 @@ class ExamQuestionsView(AdminRequiredMixin, SchoolFilterMixin, View):
         return redirect('academy:exam_questions', exam_id=exam.id)
 
 
-class QuestionChoicesView(AdminRequiredMixin, SchoolFilterMixin, View):
+class QuestionChoicesView(AdminRequiredMixin, View):
     def get(self, request, question_id):
-        question = self.school_object_or_404(Question, id=question_id, exam__course__school__isnull=False)
+        question = self.school_object_or_404(
+            Question, id=question_id,
+        )
         choices = question.choices.all()
         return render(request, 'academy/dashboard/question_choices.html', {
             'question': question,
@@ -202,7 +204,9 @@ class QuestionChoicesView(AdminRequiredMixin, SchoolFilterMixin, View):
         })
 
     def post(self, request, question_id):
-        question = self.school_object_or_404(Question, id=question_id, exam__course__school__isnull=False)
+        question = self.school_object_or_404(
+            Question, id=question_id,
+        )
         action = request.POST.get('action')
 
         if action == 'add_choice':
@@ -249,9 +253,9 @@ class QuestionChoicesView(AdminRequiredMixin, SchoolFilterMixin, View):
         return redirect('academy:question_choices', question_id=question.id)
 
 
-class ExamResultsView(AdminRequiredMixin, SchoolFilterMixin, View):
+class ExamResultsView(AdminRequiredMixin, View):
     def get(self, request, exam_id):
-        exam = self.school_object_or_404(Exam, id=exam_id, school_field='course__school')
+        exam = self.school_object_or_404(Exam, id=exam_id)
         attempts = exam.attempts.select_related('student').order_by('-score', 'start_time')
         return render(request, 'academy/dashboard/exam_results.html', {
             'exam': exam,
@@ -279,7 +283,7 @@ class ExamResultsView(AdminRequiredMixin, SchoolFilterMixin, View):
         }
 
     def post(self, request, exam_id):
-        exam = self.school_object_or_404(Exam, id=exam_id, school_field='course__school')
+        exam = self.school_object_or_404(Exam, id=exam_id)
         action = request.POST.get('action')
         attempt_id = request.POST.get('attempt_id')
 
@@ -309,10 +313,10 @@ class ExamResultsView(AdminRequiredMixin, SchoolFilterMixin, View):
         return redirect('academy:exam_results', exam_id=exam.id)
 
 
-class AttemptDetailView(AdminRequiredMixin, SchoolFilterMixin, View):
+class AttemptDetailView(AdminRequiredMixin, View):
     def get(self, request, attempt_id):
         attempt = self.school_object_or_404(
-            ExamAttempt, school_field='exam__course__school',
+            ExamAttempt,
             id=attempt_id
         )
         attempt = ExamAttempt.objects.select_related('exam', 'student', 'exam__course').get(id=attempt.id)

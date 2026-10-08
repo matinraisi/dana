@@ -1,0 +1,17 @@
+{% extends "school_management/base.html" %}
+{% block title %}اولیا{% endblock %}
+{% block content %}
+<h2 class="mb-4 text-xl font-black">اولیا و سرپرستان</h2>
+<form method="post" class="mb-6 grid gap-2 rounded-2xl bg-white p-5 shadow-sm md:grid-cols-2">{% csrf_token %}
+  <input name="first_name" required placeholder="نام" class="rounded-xl border px-3 py-2 text-sm">
+  <input name="last_name" required placeholder="نام خانوادگی" class="rounded-xl border px-3 py-2 text-sm">
+  <input name="mobile_number" required placeholder="موبایل ۰۹..." class="rounded-xl border px-3 py-2 text-sm">
+  <input name="national_code" placeholder="کد ملی" class="rounded-xl border px-3 py-2 text-sm">
+  <textarea name="address" rows="2" placeholder="نشانی" class="rounded-xl border px-3 py-2 text-sm md:col-span-2"></textarea>
+  <button class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white md:col-span-2">ثبت ولی</button>
+</form>
+<form class="mb-4"><input name="q" value="{{ query }}" placeholder="جستجو" class="w-full rounded-xl border bg-white px-4 py-3 text-sm"></form>
+<div class="space-y-2">{% for g in page_obj %}
+  <div class="rounded-2xl bg-white px-4 py-3 shadow-sm"><p class="font-black">{{ g.full_name }}</p><p class="text-xs text-slate-400">{{ g.mobile_number }}{% if g.national_code %} · {{ g.national_code }}{% endif %}</p></div>
+{% empty %}<p class="text-sm text-slate-400">موردی نیست.</p>{% endfor %}</div>
+{% endblock %}

@@ -1,7 +1,7 @@
 import logging
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
-from apps.academy.mixins import AdminRequiredMixin, SchoolFilterMixin
+from apps.academy.mixins import AdminRequiredMixin
 from django.contrib import messages
 from django.http import JsonResponse
 from django.urls import reverse
@@ -13,7 +13,7 @@ from ..services.idcard_service import IDCardService
 logger = logging.getLogger(__name__)
 
 
-class IssueIDCardView(AdminRequiredMixin, SchoolFilterMixin, View):
+class IssueIDCardView(AdminRequiredMixin, View):
     """صدور / بازصدور کارت شناسایی هنرجو"""
 
     def post(self, request, student_id):
@@ -59,7 +59,7 @@ class IssueIDCardView(AdminRequiredMixin, SchoolFilterMixin, View):
         return redirect('academy:student_id_card', slug=student.short_slug)
 
 
-class StudentIdCardView(AdminRequiredMixin, SchoolFilterMixin, View):
+class StudentIdCardView(AdminRequiredMixin, View):
     """نمایش کارت شناسایی هنرجو — قابل چاپ"""
 
     def get(self, request, slug):
@@ -94,14 +94,11 @@ class VerifyIDCardView(View):
             })
 
 
-class IDCardListView(AdminRequiredMixin, SchoolFilterMixin, View):
+class IDCardListView(AdminRequiredMixin, View):
     """لیست کارت‌های صادرشده برای مدیر"""
 
     def get(self, request):
-        cards = self.filter_by_school(
-            StudentIDCard.objects.select_related('student').order_by('-issued_at'),
-            school_field='student__school'
-        )
+        cards = StudentIDCard.objects.select_related('student').order_by('-issued_at')
 
         # صفحه‌بندی
         from django.core.paginator import Paginator
@@ -125,7 +122,7 @@ class IDCardListView(AdminRequiredMixin, SchoolFilterMixin, View):
         })
 
 
-class RevokeIDCardView(AdminRequiredMixin, SchoolFilterMixin, View):
+class RevokeIDCardView(AdminRequiredMixin, View):
     """باطل کردن / فعال کردن کارت شناسایی"""
 
     def post(self, request, card_id):

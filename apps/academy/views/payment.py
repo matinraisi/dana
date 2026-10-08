@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.urls import reverse
 from django.utils import timezone
 from django.conf import settings
-from apps.academy.mixins import AdminRequiredMixin, SchoolFilterMixin
+from apps.academy.mixins import AdminRequiredMixin
 
 from ..models import CourseEnrollment, StudentEnrollment, PaymentRequest, PaymentGateway, AcademyInstallment
 from ..services.payment_service import AqayePardakht
@@ -25,7 +25,7 @@ def get_callback_url(request):
     return request.build_absolute_uri(reverse('academy:payment_callback'))
 
 
-class PaymentInitiateView(AdminRequiredMixin, SchoolFilterMixin, View):
+class PaymentInitiateView(AdminRequiredMixin, View):
     """پرداخت از پنل ادمین"""
     def post(self, request):
         enrollment_id = request.POST.get('enrollment_id')
@@ -34,7 +34,7 @@ class PaymentInitiateView(AdminRequiredMixin, SchoolFilterMixin, View):
             messages.error(request, 'اطلاعات پرداخت ناقص است.')
             return redirect('academy:finance_management')
 
-        enrollment = self.school_object_or_404(CourseEnrollment, id=enrollment_id, school_field='student__school')
+        enrollment = self.school_object_or_404(CourseEnrollment, id=enrollment_id)
         student = enrollment.student
         try:
             amount = int(amount)
@@ -63,7 +63,8 @@ class PaymentInitiateView(AdminRequiredMixin, SchoolFilterMixin, View):
 
 class PublicPaymentInitiateView(View):
     """پرداخت عمومی — از صفحه ثبت‌نام یا لینک SMS"""
-    def post(self, request, enrollment_id):
+    def post(self, request, enrollment_id, slug=None):
+        # ``slug`` is present when mounted under /register/<slug>/pay/...
         enrollment = get_object_or_404(CourseEnrollment, id=enrollment_id)
         student = enrollment.student
         remaining = enrollment.remaining_amount
@@ -99,7 +100,8 @@ class PublicPaymentInitiateView(View):
 
 class PublicPaymentInstallmentView(View):
     """پرداخت اقساطی — ایجاد ۲ قسط و ارسال به درگاه برای قسط اول"""
-    def post(self, request, enrollment_id):
+    def post(self, request, enrollment_id, slug=None):
+        # ``slug`` is present when mounted under /register/<slug>/pay/...
         enrollment = get_object_or_404(CourseEnrollment, id=enrollment_id)
         reg_url = f'/register/{enrollment.course.registration_slug}/'
         remaining = enrollment.remaining_amount

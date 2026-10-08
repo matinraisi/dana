@@ -5,7 +5,7 @@ from django.db.models import Sum, Q, Count
 from django.utils import timezone
 from datetime import timedelta
 import calendar
-from apps.academy.mixins import AdminRequiredMixin, SchoolFilterMixin
+from apps.academy.mixins import AdminRequiredMixin
 from apps.academy.utils.date_helper import to_jalali, to_gregorian
 from django.contrib.auth import get_user_model
 
@@ -16,45 +16,29 @@ from ..models.accounting import AccountingTransaction, ExpenseCategory, PaymentG
 from ..models.course import Session
 
 
-class AccountingDashboardView(AdminRequiredMixin, SchoolFilterMixin, View):
+class AccountingDashboardView(AdminRequiredMixin, View):
     def get(self, request):
         today = timezone.now().date()
         month_start = today.replace(day=1)
 
         # ─── KPI اصلی ───
         # درآمد واقعی: مجموع پرداختی هنرجویان
-        total_revenue = self.filter_by_school(
-            CourseEnrollment.objects.all(), school_field='course__school'
-        ).aggregate(t=Sum('paid_amount'))['t'] or 0
+        total_revenue = CourseEnrollment.objects.all().aggregate(t=Sum('paid_amount'))['t'] or 0
 
         # هزینه‌ها: تراکنش‌های هزینه + پرداخت مدرسین
-        total_expenses = self.filter_by_school(
-            AccountingTransaction.objects.filter(transaction_type__in=['expense', 'teacher_payout']),
-            school_field='course__school'
-        ).aggregate(t=Sum('amount'))['t'] or 0
+        total_expenses = AccountingTransaction.objects.filter(transaction_type__in=['expense', 'teacher_payout']).aggregate(t=Sum('amount'))['t'] or 0
 
         net_profit = total_revenue - total_expenses
 
         # شهریه کل: مجموع شهریه تمام دوره‌ها
-        enrollment_revenue = self.filter_by_school(
-            CourseEnrollment.objects.all(), school_field='course__school'
-        ).aggregate(total=Sum('total_amount'))['total'] or 0
+        enrollment_revenue = CourseEnrollment.objects.all().aggregate(total=Sum('total_amount'))['total'] or 0
 
         total_debt = enrollment_revenue - total_revenue
 
         # ─── آمار ماه جاری ───
-        month_revenue = self.filter_by_school(
-            AccountingTransaction.objects.filter(
-                transaction_type='income', transaction_date__gte=month_start
-            ), school_field='course__school'
-        ).aggregate(t=Sum('amount'))['t'] or 0
+        month_revenue = AccountingTransaction.objects.filter(transaction_type='income', transaction_date__gte=month_start).aggregate(t=Sum('amount'))['t'] or 0
 
-        month_expenses = self.filter_by_school(
-            AccountingTransaction.objects.filter(
-                transaction_type__in=['expense', 'teacher_payout'],
-                transaction_date__gte=month_start
-            ), school_field='course__school'
-        ).aggregate(t=Sum('amount'))['t'] or 0
+        month_expenses = AccountingTransaction.objects.filter(transaction_type__in=['expense', 'teacher_payout'],transaction_date__gte=month_start).aggregate(t=Sum('amount'))['t'] or 0
 
         month_net = month_revenue - month_expenses
 
@@ -66,21 +50,9 @@ class AccountingDashboardView(AdminRequiredMixin, SchoolFilterMixin, View):
                 m_start = (m_start - timedelta(days=1)).replace(day=1)
             m_end_date = m_start.replace(day=calendar.monthrange(m_start.year, m_start.month)[1])
 
-            inc = self.filter_by_school(
-                AccountingTransaction.objects.filter(
-                    transaction_type='income',
-                    transaction_date__gte=m_start,
-                    transaction_date__lte=m_end_date
-                ), school_field='course__school'
-            ).aggregate(t=Sum('amount'))['t'] or 0
+            inc = AccountingTransaction.objects.filter(transaction_type='income',transaction_date__gte=m_start,transaction_date__lte=m_end_date).aggregate(t=Sum('amount'))['t'] or 0
 
-            exp = self.filter_by_school(
-                AccountingTransaction.objects.filter(
-                    transaction_type__in=['expense', 'teacher_payout'],
-                    transaction_date__gte=m_start,
-                    transaction_date__lte=m_end_date
-                ), school_field='course__school'
-            ).aggregate(t=Sum('amount'))['t'] or 0
+            exp = AccountingTransaction.objects.filter(transaction_type__in=['expense', 'teacher_payout'],transaction_date__gte=m_start,transaction_date__lte=m_end_date).aggregate(t=Sum('amount'))['t'] or 0
 
             # برچسب شمسی
             jalali_label = to_jalali(m_start).split('/')[1] + '/' + to_jalali(m_start).split('/')[0]
@@ -98,21 +70,9 @@ class AccountingDashboardView(AdminRequiredMixin, SchoolFilterMixin, View):
             w_end = today - timedelta(days=today.weekday()) - timedelta(weeks=i)
             w_start = w_end - timedelta(days=6)
 
-            inc = self.filter_by_school(
-                AccountingTransaction.objects.filter(
-                    transaction_type='income',
-                    transaction_date__gte=w_start,
-                    transaction_date__lte=w_end
-                ), school_field='course__school'
-            ).aggregate(t=Sum('amount'))['t'] or 0
+            inc = AccountingTransaction.objects.filter(transaction_type='income',transaction_date__gte=w_start,transaction_date__lte=w_end).aggregate(t=Sum('amount'))['t'] or 0
 
-            exp = self.filter_by_school(
-                AccountingTransaction.objects.filter(
-                    transaction_type__in=['expense', 'teacher_payout'],
-                    transaction_date__gte=w_start,
-                    transaction_date__lte=w_end
-                ), school_field='course__school'
-            ).aggregate(t=Sum('amount'))['t'] or 0
+            exp = AccountingTransaction.objects.filter(transaction_type__in=['expense', 'teacher_payout'],transaction_date__gte=w_start,transaction_date__lte=w_end).aggregate(t=Sum('amount'))['t'] or 0
 
             # برچسب شمسی
             j_start = to_jalali(w_start)
@@ -124,27 +84,14 @@ class AccountingDashboardView(AdminRequiredMixin, SchoolFilterMixin, View):
             })
 
         # ─── آخرین تراکنش‌ها ───
-        recent_transactions = self.filter_by_school(
-            AccountingTransaction.objects.select_related(
-                'course', 'student', 'expense_category', 'payment_gateway'
-            ), school_field='course__school'
-        ).order_by('-transaction_date', '-created_at')[:10]
+        recent_transactions = AccountingTransaction.objects.select_related('course', 'student', 'expense_category', 'payment_gateway').order_by('-transaction_date', '-created_at')[:10]
 
         # ─── درآمد به تفکیک دوره ───
-        revenue_by_course = self.filter_by_school(
-            CourseEnrollment.objects.all(), school_field='course__school'
-        ).values('course__title').annotate(
-            total=Sum('paid_amount'),
-            count=Count('id')
+        revenue_by_course = CourseEnrollment.objects.all().values('course__title').annotate(total=Sum('paid_amount'),count=Count('id')
         ).order_by('-total')
 
         # ─── هزینه به تفکیک دسته ───
-        expense_by_category = self.filter_by_school(
-            AccountingTransaction.objects.filter(transaction_type='expense'),
-            school_field='course__school'
-        ).values('expense_category__name').annotate(
-            total=Sum('amount'),
-            count=Count('id')
+        expense_by_category = AccountingTransaction.objects.filter(transaction_type='expense').values('expense_category__name').annotate(total=Sum('amount'),count=Count('id')
         ).order_by('-total')
 
         return render(request, 'academy/dashboard/accounting_dashboard.html', {
@@ -164,7 +111,7 @@ class AccountingDashboardView(AdminRequiredMixin, SchoolFilterMixin, View):
         })
 
 
-class AccountingTransactionListView(AdminRequiredMixin, SchoolFilterMixin, View):
+class AccountingTransactionListView(AdminRequiredMixin, View):
     def get(self, request):
         tx_type = request.GET.get('type', '')
         course_id = request.GET.get('course', '')
@@ -173,9 +120,9 @@ class AccountingTransactionListView(AdminRequiredMixin, SchoolFilterMixin, View)
         date_from = request.GET.get('from', '')
         date_to = request.GET.get('to', '')
 
-        transactions = self.filter_by_school(AccountingTransaction.objects.select_related(
+        transactions = AccountingTransaction.objects.select_related(
             'course', 'student', 'expense_category', 'payment_gateway', 'created_by'
-        ), school_field='course__school')
+        )
 
         if tx_type:
             transactions = transactions.filter(transaction_type=tx_type)
@@ -196,7 +143,7 @@ class AccountingTransactionListView(AdminRequiredMixin, SchoolFilterMixin, View)
 
         transactions = transactions.order_by('-transaction_date', '-created_at')
 
-        courses = self.filter_by_school(Course.objects.all())
+        courses = Course.objects.all()
         gateways = PaymentGateway.objects.filter(is_active=True)
 
         total = transactions.aggregate(t=Sum('amount'))['t'] or 0
@@ -221,13 +168,13 @@ class AccountingTransactionListView(AdminRequiredMixin, SchoolFilterMixin, View)
         })
 
 
-class AccountingTransactionCreateView(AdminRequiredMixin, SchoolFilterMixin, View):
+class AccountingTransactionCreateView(AdminRequiredMixin, View):
     def get(self, request):
-        courses = self.filter_by_school(Course.objects.all())
-        students = self.filter_by_school(StudentEnrollment.objects.all())
-        categories = self.filter_by_school(ExpenseCategory.objects.all())
-        gateways = self.filter_by_school(PaymentGateway.objects.filter(is_active=True))
-        teachers = self.filter_by_school(User.objects.filter(role='TEACHER', is_active=True), school_field='school')
+        courses = Course.objects.all()
+        students = StudentEnrollment.objects.all()
+        categories = ExpenseCategory.objects.all()
+        gateways = PaymentGateway.objects.filter(is_active=True)
+        teachers = User.objects.filter(role='TEACHER', is_active=True)
         today_jalali = to_jalali(timezone.now().date())
         return render(request, 'academy/dashboard/accounting_transaction_form.html', {
             'courses': courses,
@@ -292,37 +239,23 @@ class AccountingTransactionCreateView(AdminRequiredMixin, SchoolFilterMixin, Vie
         return redirect('academy:accounting_transactions')
 
 
-class CourseProfitReportView(AdminRequiredMixin, SchoolFilterMixin, View):
+class CourseProfitReportView(AdminRequiredMixin, View):
     def get(self, request):
-        courses = self.filter_by_school(Course.objects.all())
+        courses = Course.objects.all()
 
         course_stats = []
         for course in courses:
             # ─── درآمد: فقط از پرداخت هنرجویان ───
-            revenue = self.filter_by_school(
-                CourseEnrollment.objects.filter(course=course),
-                school_field='course__school'
-            ).aggregate(t=Sum('paid_amount'))['t'] or 0
+            revenue = CourseEnrollment.objects.filter(course=course).aggregate(t=Sum('paid_amount'))['t'] or 0
 
             # ─── شهریه کل ───
-            total_tuition = self.filter_by_school(
-                CourseEnrollment.objects.filter(course=course),
-                school_field='course__school'
-            ).aggregate(t=Sum('total_amount'))['t'] or 0
+            total_tuition = CourseEnrollment.objects.filter(course=course).aggregate(t=Sum('total_amount'))['t'] or 0
 
             # ─── پرداخت به مدرس ───
-            teacher_payouts = self.filter_by_school(
-                AccountingTransaction.objects.filter(
-                    course=course, transaction_type='teacher_payout'
-                ), school_field='course__school'
-            ).aggregate(t=Sum('amount'))['t'] or 0
+            teacher_payouts = AccountingTransaction.objects.filter(course=course, transaction_type='teacher_payout').aggregate(t=Sum('amount'))['t'] or 0
 
             # ─── سایر هزینه‌ها ───
-            other_expenses = self.filter_by_school(
-                AccountingTransaction.objects.filter(
-                    course=course, transaction_type='expense'
-                ), school_field='course__school'
-            ).aggregate(t=Sum('amount'))['t'] or 0
+            other_expenses = AccountingTransaction.objects.filter(course=course, transaction_type='expense').aggregate(t=Sum('amount'))['t'] or 0
 
             total_expenses = teacher_payouts + other_expenses
             net = revenue - total_expenses
@@ -357,14 +290,9 @@ class CourseProfitReportView(AdminRequiredMixin, SchoolFilterMixin, View):
         })
 
 
-class TeacherPayoutListView(AdminRequiredMixin, SchoolFilterMixin, View):
+class TeacherPayoutListView(AdminRequiredMixin, View):
     def get(self, request):
-        payouts = self.filter_by_school(
-            AccountingTransaction.objects.filter(
-                transaction_type='teacher_payout'
-            ).select_related('teacher', 'course'),
-            school_field='course__school'
-        ).order_by('-transaction_date')
+        payouts = AccountingTransaction.objects.filter(transaction_type='teacher_payout').select_related('teacher', 'course').order_by('-transaction_date')
 
         total = payouts.aggregate(t=Sum('amount'))['t'] or 0
 
@@ -393,9 +321,9 @@ class TeacherPayoutListView(AdminRequiredMixin, SchoolFilterMixin, View):
         })
 
 
-class AccountingTransactionDeleteView(AdminRequiredMixin, SchoolFilterMixin, View):
+class AccountingTransactionDeleteView(AdminRequiredMixin, View):
     def post(self, request, pk):
-        tx = get_object_or_404(self.filter_by_school(AccountingTransaction.objects.all(), school_field='course__school'), pk=pk)
+        tx = get_object_or_404(AccountingTransaction.objects.all(), pk=pk)
         tx.delete()
         messages.success(request, 'تراکنش حذف شد')
         return redirect('academy:accounting_transactions')

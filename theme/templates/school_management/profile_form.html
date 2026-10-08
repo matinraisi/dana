@@ -1,0 +1,15 @@
+{% extends "school_management/base.html" %}
+{% block title %}مشخصات مدرسه{% endblock %}
+{% block content %}
+<h2 class="mb-4 text-xl font-black">مشخصات مدرسه</h2>
+<form method="post" enctype="multipart/form-data" class="max-w-2xl space-y-3 rounded-2xl bg-white p-5 shadow-sm">
+  {% csrf_token %}
+  <input name="name" required value="{{ profile.name|default:'' }}" placeholder="نام مدرسه" class="w-full rounded-xl border px-3 py-2 text-sm">
+  <input name="education_code" value="{{ profile.education_code|default:'' }}" placeholder="کد آموزش و پرورش" class="w-full rounded-xl border px-3 py-2 text-sm">
+  <input name="phone_number" value="{{ profile.phone_number|default:'' }}" placeholder="تلفن" class="w-full rounded-xl border px-3 py-2 text-sm">
+  <textarea name="address" rows="3" placeholder="نشانی" class="w-full rounded-xl border px-3 py-2 text-sm">{{ profile.address|default:'' }}</textarea>
+  <input type="file" name="logo" accept="image/*" class="w-full text-sm">
+  {% if profile.logo %}<img src="{{ profile.logo.url }}" alt="" class="h-16 w-16 rounded-xl object-cover">{% endif %}
+  <button class="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white">ذخیره</button>
+</form>
+{% endblock %}

@@ -6,6 +6,8 @@ from django.views import View
 from django.contrib.auth import login, authenticate
 from django.contrib import messages
 
+from django.conf import settings
+
 from .models import OTPToken, User
 from apps.notifications.sms import send_sms
 
@@ -14,7 +16,7 @@ logger = logging.getLogger(__name__)
 # Rate limiting constants
 OTP_MIN_INTERVAL_SECONDS = 60   # حداقل فاصله بین دو درخواست OTP
 OTP_MAX_ATTEMPTS_PER_HOUR = 10  # حداکثر ۱۰ درخواست OTP در ساعت
-DEFAULT_PASSWORD = '123456789'  # رمز عبور اولیه استاد/هنرجو
+DEFAULT_PASSWORD = settings.DEFAULT_INITIAL_PASSWORD
 
 # Rate limiting for password login
 PW_MAX_ATTEMPTS = 5

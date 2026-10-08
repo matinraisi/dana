@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.views import View
-from apps.academy.mixins import AdminRequiredMixin, SchoolFilterMixin
+from apps.academy.mixins import AdminRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib import messages
 from django.db.models import Q, Sum, Count
@@ -49,37 +49,26 @@ class AcademyLogoutView(LogoutView):
     next_page = 'academy:login'
 
 
-class DashboardHomeView(AdminRequiredMixin, SchoolFilterMixin, View):
+class DashboardHomeView(AdminRequiredMixin, View):
     def get(self, request):
-        school_id = self.get_school_id()
-        is_super = request.user.is_superuser
-
-        courses = self.filter_by_school(Course.objects.all())
-        base_kw = {} if is_super else {'student__school_id': school_id}
-        base_kw2 = {} if is_super else {'course__school_id': school_id}
-
-        total_students = self.filter_by_school(StudentEnrollment.objects.all()).count()
+        courses = Course.objects.all()
+        total_students = StudentEnrollment.objects.count()
         total_courses = courses.count()
         active_courses = courses.filter(status__in=['open', 'active']).count()
-        pending_docs = self.filter_by_school(
-            StudentEnrollment.objects.filter(document_status='pending')
-        ).count()
-        overdue_count = self.filter_by_school(
-            AcademyInstallment.objects.filter(status='overdue'),
-            school_field='enrollment__student__school'
-        ).count()
+        pending_docs = StudentEnrollment.objects.filter(document_status='pending').count()
+        overdue_count = AcademyInstallment.objects.filter(status='overdue').count()
         income_total = AccountingTransaction.objects.filter(
-            transaction_type='income', **base_kw2
+            transaction_type='income',
         ).aggregate(s=Sum('amount'))['s'] or 0
         expense_total = AccountingTransaction.objects.filter(
-            transaction_type='expense', **base_kw2
+            transaction_type='expense',
         ).aggregate(s=Sum('amount'))['s'] or 0
-        enrollments_qs = CourseEnrollment.objects.filter(**base_kw).select_related(
+        enrollments_qs = CourseEnrollment.objects.select_related(
             'student', 'course'
         ).order_by('-enrolled_at')[:5]
         today = timezone.now().date()
         upcoming_sessions = Session.objects.filter(
-            date__gte=today, **base_kw2
+            date__gte=today,
         ).select_related('course').order_by('date', 'start_time')[:5]
 
         context = {

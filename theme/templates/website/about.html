@@ -1,0 +1,22 @@
+{% load static tailwind_tags %}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>درباره {{ installation.organization_name }}</title>
+  {% include "includes/pwa_head.html" %}
+  {% tailwind_css %}
+  <style>@font-face{font-family:"Vazirmatn";src:url("{% static 'font/fonts/webfonts/Vazirmatn-Regular.woff2' %}")format("woff2");font-weight:400}body{font-family:"Vazirmatn",sans-serif}</style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800">
+  <main class="mx-auto max-w-3xl px-4 py-16">
+    <p class="text-sm font-bold text-purple-600">درباره ما</p>
+    <h1 class="mt-2 text-3xl font-black">{{ installation.organization_name }}</h1>
+    <p class="mt-6 leading-8 text-slate-600">{{ installation.footer_text|default:"پلتفرم مدیریت هوشمند آموزش — دانا." }}</p>
+    <div class="mt-8 flex gap-3 text-sm font-bold">
+      <a href="{% url 'home' %}" class="rounded-xl bg-slate-800 px-4 py-2 text-white">خانه</a>
+      <a href="{% url 'contact' %}" class="rounded-xl bg-purple-600 px-4 py-2 text-white">تماس</a>
+    </div>
+  </main>
+</body>
+</html>

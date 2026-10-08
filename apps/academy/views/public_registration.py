@@ -7,7 +7,9 @@ from django.db import IntegrityError
 
 from ..models import Course, StudentEnrollment, CourseEnrollment, DiscountCode
 from ..services.sms_service import SmsService
-from apps.users.models import User, StudentAccount
+from apps.users.models import User
+from apps.academy.models import StudentAccount
+from apps.academy.org import set_organization, get_instance_organization
 
 
 class PublicCourseRegistrationView(View):
@@ -143,6 +145,7 @@ class PublicCourseRegistrationView(View):
         user.phone_number = phone_number
         user.role = 'STUDENT'
         user.save()
+        set_organization(user, course.school or get_instance_organization())
         StudentAccount.objects.get_or_create(user=user, defaults={'enrollment': student})
 
         # لاگین خودکار کاربر

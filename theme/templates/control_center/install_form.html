@@ -1,0 +1,35 @@
+{% extends "control_center/base.html" %}
+{% block title %}{{ title }} | کنترل دانا{% endblock %}
+{% block heading %}{{ title }}{% endblock %}
+{% block content %}
+<form method="post" class="mx-auto max-w-3xl space-y-4 rounded-2xl border border-slate-200 bg-white p-6">
+  {% csrf_token %}
+  <div><label class="mb-1 block text-sm font-bold">مشتری</label><select name="customer_id" required class="w-full rounded-xl border border-slate-200 px-4 py-3">{% for c in customers %}<option value="{{ c.id }}" {% if obj.customer_id == c.id %}selected{% endif %}>{{ c.organization_name }}</option>{% endfor %}</select></div>
+  <div class="grid gap-4 md:grid-cols-2">
+    <div><label class="mb-1 block text-sm font-bold">دامنه</label><input name="domain" required value="{{ obj.domain|default:'' }}" class="w-full rounded-xl border border-slate-200 px-4 py-3"></div>
+    <div><label class="mb-1 block text-sm font-bold">آدرس پنل</label><input name="panel_url" value="{{ obj.panel_url|default:'' }}" class="w-full rounded-xl border border-slate-200 px-4 py-3"></div>
+  </div>
+  <div class="grid gap-4 md:grid-cols-3">
+    <div><label class="mb-1 block text-sm font-bold">PRODUCT_MODE</label><input name="product_mode" required value="{{ obj.product_mode|default:'academy' }}" class="w-full rounded-xl border border-slate-200 px-4 py-3"></div>
+    <div><label class="mb-1 block text-sm font-bold">سرور</label><input name="server_host" value="{{ obj.server_host|default:'' }}" class="w-full rounded-xl border border-slate-200 px-4 py-3"></div>
+    <div><label class="mb-1 block text-sm font-bold">نسخه</label><input name="app_version" value="{{ obj.app_version|default:'' }}" class="w-full rounded-xl border border-slate-200 px-4 py-3"></div>
+  </div>
+  <div><label class="mb-1 block text-sm font-bold">یادداشت دیتابیس</label><input name="database_note" value="{{ obj.database_note|default:'' }}" class="w-full rounded-xl border border-slate-200 px-4 py-3"></div>
+  <fieldset class="rounded-xl border border-slate-200 p-4">
+    <legend class="px-2 text-sm font-black">چک‌لیست نصب دستی</legend>
+    <div class="grid gap-2 md:grid-cols-2 text-sm font-bold">
+      <label><input type="checkbox" name="checklist_dns" {% if obj.checklist_dns %}checked{% endif %}> DNS</label>
+      <label><input type="checkbox" name="checklist_ssl" {% if obj.checklist_ssl %}checked{% endif %}> SSL</label>
+      <label><input type="checkbox" name="checklist_env" {% if obj.checklist_env %}checked{% endif %}> .env</label>
+      <label><input type="checkbox" name="checklist_migrate" {% if obj.checklist_migrate %}checked{% endif %}> migrate</label>
+      <label><input type="checkbox" name="checklist_admin" {% if obj.checklist_admin %}checked{% endif %}> ادمین اولیه</label>
+      <label><input type="checkbox" name="checklist_sms" {% if obj.checklist_sms %}checked{% endif %}> تست پیامک</label>
+      <label><input type="checkbox" name="checklist_payment" {% if obj.checklist_payment %}checked{% endif %}> تست پرداخت</label>
+      <label><input type="checkbox" name="checklist_handover" {% if obj.checklist_handover %}checked{% endif %}> تحویل به مشتری</label>
+    </div>
+  </fieldset>
+  <div><label class="mb-1 block text-sm font-bold">یادداشت نصب</label><textarea name="install_notes" rows="4" class="w-full rounded-xl border border-slate-200 px-4 py-3">{{ obj.install_notes|default:'' }}</textarea></div>
+  <div><label class="mb-1 block text-sm font-bold">آخرین ارتقا</label><input type="date" name="last_upgraded_at" value="{{ obj.last_upgraded_at|date:'Y-m-d' }}" class="w-full rounded-xl border border-slate-200 px-4 py-3"></div>
+  <button class="rounded-xl bg-purple-600 px-5 py-3 text-sm font-bold text-white">ذخیره</button>
+</form>
+{% endblock %}

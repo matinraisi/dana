@@ -1,0 +1,26 @@
+{% load static tailwind_tags %}
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تماس با {{ installation.organization_name }}</title>
+  {% include "includes/pwa_head.html" %}
+  {% tailwind_css %}
+  <style>@font-face{font-family:"Vazirmatn";src:url("{% static 'font/fonts/webfonts/Vazirmatn-Regular.woff2' %}")format("woff2");font-weight:400}body{font-family:"Vazirmatn",sans-serif}</style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800">
+  <main class="mx-auto max-w-3xl px-4 py-16">
+    <p class="text-sm font-bold text-purple-600">تماس</p>
+    <h1 class="mt-2 text-3xl font-black">ارتباط با {{ installation.organization_name }}</h1>
+    <div class="mt-8 space-y-3 rounded-2xl border border-slate-200 bg-white p-6 text-sm">
+      {% if installation.contact_phone %}<p><span class="font-bold">تلفن:</span> {{ installation.contact_phone }}</p>{% endif %}
+      {% if installation.support_email %}<p><span class="font-bold">ایمیل:</span> {{ installation.support_email }}</p>{% endif %}
+      {% if installation.contact_address %}<p><span class="font-bold">نشانی:</span> {{ installation.contact_address }}</p>{% endif %}
+      {% if not installation.contact_phone and not installation.support_email and not installation.contact_address %}
+      <p class="text-slate-500">اطلاعات تماس هنوز در تنظیمات برندینگ Instance تکمیل نشده است.</p>
+      {% endif %}
+    </div>
+    <a href="{% url 'home' %}" class="mt-6 inline-block rounded-xl bg-slate-800 px-4 py-2 text-sm font-bold text-white">خانه</a>
+  </main>
+</body>
+</html>

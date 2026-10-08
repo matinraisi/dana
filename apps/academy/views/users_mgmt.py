@@ -1,23 +1,25 @@
 import logging
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
-from apps.academy.mixins import AdminRequiredMixin, SchoolFilterMixin
+from apps.academy.mixins import AdminRequiredMixin
 from django.contrib import messages
 
 from django.db.models import Count
-from apps.users.models import User, Teacher, StudentAccount
-from apps.academy.models import StudentEnrollment
+from apps.users.models import User
+from apps.academy.models import StudentEnrollment, Teacher, StudentAccount
+from apps.academy.org import set_organization
 
 logger = logging.getLogger(__name__)
 
-
-class UserListView(AdminRequiredMixin, SchoolFilterMixin, View):
+class UserListView(AdminRequiredMixin, View):
     def get(self, request):
         role_filter = request.GET.get('role', '')
-        users = self.filter_by_school(User.objects.all(), school_field='school').order_by('role', 'first_name')
+        users = User.objects.all().order_by('role', 'first_name')
         if role_filter:
             users = users.filter(role=role_filter)
-        role_counts = dict(self.filter_by_school(User.objects.all(), school_field='school').values_list('role').annotate(count=Count('id')))
+        role_counts = dict(
+            User.objects.values_list('role').annotate(count=Count('id'))
+        )
         role_choices_with_count = [(val, label, role_counts.get(val, 0)) for val, label in User.ROLE_CHOICES]
         return render(request, 'academy/dashboard/user_list.html', {
             'users': users,
@@ -27,11 +29,11 @@ class UserListView(AdminRequiredMixin, SchoolFilterMixin, View):
         })
 
 
-class UserCreateView(AdminRequiredMixin, SchoolFilterMixin, View):
+class UserCreateView(AdminRequiredMixin, View):
     def get(self, request):
-        students_without_account = self.filter_by_school(StudentEnrollment.objects.filter(
+        students_without_account = StudentEnrollment.objects.filter(
             user_account__isnull=True
-        )).order_by('first_name')
+        ).order_by('first_name')
         return render(request, 'academy/dashboard/user_create.html', {
             'role_choices': User.ROLE_CHOICES,
             'students_without_account': students_without_account,
@@ -58,8 +60,8 @@ class UserCreateView(AdminRequiredMixin, SchoolFilterMixin, View):
             last_name=last_name,
             phone_number=phone,
             role=role,
-            school=getattr(request.user, 'school', None),
         )
+        set_organization(user)
 
         # اگر نقش استاد است → Teacher profile بساز + پیامک بفرست
         if role == 'TEACHER':
@@ -102,13 +104,13 @@ class UserCreateView(AdminRequiredMixin, SchoolFilterMixin, View):
         return redirect('academy:user_list')
 
 
-class UserEditView(AdminRequiredMixin, SchoolFilterMixin, View):
+class UserEditView(AdminRequiredMixin, View):
     def get(self, request, pk):
         user = get_object_or_404(User, pk=pk)
         teacher = getattr(user, 'teacher_profile', None)
-        students_without_account = self.filter_by_school(StudentEnrollment.objects.filter(
+        students_without_account = StudentEnrollment.objects.filter(
             user_account__isnull=True
-        )).order_by('first_name')
+        ).order_by('first_name')
         return render(request, 'academy/dashboard/user_edit.html', {
             'edit_user': user,
             'teacher': teacher,
@@ -144,7 +146,7 @@ class UserEditView(AdminRequiredMixin, SchoolFilterMixin, View):
         return redirect('academy:user_list')
 
 
-class UserToggleActiveView(AdminRequiredMixin, SchoolFilterMixin, View):
+class UserToggleActiveView(AdminRequiredMixin, View):
     def post(self, request, pk):
         user = get_object_or_404(User, pk=pk)
         if user == request.user:

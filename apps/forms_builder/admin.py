@@ -22,14 +22,6 @@ class DynamicFormAdmin(admin.ModelAdmin):
     search_fields = ('title', 'slug')
     inlines = [FormFieldInline]
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        if school_id := getattr(request.user, 'school_id', None):
-            return qs.filter(linked_course__school_id=school_id)
-        return qs.none()
-
 
 @admin.register(FormSubmission)
 class FormSubmissionAdmin(admin.ModelAdmin):
@@ -37,11 +29,3 @@ class FormSubmissionAdmin(admin.ModelAdmin):
     list_filter = ('form',)
     readonly_fields = ('submission_id', 'submitted_at')
     inlines = [FieldResponseInline]
-
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        if request.user.is_superuser:
-            return qs
-        if school_id := getattr(request.user, 'school_id', None):
-            return qs.filter(form__linked_course__school_id=school_id)
-        return qs.none()

@@ -1,5 +1,7 @@
 import logging
 
+from django.conf import settings
+
 from apps.notifications.sms import send_sms
 from ..models import SMSLog
 
@@ -39,7 +41,7 @@ class SmsService:
             f"{student.first_name} عزیز، خوش آمدید!\n"
             f"ثبت‌نام شما با موفقیت انجام شد.\n\n"
             f"نام کاربری: {student.phone_number}\n"
-            f"رمز عبور: 123456789\n"
+            f"رمز عبور اولیه: {settings.DEFAULT_INITIAL_PASSWORD}\n"
             f"ورود: {login_url}\n\n"
             f"پس از ورود، رمز عبور خود را تغییر دهید."
         )

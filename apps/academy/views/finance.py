@@ -2,7 +2,7 @@ from datetime import timedelta
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
 from django.contrib import messages
-from apps.academy.mixins import AdminRequiredMixin, SchoolFilterMixin
+from apps.academy.mixins import AdminRequiredMixin
 from django.db.models import Sum, Q
 from django.utils import timezone
 
@@ -11,21 +11,21 @@ from ..models.accounting import AccountingTransaction, PaymentGateway
 from ..services.sms_service import SmsService
 
 
-class FinancialReportView(AdminRequiredMixin, SchoolFilterMixin, View):
+class FinancialReportView(AdminRequiredMixin, View):
     def get(self, request):
         now = timezone.now().date()
         next_30_days = now + timedelta(days=30)
 
-        self.filter_by_school(AcademyInstallment.objects.filter(status='pending', due_date__lt=now), school_field='enrollment__student__school').update(status='overdue')
+        AcademyInstallment.objects.filter(status='pending', due_date__lt=now).update(status='overdue')
 
-        total_revenue = self.filter_by_school(CourseEnrollment.objects.all(), school_field='course__school').aggregate(total=Sum('paid_amount'))['total'] or 0
-        overdue_payments = self.filter_by_school(AcademyInstallment.objects.filter(status='overdue'), school_field='enrollment__student__school').aggregate(total=Sum('amount'))['total'] or 0
-        upcoming_cashflow = self.filter_by_school(AcademyInstallment.objects.filter(
+        total_revenue = CourseEnrollment.objects.all().aggregate(total=Sum('paid_amount'))['total'] or 0
+        overdue_payments = AcademyInstallment.objects.filter(status='overdue').aggregate(total=Sum('amount'))['total'] or 0
+        upcoming_cashflow = AcademyInstallment.objects.filter(
             status='pending', due_date__range=[now, next_30_days]
-        ), school_field='enrollment__student__school').aggregate(total=Sum('amount'))['total'] or 0
-        recent_installments = self.filter_by_school(AcademyInstallment.objects.select_related(
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        recent_installments = AcademyInstallment.objects.select_related(
             'enrollment__student', 'enrollment__course'
-        ), school_field='enrollment__student__school').order_by('-due_date')[:10]
+        ).order_by('-due_date')[:10]
 
         return render(request, 'academy/dashboard/financial_report.html', {
             'total_revenue': total_revenue,
@@ -35,12 +35,12 @@ class FinancialReportView(AdminRequiredMixin, SchoolFilterMixin, View):
         })
 
 
-class FinanceDashboardView(AdminRequiredMixin, SchoolFilterMixin, View):
+class FinanceDashboardView(AdminRequiredMixin, View):
     def get(self, request):
         today = timezone.now().date()
-        self.filter_by_school(AcademyInstallment.objects.filter(status='pending', due_date__lt=today), school_field='enrollment__student__school').update(status='overdue')
+        AcademyInstallment.objects.filter(status='pending', due_date__lt=today).update(status='overdue')
 
-        enrollments = self.filter_by_school(CourseEnrollment.objects.select_related('student', 'course').prefetch_related('installments').all(), school_field='course__school')
+        enrollments = CourseEnrollment.objects.select_related('student', 'course').prefetch_related('installments').all()
 
         # جستجو
         search = request.GET.get('q', '').strip()
@@ -58,11 +58,11 @@ class FinanceDashboardView(AdminRequiredMixin, SchoolFilterMixin, View):
         paginator = Paginator(enrollments, 15)  # ۱۳ هنرجو در هر صفحه
         page_obj = paginator.get_page(page_number)
 
-        total_students = self.filter_by_school(StudentEnrollment.objects.all()).count()
-        total_revenue = self.filter_by_school(CourseEnrollment.objects.all(), school_field='course__school').aggregate(t=Sum('paid_amount'))['t'] or 0
-        total_debt = self.filter_by_school(CourseEnrollment.objects.all(), school_field='course__school').aggregate(t=Sum('total_amount'))['t'] or 0
+        total_students = StudentEnrollment.objects.all().count()
+        total_revenue = CourseEnrollment.objects.all().aggregate(t=Sum('paid_amount'))['t'] or 0
+        total_debt = CourseEnrollment.objects.all().aggregate(t=Sum('total_amount'))['t'] or 0
         total_remaining = total_debt - total_revenue
-        overdue_count = self.filter_by_school(AcademyInstallment.objects.filter(status='overdue'), school_field='enrollment__student__school').count()
+        overdue_count = AcademyInstallment.objects.filter(status='overdue').count()
 
         return render(request, 'academy/dashboard/finance_management.html', {
             'enrollments': page_obj,
@@ -76,14 +76,14 @@ class FinanceDashboardView(AdminRequiredMixin, SchoolFilterMixin, View):
         })
 
 
-class AddInstallmentView(AdminRequiredMixin, SchoolFilterMixin, View):
+class AddInstallmentView(AdminRequiredMixin, View):
     def post(self, request):
         enroll_id = request.POST.get('enrollment_id')
         amount = request.POST.get('amount')
         due_date = request.POST.get('due_date')
         if enroll_id and amount and due_date:
             try:
-                enroll = self.filter_by_school(CourseEnrollment.objects.all(), school_field='course__school').get(id=enroll_id)
+                enroll = CourseEnrollment.objects.all().get(id=enroll_id)
                 if int(amount) > 0:
                     AcademyInstallment.objects.create(
                         enrollment=enroll,
@@ -100,9 +100,9 @@ class AddInstallmentView(AdminRequiredMixin, SchoolFilterMixin, View):
         return redirect(referer)
 
 
-class ToggleInstallmentStatusView(AdminRequiredMixin, SchoolFilterMixin, View):
+class ToggleInstallmentStatusView(AdminRequiredMixin, View):
     def post(self, request, installment_id):
-        installment = get_object_or_404(self.filter_by_school(AcademyInstallment.objects.all(), school_field='enrollment__student__school'), id=installment_id)
+        installment = get_object_or_404(AcademyInstallment.objects.all(), id=installment_id)
         enrollment = installment.enrollment
 
         if installment.status in ['pending', 'overdue']:
@@ -140,7 +140,7 @@ class ToggleInstallmentStatusView(AdminRequiredMixin, SchoolFilterMixin, View):
         return redirect('academy:finance_management')
 
 
-class RecordPaymentView(AdminRequiredMixin, SchoolFilterMixin, View):
+class RecordPaymentView(AdminRequiredMixin, View):
     def get(self, request):
         return redirect('academy:finance_management')
 
@@ -156,7 +156,7 @@ class RecordPaymentView(AdminRequiredMixin, SchoolFilterMixin, View):
             return redirect('academy:finance_management')
 
         try:
-            enroll = self.filter_by_school(CourseEnrollment.objects.select_related('student', 'course').all(), school_field='course__school').get(id=enroll_id)
+            enroll = CourseEnrollment.objects.select_related('student', 'course').all().get(id=enroll_id)
             amount_val = int(amount)
             if amount_val <= 0:
                 messages.error(request, 'مبلغ باید بیشتر از صفر باشد.')

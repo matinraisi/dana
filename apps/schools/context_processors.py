@@ -1,24 +1,36 @@
-from .models import School
+from apps.installation.utils import get_installation_config
+from apps.academy.org import get_instance_organization
 
 
 def school_context(request):
-    school = getattr(request, 'school', None)
-    if school is None and request.user.is_authenticated:
-        school_id = getattr(request.user, 'school_id', None)
-        if school_id:
-            try:
-                school = School.objects.get(id=school_id, is_active=True)
-            except School.DoesNotExist:
-                school = None
-    if school is None:
-        try:
-            school = School.objects.filter(is_default=True, is_active=True).first()
-        except Exception:
-            school = None
+    """Branding: Academy Organization first, then InstallationConfig fallback."""
+    installation = get_installation_config()
+    school = get_instance_organization()
+
+    title = (
+        (school.title if school else None)
+        or installation.organization_name
+        or 'دانا'
+    )
+    logo = None
+    if school and school.logo:
+        logo = school.logo.url
+    elif installation.logo:
+        logo = installation.logo.url
+    favicon = None
+    if school and school.favicon:
+        favicon = school.favicon.url
+    elif installation.favicon:
+        favicon = installation.favicon.url
+    color = (
+        (school.primary_color if school else None)
+        or installation.primary_color
+        or '#4f46e5'
+    )
     return {
         'school': school,
-        'school_title': school.title if school else 'آکادمی هوش مصنوعی سانتک',
-        'school_logo': school.logo.url if school and school.logo else None,
-        'school_favicon': school.favicon.url if school and school.favicon else None,
-        'school_color': school.primary_color if school else '#2563eb',
+        'school_title': title,
+        'school_logo': logo,
+        'school_favicon': favicon,
+        'school_color': color,
     }

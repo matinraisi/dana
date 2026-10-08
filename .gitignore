@@ -3,6 +3,9 @@
 .env.*
 !.env.example
 
+# Install identity (copy from install_config.example.py; not secrets)
+install_config.py
+
 # Python
 __pycache__/
 *.py[cod]
@@ -20,10 +23,15 @@ env/
 
 # Django
 *.sqlite3
+*.bak
+db.sqlite3.*
 staticfiles/
 media/
 *.log
 stderr.log
+
+# Local first-install / QA scratch
+_tmp_install_verify/
 
 # IDE
 .vscode/

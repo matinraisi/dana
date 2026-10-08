@@ -1,29 +1,38 @@
-name: panel-aihousesb
+# Generic Dana customer instance compose file.
+# Per customer: copy install_config.example.py → install_config.py (PRODUCT_MODE),
+# fill .env with secrets/hosts/DATABASE_URL, adjust ports/volumes.
+# Product identity is NOT read from .env.
+
+name: dana-customer
 
 services:
   web:
-    image: panel-aihousesb:latest
+    image: dana:latest
     build:
       context: .
     env_file:
-      - /srv/panel-aihousesb/.env
+      - .env
     environment:
       DJANGO_SETTINGS_MODULE: config.settings
-      DATABASE_URL: "sqlite:////data/db.sqlite3"
-      STATIC_ROOT: /app/staticfiles
-      MEDIA_ROOT: /app/media
+      # Prefer DATABASE_URL from .env; container default only if unset there:
+      DATABASE_URL: ${DATABASE_URL:-sqlite:////data/db.sqlite3}
+      STATIC_ROOT: ${STATIC_ROOT:-/app/staticfiles}
+      MEDIA_ROOT: ${MEDIA_ROOT:-/app/media}
     volumes:
-      - panel_data:/data
-      - /srv/panel-aihousesb/media:/app/media
+      - dana_data:/data
+      - ./media:/app/media
+      # install_config.py must be present in the build context / image working dir
+      # (or mount it explicitly). Do not put PRODUCT_MODE in .env.
     ports:
-      - "127.0.0.1:3011:8000"
+      - "127.0.0.1:8000:8000"
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "-H", "Host: panel.aihousesb.ir", "http://127.0.0.1:8000/"]
+      # Host header must match an entry in ALLOWED_HOSTS (include localhost for this check)
+      test: ["CMD", "curl", "-f", "-H", "Host: localhost", "http://127.0.0.1:8000/"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 15s
 
 volumes:
-  panel_data:
+  dana_data:

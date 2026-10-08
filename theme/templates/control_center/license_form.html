@@ -1,0 +1,21 @@
+{% extends "control_center/base.html" %}
+{% block title %}{{ title }} | کنترل دانا{% endblock %}
+{% block heading %}{{ title }}{% endblock %}
+{% block content %}
+<form method="post" class="mx-auto max-w-2xl space-y-4 rounded-2xl border border-slate-200 bg-white p-6">
+  {% csrf_token %}
+  <div><label class="mb-1 block text-sm font-bold">مشتری</label><select name="customer_id" required class="w-full rounded-xl border border-slate-200 px-4 py-3">{% for c in customers %}<option value="{{ c.id }}" {% if obj.customer_id == c.id %}selected{% endif %}>{{ c.organization_name }}</option>{% endfor %}</select></div>
+  <div class="grid gap-4 md:grid-cols-2">
+    <div><label class="mb-1 block text-sm font-bold">کلید لایسنس</label><input name="license_key" required value="{{ obj.license_key|default:generated_key }}" class="w-full rounded-xl border border-slate-200 px-4 py-3 font-mono text-sm"></div>
+    <div><label class="mb-1 block text-sm font-bold">پلن</label><input name="plan_name" value="{{ obj.plan_name|default:'standard' }}" class="w-full rounded-xl border border-slate-200 px-4 py-3"></div>
+  </div>
+  <div class="grid gap-4 md:grid-cols-3">
+    <div><label class="mb-1 block text-sm font-bold">وضعیت</label><select name="status" class="w-full rounded-xl border border-slate-200 px-4 py-3">{% for value, label in statuses %}<option value="{{ value }}" {% if obj.status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    <div><label class="mb-1 block text-sm font-bold">شروع</label><input type="date" name="starts_at" required value="{{ obj.starts_at|date:'Y-m-d' }}" class="w-full rounded-xl border border-slate-200 px-4 py-3"></div>
+    <div><label class="mb-1 block text-sm font-bold">پایان</label><input type="date" name="ends_at" value="{{ obj.ends_at|date:'Y-m-d' }}" class="w-full rounded-xl border border-slate-200 px-4 py-3"></div>
+  </div>
+  <label class="flex items-center gap-2 text-sm font-bold"><input type="checkbox" name="website_enabled" {% if obj.website_enabled or not obj.pk %}checked{% endif %}> وب‌سایت برای این Instance مجاز است</label>
+  <div><label class="mb-1 block text-sm font-bold">یادداشت</label><textarea name="notes" rows="3" class="w-full rounded-xl border border-slate-200 px-4 py-3">{{ obj.notes|default:'' }}</textarea></div>
+  <button class="rounded-xl bg-purple-600 px-5 py-3 text-sm font-bold text-white">ذخیره</button>
+</form>
+{% endblock %}

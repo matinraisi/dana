@@ -1,7 +1,7 @@
 from datetime import timedelta
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from apps.academy.mixins import AdminRequiredMixin, SchoolFilterMixin
+from apps.academy.mixins import AdminRequiredMixin
 from django.views import View
 
 from ..models import Session, Course
@@ -10,7 +10,7 @@ from ..services.attendance_service import AttendanceService
 from ..utils.date_helper import to_gregorian
 
 
-class SessionListView(AdminRequiredMixin, SchoolFilterMixin, View):
+class SessionListView(AdminRequiredMixin, View):
     def get(self, request, course_id):
         course = self.school_object_or_404(Course, id=course_id)
         sessions = course.sessions.order_by('session_number')
@@ -19,7 +19,7 @@ class SessionListView(AdminRequiredMixin, SchoolFilterMixin, View):
         })
 
 
-class SessionCreateView(AdminRequiredMixin, SchoolFilterMixin, View):
+class SessionCreateView(AdminRequiredMixin, View):
     def post(self, request, course_id):
         course = self.school_object_or_404(Course, id=course_id)
         title = request.POST.get('title', f"جلسه {course.sessions.count() + 1}")
@@ -66,7 +66,7 @@ class SessionCreateView(AdminRequiredMixin, SchoolFilterMixin, View):
         return redirect('academy:session_list', course_id=course_id)
 
 
-class AttendanceSheetView(AdminRequiredMixin, SchoolFilterMixin, View):
+class AttendanceSheetView(AdminRequiredMixin, View):
     def get(self, request, session_id):
         data = AttendanceService.get_sheet(session_id)
         return render(request, 'academy/attendance/attendance_sheet.html', data)
@@ -85,13 +85,13 @@ class AttendanceSheetView(AdminRequiredMixin, SchoolFilterMixin, View):
         return redirect('academy:attendance_sheet', session_id=session_id)
 
 
-class StudentAttendanceReportView(AdminRequiredMixin, SchoolFilterMixin, View):
+class StudentAttendanceReportView(AdminRequiredMixin, View):
     def get(self, request, student_id, course_id):
         report = AttendanceService.get_student_report(student_id, course_id)
         return render(request, 'academy/attendance/student_report.html', report)
 
 
-class CourseAttendanceSummaryView(AdminRequiredMixin, SchoolFilterMixin, View):
+class CourseAttendanceSummaryView(AdminRequiredMixin, View):
     def get(self, request, course_id):
         course = self.school_object_or_404(Course, id=course_id)
         students = AttendanceService.get_course_summary(course_id)
@@ -126,14 +126,11 @@ class CourseAttendanceSummaryView(AdminRequiredMixin, SchoolFilterMixin, View):
         return redirect('academy:course_attendance_summary', course_id=course_id)
 
 
-class AdminMaterialListView(AdminRequiredMixin, SchoolFilterMixin, View):
+class AdminMaterialListView(AdminRequiredMixin, View):
     def get(self, request):
         import django.db.models as models
-        materials = self.filter_by_school(
-            SessionMaterial.objects.select_related('course', 'session').order_by('-created_at'),
-            school_field='course__school'
-        )
-        courses = self.filter_by_school(Course.objects.all())
+        materials = SessionMaterial.objects.select_related('course', 'session').order_by('-created_at')
+        courses = Course.objects.all()
         t = request.GET.get('type', '')
         c = request.GET.get('course', '')
         if t:

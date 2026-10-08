@@ -127,15 +127,16 @@ class GatewayPaymentTests(TestCase):
 
     @override_settings(**GATEWAY_SETTINGS)
     def test_the_admin_button_charges_the_course_schools_account(self):
-        """A superuser has no school; the enrollment's school picks the PIN,
-        not whichever active gateway comes first."""
-        owner = get_user_model().objects.get(username='owner')
-        other = School.objects.create(title='دیگری', slug='other', owner=owner, is_active=True)
+        """A superuser has no school; gateway_for uses the enrollment course's
+        organization gateway PIN (singleton org — no second School)."""
+        # Inactive decoy must not win over the course org's active gateway.
         PaymentGateway.objects.create(
-            school=other, name='درگاه دیگر', gateway_type='gateway', merchant_code='OTHER-PIN',
+            school=self.school, name='درگاه غیرفعال', gateway_type='gateway',
+            merchant_code='OTHER-PIN', is_active=False,
         )
         enrollment = CourseEnrollment.objects.create(
-            student=self.student, course=Course.objects.create(title='هوش', code='AI1', school=other),
+            student=self.student,
+            course=Course.objects.create(title='هوش', code='AI1', school=self.school),
             total_amount=1_000,
         )
         admin = get_user_model().objects.create_superuser(username='root', password='x')
@@ -145,7 +146,7 @@ class GatewayPaymentTests(TestCase):
             self.client.post('/dashboard/finance/payment-initiate/', {
                 'enrollment_id': enrollment.id, 'amount': 1_000,
             })
-        self.assertEqual(json.loads(req.call_args.kwargs['data'])['pin'], 'OTHER-PIN')
+        self.assertEqual(json.loads(req.call_args.kwargs['data'])['pin'], 'SCHOOL-PIN')
 
     # ── webhook ───────────────────────────────────────────────────────────
 

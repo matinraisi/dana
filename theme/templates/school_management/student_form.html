@@ -1,0 +1,20 @@
+{% extends "school_management/base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<h2 class="mb-4 text-xl font-black">{{ title }}</h2>
+<form method="post" class="max-w-2xl space-y-3 rounded-2xl bg-white p-5 shadow-sm">
+  {% csrf_token %}
+  <div class="grid gap-3 md:grid-cols-2">
+    <input name="first_name" required placeholder="نام" class="rounded-xl border px-3 py-2 text-sm">
+    <input name="last_name" required placeholder="نام خانوادگی" class="rounded-xl border px-3 py-2 text-sm">
+  </div>
+  <input name="national_code" required placeholder="کد ملی ۱۰ رقمی" class="w-full rounded-xl border px-3 py-2 text-sm">
+  <div class="grid gap-3 md:grid-cols-2">
+    <select name="gender" class="rounded-xl border px-3 py-2 text-sm">{% for value, label in genders %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select>
+    <input type="date" name="birth_date" class="rounded-xl border px-3 py-2 text-sm">
+  </div>
+  <input name="mobile_number" placeholder="موبایل دانش‌آموز (اختیاری)" class="w-full rounded-xl border px-3 py-2 text-sm">
+  <textarea name="address" rows="2" placeholder="نشانی" class="w-full rounded-xl border px-3 py-2 text-sm"></textarea>
+  <button class="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white">ذخیره</button>
+</form>
+{% endblock %}

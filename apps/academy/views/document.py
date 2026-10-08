@@ -2,24 +2,24 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
 from django.contrib import messages
 from django.core.paginator import Paginator
-from apps.academy.mixins import AdminRequiredMixin, SchoolFilterMixin
+from apps.academy.mixins import AdminRequiredMixin
 
 from ..models import StudentEnrollment
 from ..services.sms_service import SmsService
 
 
-class DocumentVerificationView(AdminRequiredMixin, SchoolFilterMixin, View):
+class DocumentVerificationView(AdminRequiredMixin, View):
     def get(self, request):
         from django.db.models import Q
-        students = self.filter_by_school(StudentEnrollment.objects.filter(
+        students = StudentEnrollment.objects.filter(
             Q(avatar_3x4__isnull=False) | Q(national_card_img__isnull=False) | Q(identity_img__isnull=False)
-        ).distinct().order_by('-created_at'))
+        ).distinct().order_by('-created_at')
         paginator = Paginator(students, 10)
         page_obj = paginator.get_page(request.GET.get('page', 1))
         return render(request, 'academy/dashboard/document_verification.html', {'page_obj': page_obj})
 
 
-class ApproveRejectDocumentView(AdminRequiredMixin, SchoolFilterMixin, View):
+class ApproveRejectDocumentView(AdminRequiredMixin, View):
     def post(self, request, student_id):
         student = self.school_object_or_404(StudentEnrollment, id=student_id)
         action = request.POST.get('action')

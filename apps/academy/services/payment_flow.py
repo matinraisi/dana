@@ -155,15 +155,24 @@ def _send_success_sms(payment_req, enrollment, tracking_number, bank) -> None:
     student = payment_req.student
     user = student.user if hasattr(student, 'user') else None
     if user:
-        sms_text = (
-            f'پرداخت شما به مبلغ {payment_req.amount:,} تومان برای دوره «{enrollment.course.title}» با موفقیت انجام شد.\n'
-            f'شماره تراکنش: {tracking_number or "-"}\n'
-            f'بانک: {bank or "-"}\n\n'
-            f'ورود به پنل هنرجو:\n'
-            f'آدرس: https://panel.aihousesb.ir/my/\n'
-            f'نام کاربری: {user.username}\n'
-            f'رمز عبور: 123456789'
-        )
+        from django.conf import settings as django_settings
+        panel = (getattr(django_settings, 'PANEL_PUBLIC_URL', '') or '').rstrip('/')
+        if panel:
+            sms_text = (
+                f'پرداخت شما به مبلغ {payment_req.amount:,} تومان برای دوره «{enrollment.course.title}» با موفقیت انجام شد.\n'
+                f'شماره تراکنش: {tracking_number or "-"}\n'
+                f'بانک: {bank or "-"}\n\n'
+                f'ورود به پنل هنرجو:\n'
+                f'{panel}/my/\n'
+                f'نام کاربری: {user.username}'
+            )
+        else:
+            sms_text = (
+                f'پرداخت شما به مبلغ {payment_req.amount:,} تومان برای دوره «{enrollment.course.title}» با موفقیت انجام شد.\n'
+                f'شماره تراکنش: {tracking_number or "-"}\n'
+                f'بانک: {bank or "-"}\n\n'
+                f'نام کاربری پنل هنرجو: {user.username}'
+            )
     else:
         sms_text = (
             f'پرداخت شما به مبلغ {payment_req.amount:,} تومان برای دوره «{enrollment.course.title}» با موفقیت انجام شد.\n'

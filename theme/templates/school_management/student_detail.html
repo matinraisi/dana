@@ -1,0 +1,36 @@
+{% extends "school_management/base.html" %}
+{% block title %}{{ student.full_name }}{% endblock %}
+{% block content %}
+<div class="mb-6 rounded-2xl bg-white p-5 shadow-sm">
+  <h2 class="text-xl font-black">{{ student.full_name }}</h2>
+  <p class="mt-1 text-sm text-slate-500">کد ملی {{ student.national_code }} · {{ student.get_gender_display }}{% if student.mobile_number %} · {{ student.mobile_number }}{% endif %}</p>
+</div>
+<div class="grid gap-6 lg:grid-cols-2">
+  <section class="rounded-2xl bg-white p-5 shadow-sm">
+    <h3 class="mb-3 font-black">اولیا</h3>
+    <ul class="mb-4 space-y-2 text-sm">{% for link in links %}<li class="rounded-xl bg-slate-50 px-3 py-2">{{ link.guardian.full_name }} · {{ link.get_relationship_display }}{% if link.is_primary %} · اصلی{% endif %} · {{ link.guardian.mobile_number }}</li>{% empty %}<li class="text-slate-400">ولی متصل نیست.</li>{% endfor %}</ul>
+    <form method="post" class="space-y-2 border-t pt-4">{% csrf_token %}<input type="hidden" name="action" value="link_guardian">
+      <label class="flex items-center gap-2 text-xs font-bold"><input type="checkbox" name="new_guardian" value="1" onchange="document.getElementById('existing').classList.toggle('hidden');document.getElementById('newg').classList.toggle('hidden')"> ثبت ولی جدید</label>
+      <div id="existing"><select name="guardian_id" class="w-full rounded-xl border px-3 py-2 text-sm"><option value="">انتخاب ولی موجود</option>{% for g in guardians %}<option value="{{ g.id }}">{{ g.full_name }} — {{ g.mobile_number }}</option>{% endfor %}</select></div>
+      <div id="newg" class="hidden space-y-2"><input name="g_first_name" placeholder="نام ولی" class="w-full rounded-xl border px-3 py-2 text-sm"><input name="g_last_name" placeholder="نام خانوادگی" class="w-full rounded-xl border px-3 py-2 text-sm"><input name="g_mobile" placeholder="موبایل" class="w-full rounded-xl border px-3 py-2 text-sm"><input name="g_national_code" placeholder="کد ملی" class="w-full rounded-xl border px-3 py-2 text-sm"></div>
+      <select name="relationship" class="w-full rounded-xl border px-3 py-2 text-sm">{% for value, label in relationships %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select>
+      <label class="flex items-center gap-2 text-xs font-bold"><input type="checkbox" name="is_primary"> ولی اصلی</label>
+      <label class="flex items-center gap-2 text-xs font-bold"><input type="checkbox" name="receives_notifications" checked> دریافت اعلان</label>
+      <button class="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white">اتصال ولی</button>
+    </form>
+  </section>
+  <section class="rounded-2xl bg-white p-5 shadow-sm">
+    <h3 class="mb-3 font-black">ثبت‌نام تحصیلی</h3>
+    <ul class="mb-4 space-y-2 text-sm">{% for e in enrollments %}<li class="rounded-xl bg-slate-50 px-3 py-2">{{ e.academic_year }} · {{ e.classroom }} · {{ e.get_status_display }}</li>{% empty %}<li class="text-slate-400">ثبت‌نامی نیست.</li>{% endfor %}</ul>
+    <form method="post" class="space-y-2 border-t pt-4">{% csrf_token %}<input type="hidden" name="action" value="enroll">
+      <select name="academic_year_id" required class="w-full rounded-xl border px-3 py-2 text-sm"><option value="">سال تحصیلی</option>{% for y in years %}<option value="{{ y.id }}">{{ y.title }}</option>{% endfor %}</select>
+      <select name="classroom_id" required class="w-full rounded-xl border px-3 py-2 text-sm"><option value="">کلاس</option>{% for c in classrooms %}<option value="{{ c.id }}">{{ c }}</option>{% endfor %}</select>
+      <input name="student_number" placeholder="شماره دانش‌آموزی" class="w-full rounded-xl border px-3 py-2 text-sm">
+      <input type="date" name="enrolled_at" required class="w-full rounded-xl border px-3 py-2 text-sm">
+      <select name="status" class="w-full rounded-xl border px-3 py-2 text-sm">{% for value, label in statuses %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select>
+      <textarea name="note" rows="2" placeholder="یادداشت" class="w-full rounded-xl border px-3 py-2 text-sm"></textarea>
+      <button class="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white">ثبت‌نام</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

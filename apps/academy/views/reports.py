@@ -6,27 +6,27 @@ from django.contrib import messages
 from django.http import HttpResponse
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
-from apps.academy.mixins import AdminRequiredMixin, SchoolFilterMixin
+from apps.academy.mixins import AdminRequiredMixin
 
 from ..models import Course, StudentEnrollment, CourseEnrollment, AcademyInstallment
 from ..models.accounting import AccountingTransaction
 from ..models.attendance import Attendance
 
 
-class ReportDashboardView(AdminRequiredMixin, SchoolFilterMixin, View):
+class ReportDashboardView(AdminRequiredMixin, View):
     def get(self, request):
         today = timezone.now().date()
 
-        total_students = self.filter_by_school(StudentEnrollment.objects.all()).count()
-        total_courses = self.filter_by_school(Course.objects.all()).count()
-        total_enrollments = self.filter_by_school(CourseEnrollment.objects.all(), school_field='course__school').count()
+        total_students = StudentEnrollment.objects.all().count()
+        total_courses = Course.objects.all().count()
+        total_enrollments = CourseEnrollment.objects.all().count()
 
-        total_revenue = self.filter_by_school(CourseEnrollment.objects.all(), school_field='course__school').aggregate(t=Sum('paid_amount'))['t'] or 0
-        total_outstanding = self.filter_by_school(AcademyInstallment.objects.filter(
+        total_revenue = CourseEnrollment.objects.all().aggregate(t=Sum('paid_amount'))['t'] or 0
+        total_outstanding = AcademyInstallment.objects.filter(
             status__in=['pending', 'overdue']
-        ), school_field='enrollment__student__school').aggregate(t=Sum('amount'))['t'] or 0
+        ).aggregate(t=Sum('amount'))['t'] or 0
 
-        students_by_course = self.filter_by_school(CourseEnrollment.objects.all(), school_field='course__school').values(
+        students_by_course = CourseEnrollment.objects.all().values(
             'course__title', 'course__code'
         ).annotate(
             count=Count('id'),
@@ -34,9 +34,9 @@ class ReportDashboardView(AdminRequiredMixin, SchoolFilterMixin, View):
             total_amount=Sum('total_amount'),
         ).order_by('-count')
 
-        monthly_revenue = self.filter_by_school(AccountingTransaction.objects.filter(
+        monthly_revenue = AccountingTransaction.objects.filter(
             transaction_type='income'
-        ), school_field='course__school').extra(
+        ).extra(
             select={'year': "strftime('%%Y', transaction_date)",
                     'month': "strftime('%%m', transaction_date)"}
         ).values('year', 'month').annotate(
@@ -54,12 +54,12 @@ class ReportDashboardView(AdminRequiredMixin, SchoolFilterMixin, View):
                 'total_amount': item['total_amount'] or 0,
             })
 
-        recent_enrollments = self.filter_by_school(CourseEnrollment.objects.select_related(
+        recent_enrollments = CourseEnrollment.objects.select_related(
             'student', 'course'
-        ), school_field='course__school').order_by('-enrolled_at')[:10]
+        ).order_by('-enrolled_at')[:10]
 
-        total_sessions = sum(c.sessions.count() for c in self.filter_by_school(Course.objects.all()))
-        total_attendance = self.filter_by_school(Attendance.objects.all(), school_field='session__course__school').count()
+        total_sessions = sum(c.sessions.count() for c in Course.objects.all())
+        total_attendance = Attendance.objects.all().count()
 
         return render(request, 'academy/dashboard/reports/dashboard.html', {
             'total_students': total_students,
@@ -75,31 +75,35 @@ class ReportDashboardView(AdminRequiredMixin, SchoolFilterMixin, View):
         })
 
 
-class CourseStudentsReportView(AdminRequiredMixin, SchoolFilterMixin, View):
+class CourseStudentsReportView(AdminRequiredMixin, View):
     def get(self, request):
-        courses = self.filter_by_school(Course.objects.all())
-        course_id = request.GET.get('course_id', '')
+        courses = Course.objects.all()
+        course_id_raw = request.GET.get('course_id', '')
+        try:
+            course_id = int(course_id_raw) if str(course_id_raw).strip() else None
+        except (TypeError, ValueError):
+            course_id = None
 
         students = []
         selected_course = None
-        if course_id:
+        if course_id is not None:
             selected_course = get_object_or_404(Course.objects.all(), id=course_id)
-            enrollments = self.filter_by_school(CourseEnrollment.objects.filter(
+            enrollments = CourseEnrollment.objects.filter(
                 course=selected_course
-            ).select_related('student'), school_field='course__school').order_by('student__first_name')
+            ).select_related('student').order_by('student__first_name')
 
             for enroll in enrollments:
                 student = enroll.student
-                installments = self.filter_by_school(AcademyInstallment.objects.filter(enrollment=enroll), school_field='enrollment__student__school')
+                installments = AcademyInstallment.objects.filter(enrollment=enroll)
                 total_installments = installments.count()
                 paid_installments = installments.filter(status='paid').count()
                 overdue_installments = installments.filter(status='overdue').count()
 
-                attendance_count = self.filter_by_school(Attendance.objects.filter(
+                attendance_count = Attendance.objects.filter(
                     session__course=selected_course,
                     student=student,
                     status='present'
-                ), school_field='session__course__school').count()
+                ).count()
                 total_sessions = selected_course.sessions.count()
 
                 students.append({
@@ -119,12 +123,12 @@ class CourseStudentsReportView(AdminRequiredMixin, SchoolFilterMixin, View):
         })
 
 
-class CourseStudentsExportView(AdminRequiredMixin, SchoolFilterMixin, View):
+class CourseStudentsExportView(AdminRequiredMixin, View):
     def get(self, request, course_id):
         course = get_object_or_404(Course.objects.all(), id=course_id)
-        enrollments = self.filter_by_school(CourseEnrollment.objects.filter(
+        enrollments = CourseEnrollment.objects.filter(
             course=course
-        ).select_related('student'), school_field='course__school').order_by('student__first_name')
+        ).select_related('student').order_by('student__first_name')
 
         wb = openpyxl.Workbook()
         ws = wb.active
@@ -156,7 +160,7 @@ class CourseStudentsExportView(AdminRequiredMixin, SchoolFilterMixin, View):
 
         for i, enroll in enumerate(enrollments, 1):
             student = enroll.student
-            installments = self.filter_by_school(AcademyInstallment.objects.filter(enrollment=enroll), school_field='enrollment__student__school')
+            installments = AcademyInstallment.objects.filter(enrollment=enroll)
             total_inst = installments.count()
             paid_inst = installments.filter(status='paid').count()
             overdue_inst = installments.filter(status='overdue').count()
@@ -197,18 +201,26 @@ class CourseStudentsExportView(AdminRequiredMixin, SchoolFilterMixin, View):
         return response
 
 
-class AllStudentsReportView(AdminRequiredMixin, SchoolFilterMixin, View):
+class AllStudentsReportView(AdminRequiredMixin, View):
     def get(self, request):
-        students = self.filter_by_school(StudentEnrollment.objects.all()).order_by('-created_at')
+        students = StudentEnrollment.objects.all().order_by('-created_at')
 
-        course = request.GET.get('course', '')
+        course_raw = request.GET.get('course', '')
         search = request.GET.get('search', '')
         status = request.GET.get('status', '')
+        if status not in ('paid', 'debtor', ''):
+            status = ''
 
-        enrollments_qs = self.filter_by_school(CourseEnrollment.objects.select_related('course'), school_field='course__school')
+        try:
+            course_id = int(course_raw) if str(course_raw).strip() else None
+        except (TypeError, ValueError):
+            course_id = None
+        course = str(course_id) if course_id is not None else ''
 
-        if course:
-            enrollments_qs = enrollments_qs.filter(course_id=course)
+        enrollments_qs = CourseEnrollment.objects.select_related('course')
+
+        if course_id is not None:
+            enrollments_qs = enrollments_qs.filter(course_id=course_id)
 
         student_data = []
         for s in students:
@@ -241,11 +253,15 @@ class AllStudentsReportView(AdminRequiredMixin, SchoolFilterMixin, View):
                 'is_fully_paid': total_remaining == 0,
             })
 
-        courses = self.filter_by_school(Course.objects.all())
+        courses = Course.objects.all()
 
         # صفحه‌بندی
         from django.core.paginator import Paginator
-        page_number = request.GET.get('page', 1)
+        page_raw = request.GET.get('page', 1)
+        try:
+            page_number = int(page_raw)
+        except (TypeError, ValueError):
+            page_number = 1
         paginator = Paginator(student_data, 20)
         page_obj = paginator.get_page(page_number)
 
@@ -259,9 +275,9 @@ class AllStudentsReportView(AdminRequiredMixin, SchoolFilterMixin, View):
         })
 
 
-class AllStudentsExportView(AdminRequiredMixin, SchoolFilterMixin, View):
+class AllStudentsExportView(AdminRequiredMixin, View):
     def get(self, request):
-        students = self.filter_by_school(StudentEnrollment.objects.all()).order_by('-created_at')
+        students = StudentEnrollment.objects.all().order_by('-created_at')
 
         wb = openpyxl.Workbook()
         ws = wb.active
@@ -291,7 +307,7 @@ class AllStudentsExportView(AdminRequiredMixin, SchoolFilterMixin, View):
             cell.border = thin_border
 
         for i, s in enumerate(students, 1):
-            enrollments = self.filter_by_school(CourseEnrollment.objects.filter(student=s), school_field='course__school')
+            enrollments = CourseEnrollment.objects.filter(student=s)
             total_enrolled = sum(e.total_amount for e in enrollments)
             total_paid = sum(e.paid_amount for e in enrollments)
             total_remaining = total_enrolled - total_paid

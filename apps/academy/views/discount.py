@@ -2,23 +2,24 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
 from django.contrib import messages
 from django.http import JsonResponse
-from apps.academy.mixins import AdminRequiredMixin, SchoolFilterMixin
+from apps.academy.mixins import AdminRequiredMixin
+from apps.academy.org import get_instance_organization
 
 from ..models import DiscountCode
 
 
-class DiscountCodeListView(AdminRequiredMixin, SchoolFilterMixin, View):
+class DiscountCodeListView(AdminRequiredMixin, View):
     def get(self, request):
-        codes = self.filter_by_school(DiscountCode.objects.all())
+        codes = DiscountCode.objects.all()
         return render(request, 'academy/dashboard/discount_list.html', {
             'codes': codes,
         })
 
 
-class DiscountCodeCreateView(AdminRequiredMixin, SchoolFilterMixin, View):
+class DiscountCodeCreateView(AdminRequiredMixin, View):
     def get(self, request):
         from ..models import Course
-        courses = self.filter_by_school(Course.objects.all())
+        courses = Course.objects.all()
         return render(request, 'academy/dashboard/discount_create.html', {
             'courses': courses,
         })
@@ -83,7 +84,7 @@ class DiscountCodeCreateView(AdminRequiredMixin, SchoolFilterMixin, View):
             course=course,
             valid_from=valid_from_dt,
             valid_until=valid_until_dt,
-            school=getattr(request.user, 'school', None),
+            school=get_instance_organization(),
             created_by=request.user,
         )
 
@@ -91,7 +92,7 @@ class DiscountCodeCreateView(AdminRequiredMixin, SchoolFilterMixin, View):
         return redirect('academy:discount_list')
 
 
-class DiscountCodeDeleteView(AdminRequiredMixin, SchoolFilterMixin, View):
+class DiscountCodeDeleteView(AdminRequiredMixin, View):
     def post(self, request, pk):
         code = self.school_object_or_404(DiscountCode, pk=pk)
         code_text = code.code
@@ -100,7 +101,7 @@ class DiscountCodeDeleteView(AdminRequiredMixin, SchoolFilterMixin, View):
         return redirect('academy:discount_list')
 
 
-class DiscountCodeToggleView(AdminRequiredMixin, SchoolFilterMixin, View):
+class DiscountCodeToggleView(AdminRequiredMixin, View):
     def post(self, request, pk):
         code = self.school_object_or_404(DiscountCode, pk=pk)
         code.is_active = not code.is_active

@@ -40,7 +40,7 @@ class Course(models.Model):
         max_length=20, choices=STATUS_CHOICES, default=STATUS_DRAFT, verbose_name="وضعیت"
     )
     teacher = models.ForeignKey(
-        'users.Teacher',
+        'academy.Teacher',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,

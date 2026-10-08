@@ -1,94 +1,46 @@
-# گزارش پیشرفت پروژه Cademy (دانا) — نسخه نهایی
+# Changelog — دانا (Dana)
 
-## خلاصه کلی
-بازطراحی کامل UI/UX + تکمیل سناریوی دوره‌ها + سیستم کد تخفیف + حسابداری + آزمون‌ها + پیامک + پنل استاد/هنرجو + کارت شناسایی
+وضعیت معماری فعلی و مرز پروفایل‌ها: [`docs/architecture-contract.md`](docs/architecture-contract.md).  
+این فایل تاریخچهٔ محصولی/UI است؛ برای قوانین tenancy و kernel به قرارداد مراجعه کنید.
 
----
+## 2026-10 — Fresh Academy install notes
 
-## بخش‌های کامل شده (۲۱):
+- Empty-database Academy path verified: `install_config.py` → `.env` → `migrate` → `createsuperuser` → dashboard, after CSS build and `collectstatic`
+- Academy has no `/admin/` and no organization settings screen; customer name is `init_academy_org.py --title`. Logo, phone, email, and address stay unset in the UI
+- First-install doc now requires `tailwind build` before `collectstatic` on a clean tree
 
-### ۱. لاگین و احراز هویت ✅
-- `PasswordLoginView` + `OTPRequestView` + `OTPVerifyView`
-- Rate limiting (60s cooldown + 10/hour)
-- Lockout لاگین مدیر (5 بار اشتباه → ۵ دقیقه قفل)
-- `RoleRequiredMixin` مشترک بین استاد/هنرجو
-- رمز پیش‌فرض: 123456789
-- UI حرفه‌ای یکپارچه
+## 2026-10 — Installation identity file (`install_config.py`)
 
-### ۲. دوره‌های آموزشی ✅
-- جدول ۱۰ ستونه با badge وضعیت
-- فرم ایجاد/ویرایش ۴ بخشی
-- جستجو + فیلتر
-- ثبت‌نام آنلاین با لینک
+- `PRODUCT_MODE` و `WEBSITE_ENABLED` از `install_config.py` (نه `.env`)؛ loader: `config/install_loader.py`
+- `.env` فقط secrets/infra؛ بدون dual-read از env برای محصول
+- `DANA_INSTALL_FILE` برای تست/نصب جدا؛ بدون fallback خاموش به academy
 
-### ۳. ثبت‌نام هنرجو ✅
-- پذیرش دستی + عمومی
-- کد تخفیف در فرم
-- SMS خوش‌آمد با رمز
-- جداکننده هزارگان
+## 2026-10 — Customer first-install foundation
 
-### ۴. کدهای تخفیف ✅
-- ایجاد/لیست/حذف/فعال/غیرفعال
-- نوع درصدی/مبلغ ثابت
-- حداقل مبلغ + حداکثر دفعات
-- اعتبارسنجی AJAX
+- `PRODUCT_MODE` الزامی (بدون fallback خاموش به academy) — `config/settings.py`, `config/product_mode.py`
+- `.env.example` و `docker-compose.yml` عمومی برای مشتری (بدون hostهای panel.aihousesb)
+- `scripts/init_academy_org.py --title "..."`؛ حذف رفتار hardcode سان‌تک از init
+- راهنما: [`docs/customer-first-install.md`](docs/customer-first-install.md) (`migrate` + `createsuperuser` + branding + SchoolProfile)
 
-### ۵. حسابداری ✅
-- داشبورد با KPI + نمودار ماهانه/هفتگی
-- ثبت تراکنش با فیلتر تاریخ شمسی
-- گزارش سودآوری دوره‌ها
-- پرداخت به مدرسین
+## 2026-10 — Hosting & demo architecture contract (docs only)
 
-### ۶. مدیریت اقساط ✅
-- پیجینیشن + فیلتر
-- ثبت پرداخت دستی + آنلاین
-- تأیید اقساط
+- سند [`docs/hosting-and-demo.md`](docs/hosting-and-demo.md): سایت مرکزی `edu-aihousesb.ir`، دموهای جدا Academy/School، نصب مشتری، Control داخلی؛ بدون ادغام پروفایل‌ها
+- قفل مفهومی مسیرهای `/demo/academy/` و `/demo/school/` (proxy بعداً؛ هنوز پیاده‌سازی نشده)
 
-### ۷. گزارشات ✅
-- داشبورد با نمودار Chart.js
-- گزارش جامع هنرجویان + پیجینیشن
-- خروجی اکسل
+## 2026-10 — Architecture checkpoint (docs + website CTA hooks)
 
-### ۸. کارت شناسایی ✅
-- صدور + نمایش + چاپ
-- باطل کردن
-- QR code
-- SMS با لینک کارت
+- Website public CTAs از profile registry (`website_public_context`)؛ حذف قالب مرده `website/home.html`
+- رگرسیون کامل سیستم / ایزولاسیون cross-profile: **172 PASS / 0 FAIL / 2 SKIP**
+- همگام‌سازی اسناد منبع حقیقت با deferredهای شناخته‌شده (mount تکراری، exams path، GET logout، W003، …)
 
-### ۹. آزمون‌ها ✅
-- اصلاح فیلتر مدرسه (امنیت)
-- بررسی زمان ارسال
-- نمایش پاسخ انتخابی
-- ویرایش سوالات
-- حذف فیلتر toman از مقادیر غیرمالی
+## 2026-10 — Profile isolation & Academy singleton
 
-### ۱۰. پیامک ✅
-- AJAX ارسال با progress
-- جستجو + پیجینیشن
-- دسته‌بندی گیرندگان
-- انتخاب همه + شمارش
+- سوئیچ پروفایل `config/profile.py` (academy / school / control)
+- سازمان آموزشگاه singleton (`schools.School`)؛ حذف subdomain tenancy و `SchoolMiddleware`
+- حذف اپ‌های مرده `apps.core` / `apps.accounting` و مسیر register چندمستاجری `apps.schools`
+- تست‌ها: profile isolation، kernel purity، singleton، gateway
+- اصلاحات QA: nested public pay (`slug`)، Forms `is_public`، SMS search (`Q`)، Control 403 fonts، teacher materials jalali filter
 
-### ۱۱. پنل استاد ✅
-- منوی پایین موبایل (bottom nav)
-- Sidebar دسکتاپ
-- تاریخ شمسی تمام صفحات
+## تاریخی (Cademy / UI rebuild)
 
-### ۱۲. پنل هنرجو ✅
-- منوی پایین موبایل + بیشتر
-- هدر دسکتاپ
-- تمام صفحات
-
----
-
-## بخش‌های رد شده:
-- CRM و فروش
-- کلاس آنلاین و جلسه آنلاین
-
----
-
-## نکات فنی:
-- فیلتر `jalali` باید `{% load custom_filters %}` داشته باشه
-- مایگریشن `0022_discountcode.py`
-- فرم‌ها از `inputmode="numeric"` استفاده می‌کنن
-- تاریخ شمسی از `to_jalali()` و `to_gregorian()`
-- management command: `python manage.py set_default_passwords`
+خلاصه کارهای تکمیل‌شده پیش از تفکیک پروفایل‌ها (لاگین OTP، دوره، ثبت‌نام، تخفیف، حسابداری، اقساط، گزارش، کارت شناسایی، آزمون، پیامک، پنل استاد/هنرجو، PWA). جزئیات قدیمی در git history باقی است.

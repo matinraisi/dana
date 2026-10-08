@@ -1,0 +1,20 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div class="container mx-auto p-4 md:p-6 max-w-2xl" style="direction: rtl;">
+  <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+    <h1 class="text-base font-bold text-slate-800 mb-2 flex items-center gap-2">ارسال پیامک سفارشی دسته‌جمعی</h1>
+    <p class="text-xs text-slate-500 mb-6">تعداد مخاطبین انتخاب شده: <span class="text-slate-800 font-bold">{{ receptor_count }} نفر</span></p>
+    <form method="POST" class="space-y-4">
+      {% csrf_token %}
+      <div>
+        <label class="block text-xs font-bold mb-2 text-slate-700">متن پیامک ارسالی:</label>
+        <textarea name="message_text" rows="5" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-700" placeholder="متن پیامک خود را اینجا بنویسید..."></textarea>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="py-2.5 px-6 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs">ارسال نهایی پیامک‌ها</button>
+        <a href=".." class="py-2.5 px-6 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs text-center">انصراف</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

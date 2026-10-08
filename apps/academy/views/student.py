@@ -6,7 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse, HttpResponseForbidden
 from django.urls import reverse
 from django.utils import timezone
-from apps.academy.mixins import AdminRequiredMixin, SchoolFilterMixin
+from apps.academy.mixins import AdminRequiredMixin
 
 from django.db.models import Q
 from django.core.paginator import Paginator
@@ -14,7 +14,9 @@ from ..models import Course, StudentEnrollment, CourseEnrollment, AcademyInstall
 from ..models.accounting import AccountingTransaction, PaymentGateway
 from ..services.sms_service import SmsService
 from ..utils.date_helper import to_gregorian
-from apps.users.models import User, StudentAccount
+from apps.users.models import User
+from apps.academy.models import StudentAccount
+from apps.academy.org import get_instance_organization
 
 # محدودیت‌های آپلود فایل
 ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp']
@@ -62,9 +64,9 @@ def _ensure_student_user(student: StudentEnrollment, send_welcome_sms: bool = Fa
             pass
 
 
-class StudentCreateView(AdminRequiredMixin, SchoolFilterMixin, View):
+class StudentCreateView(AdminRequiredMixin, View):
     def get(self, request):
-        courses = self.filter_by_school(Course.objects.all())
+        courses = Course.objects.all()
         return render(request, 'academy/dashboard/student_create.html', {'courses': courses})
 
     def post(self, request):
@@ -103,7 +105,7 @@ class StudentCreateView(AdminRequiredMixin, SchoolFilterMixin, View):
                     'phone_number': str(phone_number), 'emergency_phone': emergency_phone,
                     'field_of_study': field_of_study, 'education_level': education_level,
                     'birth_date': birth_date or None, 'address': address,
-                    'school': getattr(request.user, 'school', None),
+                    'school': get_instance_organization(),
                 }
             )
 
@@ -201,10 +203,10 @@ class StudentIdCardView(LoginRequiredMixin, View):
         return render(request, "academy/id_card_template.html", {"student": student})
 
 
-class StudentEditView(AdminRequiredMixin, SchoolFilterMixin, View):
+class StudentEditView(AdminRequiredMixin, View):
     def get(self, request, slug):
         student = self.school_object_or_404(StudentEnrollment, short_slug=slug)
-        courses = self.filter_by_school(Course.objects.all())
+        courses = Course.objects.all()
         enrollments = CourseEnrollment.objects.filter(student=student)
         return render(request, 'academy/dashboard/student_edit.html', {
             'student': student, 'courses': courses, 'enrollments': enrollments,
@@ -293,7 +295,7 @@ class StudentEditView(AdminRequiredMixin, SchoolFilterMixin, View):
             student.birth_date = to_gregorian(request.POST.get('birth_date'))
             student.address = request.POST.get('address') or None
             if not student.school_id:
-                student.school = getattr(request.user, 'school', None)
+                student.school = get_instance_organization()
             student.save()
             messages.success(request, f"اطلاعات هنرجو «{student.full_name}» با موفقیت بروزرسانی شد.")
         except Exception as e:
@@ -302,7 +304,7 @@ class StudentEditView(AdminRequiredMixin, SchoolFilterMixin, View):
         return redirect('academy:student_edit', slug=student.short_slug)
 
 
-class StudentDeleteView(AdminRequiredMixin, SchoolFilterMixin, View):
+class StudentDeleteView(AdminRequiredMixin, View):
     def post(self, request, slug):
         student = self.school_object_or_404(StudentEnrollment, short_slug=slug)
         full_name = student.full_name
@@ -330,6 +332,7 @@ class ImportExcelView(AdminRequiredMixin, View):
             wb = openpyxl.load_workbook(excel_file, data_only=True)
             worksheet = wb.active
             success_count = 0
+            courses = Course.objects.all()
 
             for row in worksheet.iter_rows(min_row=2, values_only=True):
                 if not row or not row[2]:
@@ -344,7 +347,7 @@ class ImportExcelView(AdminRequiredMixin, View):
                 address = row[11] if len(row) > 11 else None
 
                 try:
-                    course = Course.objects.get(code=str(course_code).strip())
+                    course = courses.get(code=str(course_code).strip())
                     student, created = StudentEnrollment.objects.get_or_create(
                         national_code=str(national_code).strip(),
                         defaults={
@@ -353,7 +356,7 @@ class ImportExcelView(AdminRequiredMixin, View):
                             'field_of_study': field_of_study, 'education_level': education_level,
                             'emergency_phone': str(emergency_phone).strip() if emergency_phone else None,
                             'birth_date': birth_date or None, 'address': address,
-                            'school': getattr(request.user, 'school', None),
+                            'school': get_instance_organization(),
                         }
                     )
 
@@ -378,17 +381,14 @@ class ImportExcelView(AdminRequiredMixin, View):
             return redirect('academy:import_excel')
 
 
-class StudentListView(AdminRequiredMixin, SchoolFilterMixin, View):
+class StudentListView(AdminRequiredMixin, View):
     def get(self, request):
-        school_id = self.get_school_id()
-        is_super = request.user.is_superuser
-        courses = self.filter_by_school(Course.objects.all())
+        courses = Course.objects.all()
         course_id = request.GET.get('course')
         search = request.GET.get('search', '').strip()
 
-        students = self.filter_by_school(
-            StudentEnrollment.objects.prefetch_related('active_enrollments__course')
-        )
+        students = StudentEnrollment.objects.prefetch_related('active_enrollments__course')
+
         if course_id:
             students = students.filter(active_enrollments__course_id=course_id)
         if search:

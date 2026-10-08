@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('academy', '0021_session_location'),
         ('schools', '0002_school_add_is_default'),
-        ('users', '0005_teacher_card_number_teacher_shaba_number'),
+        ('users', '0002_otptoken'),
     ]
 
     operations = [
